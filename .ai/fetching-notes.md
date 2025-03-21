@@ -1,0 +1,44 @@
+
+
+## Astral API Integration & Data Fetching  
+The SDK will provide high-level access to Astral’s REST API for querying proofs and related data, hiding the intricacies of HTTP and OGC standards behind a clean interface. Key points for this module:
+
+- **HTTP Client**: We will use a reliable HTTP client that works in both Node and browser. Options: the global `fetch` (Node 18+ has it; for older Node, we might polyfill or use `cross-fetch`), or Axios. We want minimal dependencies, and since fetch is standard and tree-shakable, we lean towards using `fetch` via a small wrapper for convenience (to handle timeouts, etc.). This avoids adding Axios (which is slightly heavier). We’ll abstract it in `AstralApiClient` so if needed we can swap implementations.
+
+- **Endpoints**: Astral’s API structure (from docs):  
+  - Base URL: `https://api.astral.global/api/v0/` (for current version).  
+  - Key endpoint: `/api/ogc/`, i.e. the OGC `/collections/location-proofs/items`. The OGC route offers extensive filtering options (bbox, datetime, etc.) ([OGC API Features Implementation | Astral Documentation](https://docs.astral.global/docs/api/ogc-api#:~:text=GET%20%2Fapi%2Fogc%2Fcollections%2F)) ([OGC API Features Implementation | Astral Documentation](https://docs.astral.global/docs/api/ogc-api#:~:text=Core%20Parameters)). We can support both or unify them (likely focus on OGC since it’s full-featured).  
+  - There’s also possibly a GraphQL endpoint (docs mention GraphQL API), but as per requirements we stick to OGC Features (unless a use case for GraphQL arises, possibly leave as future extension).
+
+- **Query Construction**: The `AstralApiClient` will have methods like:
+  - `fetchProofs(params: ProofQuery): Promise<LocationProofCollection>` – constructs the query string. For example, if `params = { bbox: [minLon, minLat, maxLon, maxLat], chain: "base", prover: "0xabc...", datetime: "2023-01-01T00:00:00Z/2023-01-31T23:59:59Z", limit: 100 }`, it will encode those as `...?bbox=minLon,minLat,maxLon,maxLat&chain=base&prover=0xabc...&datetime=2023-01-01T00:00:00Z/2023-01-31T23:59:59Z&limit=100`. We must ensure proper URL encoding. We’ll also support friendly formats (e.g., if datetime is a Date or tuple of Dates, convert to the ISO string or interval format required). The standards from OGC API Features specify how to format intervals ([OGC API Features Implementation | Astral Documentation](https://docs.astral.global/docs/api/ogc-api#:~:text=,01T00%3A00%3A00Z)), so we’ll follow that strictly.  
+  - `fetchProof(uid: string): Promise<LocationProofFeature>` – fetch a single proof by ID. Possibly Astral API allows `GET /location-proofs/{uid}` or we filter by UID (if not, we can fetch all and filter client-side, but it’s better if the API supports direct access – likely it does via OGC feature by id). We will check conformance docs or just attempt `GET /items/{uid}` which might work if the collection is set up properly.
+  - Internal low-level `request(path, params)` method to call fetch and handle response parsing.
+
+- **Data Parsing**: The responses will be JSON, often in GeoJSON format for features. For example, a query might return: 
+  ```json
+  { "type": "FeatureCollection", "features": [ { "type": "Feature", "id": "<uid>", "geometry": {...}, "properties": { "chain": "celo", "prover": "...", "event_timestamp": "...", "recipe_types": [...], ... } } ], "numberReturned": 1, "numberMatched": 1 }
+  ``` 
+  Our SDK will parse this into our `LocationProof` model(s). We have two choices: 
+   - Work directly with the GeoJSON (some devs might want to use it with mapping libraries). We could return the FeatureCollection as-is, but enriched with TypeScript types.
+   - Or convert each feature to our `LocationProof` class. Probably we do the latter for consistency, but also provide raw access if needed. Possibly the `LocationProofCollection` we return could have both: e.g., `collection.features` array of GeoJSON Features, *and* a convenience `collection.proofs` array of `LocationProof` objects. We need to be careful not to bloat memory, but converting a few hundred proofs is fine.
+
+  We will use the field mappings from Astral’s data model doc to interpret properties correctly (for instance, `event_timestamp` (ISO string) into a `Date` object in our model, and geometry into perhaps a `GeoJSON.Geometry` object or leave as is). The location coordinates will be present in `geometry` and also duplicated as `latitude`/`longitude` in properties ([Data Model | Astral Documentation](https://docs.astral.global/docs/data-model#:~:text=%22event_timestamp%22%3A%20%222023,image%2Fjpeg)) for points. We might ignore the duplicate numeric fields since geometry is enough, or use them for convenience. 
+
+- **OGC Compliance**: By following the OGC API, we automatically handle spatial queries. We will ensure to include support for the special query params:
+  - `bbox` as described.
+  - `datetime` for time filtering.
+  - Also Astral adds `chain` and `prover` as extra filters ([OGC API Features Implementation | Astral Documentation](https://docs.astral.global/docs/api/ogc-api#:~:text=Additional%20Parameters)) which we incorporate easily.
+  - Pagination: We will abstract that. Possibly our `queryLocationProofs` will by default fetch all available (by looping with `offset`), or fetch only the first page depending on expected usage. We might allow an option in `ProofQuery` like `all: boolean` or an async iterator. For simplicity in v1, we can default to fetching all up to a sane cap (e.g., if no limit specified, get all with internal loop until `numberReturned < limit` or until a max cap to avoid huge loops).
+  - If the API supports sorting or other parameters, we can expose them if needed.
+
+- **Authentication**: If Astral’s API requires an API key or token (some sections mention “Authentication” in docs, possibly API Key or OAuth). We will research Astral’s auth: likely an API key header or token. For safety, our `AstralSDKOptions.apiKey` would be used by AstralApiClient: e.g., include `Authorization: Bearer <token>` or `x-api-key: <key>` header on requests. We’ll document how to obtain and provide this. In absence of a key, if the API is open for certain read operations, we proceed; if a key is required, we’ll clearly error stating no API key. (Astral’s health and basic queries might not need auth, but deeper queries might after a certain rate limit). We will confirm from Astral docs or simply design for both scenarios.
+
+- **Resilience & Retries**: Network calls can fail. We will implement a simple retry logic for idempotent GET requests: e.g., retry up to 3 times with exponential backoff if we get network errors or 5xx from server. This falls under “enterprise features” that developers expect in robust SDKs ([SDK Best Practices](https://www.speakeasy.com/post/sdk-best-practices#:~:text=5)). We’ll make it configurable (via AstralSDKOptions, e.g., `retryCount` and `retryDelay`). For 4xx errors (client errors like 400 or 401), no retry (fail immediately as those won’t succeed with retry).  
+  Also, we handle timeouts – using AbortController with fetch, or a race with setTimeout – to not hang forever if API doesn’t respond. A default timeout (e.g., 10 seconds) can be set.
+
+- **Caching**: If an application calls the same query repeatedly, the SDK could cache results in memory (since the data is mostly static after creation). We will not implement heavy caching by default (to avoid stale data confusion), but we can allow the user to pass a cache implementation or enable caching for specific calls. Perhaps as a simple approach, we document that developers can cache at application level by storing results from the SDK if needed. If we have time, a simple cache (map of request->result for a short TTL) can be added in AstralApiClient for non-volatile data like config or schema info (which rarely changes).
+
+- **Testing Against API**: We will likely simulate or use the real Astral test environment for testing this module. Possibly Astral provides a staging or the main API can be used with test data (Sepolia and others are testnets). We might include a mechanism to use a *mock API* for testing (like supplying a fake AstralApiClient implementation that returns preset data), to not rely on internet in our automated tests.
+
+By integrating the Astral API following OGC standards, we ensure the SDK provides powerful query capabilities “out of the box”. A developer can ask for proofs within an area and timeframe with one function call, rather than dealing with raw HTTP themselves. This fulfills the aim of turning endpoints into easy-to-use SDK methods ([10 Best Practices For SDK Generation | Nordic APIs |](https://nordicapis.com/10-best-practices-for-sdk-generation/#:~:text=4,Methods)). It also ensures that if Astral’s API updates (say v1), we can update our internal paths without breaking the SDK’s external interface, preserving stability for developers.

@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run lint-staged to format and lint staged files
+npx lint-staged
+
+# Run typechecking
+pnpm run typecheck
+
+# Run tests
+pnpm run test -- --findRelatedTests $(git diff --cached --name-only --diff-filter=ACM | grep -E '\.ts$')
