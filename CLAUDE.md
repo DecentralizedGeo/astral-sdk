@@ -35,15 +35,22 @@ astral-sdk/
 │   │   └── OnchainRegistrar.ts # Handles onchain registrations
 │   ├── extensions/           # Extension system
 │   │   ├── location/         # Location format handlers
-│   │   │   ├── GeoJSON.ts    # GeoJSON format support
-│   │   │   ├── Decimal.ts    # Decimal coordinates support
-│   │   │   ├── WKT.ts        # Well-Known Text support
-│   │   │   └── H3.ts         # H3 geospatial index support
+│   │   │   ├── builtins/     # Built-in location format implementations
+│   │   │   │   ├── GeoJSON.ts # GeoJSON format support
+│   │   │   │   ├── Coordinate.ts # Coordinate format support (decimal, degrees)
+│   │   │   │   ├── WKT.ts    # Well-Known Text support
+│   │   │   │   └── H3.ts     # H3 geospatial index support
+│   │   │   └── index.ts      # Location extensions exports
 │   │   ├── media/            # Media type handlers
-│   │   |   ├── Image.ts      # Image handling (JPEG, PNG)
-│   │   |   └── Document.ts   # Document handling (PDF)
+│   │   │   ├── builtins/     # Built-in media format implementations
+│   │   │   │   ├── image.ts  # Image handling (JPEG, PNG, GIF, TIFF)
+│   │   │   │   ├── video.ts  # Video handling (MP4, MOV)
+│   │   │   │   ├── audio.ts  # Audio handling (MP3, WAV, OGG, AAC)
+│   │   │   │   └── application.ts # Application handling (PDF)
+│   │   │   └── index.ts      # Media extensions exports
 │   │   └── recipe/           # Other extension types
-│   │       └── <PLACEHOLDER> # Recipe handling (not implemented)
+│   │       ├── builtins/     # Built-in recipe implementations (placeholder)
+│   │       └── index.ts      # Recipe extensions exports
 │   ├── api/                  # API client
 │   │   └── AstralApiClient.ts # REST API communication
 │   ├── storage/              # Storage adapters

@@ -2,63 +2,53 @@
 We will structure the repository in a logical, feature-based layout consistent with modern TypeScript library conventions:
 
 ```
-astral-ts-sdk/
+astral-sdk/
 ├── package.json
 ├── tsconfig.json
 ├── jest.config.js
 ├── src/
-│   ├── index.ts             # Entry point exporting public API
-│   ├── core/                # Core types, interfaces, main AstralSDK class
-│   │   ├── AstralSDK.ts
-│   │   ├── types.ts         # e.g., UnsignedLocationProof, OffchainLocationProof, OnchainLocationProof interfaces
-│   │   ├── errors.ts        # Error hierarchy definitions
-│   │   └── utils.ts         # common helpers (validators, formatters)
-│   ├── eas/                 # EAS integration module
-│   │   ├── EASClient.ts     # wraps @ethereum-attestation-service/eas-sdk
-│   │   ├── OffchainSigner.ts # EIP-712 signing for offchain proofs
-│   │   ├── OnchainRegistrar.ts # Blockchain registration for onchain proofs
-│   │   └── schemas.ts       # schema IDs, encoding logic
-│   ├── api/                 # Astral API integration
-│   │   ├── AstralApiClient.ts # handles HTTP requests
-│   │   └── models.ts        # types for API responses (FeatureCollection, etc.)
-│   ├── extensions/          # Base extension framework
-│   │   ├── ExtensionManager.ts # Common extension registration/management
-│   │   ├── Extension.ts     # Base extension interface or abstract class
-│   │   ├── location/        # Location type extensions
-│   │   │   ├── LocationExtension.ts # Base for all location extensions
-│   │   │   ├── LocationExtensionManager.ts # Manager specific to location extensions
-│   │   │   └── builtins/    # Built-in location extensions
-│   │   │       ├── GeoJSONExtension.ts
-│   │   │       └── WKTExtension.ts
-│   │   ├── media/           # Media type extensions
-│   │   │   ├── MediaExtension.ts # Base for all media extensions
-│   │   │   ├── MediaExtensionManager.ts # Manager specific to media extensions
-│   │   │   └── builtins/    # Built-in media extensions
-│   │   │       ├── ImageExtension.ts
-│   │   │       └── VideoExtension.ts
-│   │   └── recipe/          # Recipe type extensions (placeholder for future versions)
-│   │       ├── RecipeExtension.ts # Base for all recipe extensions
-│   │       ├── RecipeExtensionManager.ts # Manager specific to recipe extensions
-│   │       └── README.md    # Documentation for future implementation
-│   ├── storage/             # Storage adapters for proofs
-│   │   ├── StorageAdapter.ts # Common interface for storage adapters
-│   │   ├── OnchainStorage.ts # Handles blockchain attestation storage
-│   │   ├── OffchainStorage.ts # Handles offchain publication (IPFS, etc)
-│   │   └── IPFSClient.ts    # IPFS integration
-│   ├── utils/               # Shared utilities
-│   │   ├── geo.ts           # Geospatial conversion utilities
-│   │   ├── validation.ts    # Common validation functions
-│   │   └── typeGuards.ts    # Type guards for proof types
-│   └── __tests__/           # Test files (mirroring src structure)
-│       ├── core/...
-│       ├── eas/...
-│       ├── api/...
-│       ├── extensions/
-│       │   ├── location/...
-│       │   └── media/...
-│       └── storage/...
-├── docs/                    # Documentation markdown or generated docs
-└── examples/                # Example scripts or sample usage
+│   ├── index.ts             # Main entry point
+│   ├── core/                # Core SDK functionality
+│   │   ├── types.ts         # Main type definitions
+│   │   ├── errors.ts        # Error hierarchy
+│   │   └── AstralSDK.ts     # Main SDK entry point
+│   ├── eas/                 # EAS integration
+│   │   ├── chains.ts        # Chain configurations
+│   │   ├── SchemaEncoder.ts # EAS schema handling
+│   │   ├── OffchainSigner.ts # Handles offchain attestations
+│   │   └── OnchainRegistrar.ts # Handles onchain registrations
+│   ├── offchain/            # Offchain workflow components
+│   │   └── index.ts         # Offchain workflow exports
+│   ├── onchain/             # Onchain workflow components
+│   │   └── index.ts         # Onchain workflow exports
+│   ├── extensions/          # Extension system
+│   │   ├── location/        # Location format handlers
+│   │   │   ├── builtins/    # Built-in location format implementations
+│   │   │   │   ├── GeoJSON.ts # GeoJSON format support
+│   │   │   │   ├── Coordinate.ts # Coordinate format support (decimal, degrees)
+│   │   │   │   ├── WKT.ts    # Well-Known Text support
+│   │   │   │   └── H3.ts     # H3 geospatial index support
+│   │   │   └── index.ts      # Location extensions exports
+│   │   ├── media/           # Media type handlers
+│   │   │   ├── builtins/    # Built-in media format implementations
+│   │   │   │   ├── image.ts  # Image handling (JPEG, PNG, GIF, TIFF)
+│   │   │   │   ├── video.ts  # Video handling (MP4, MOV)
+│   │   │   │   ├── audio.ts  # Audio handling (MP3, WAV, OGG, AAC)
+│   │   │   │   └── application.ts # Application handling (PDF)
+│   │   │   └── index.ts      # Media extensions exports
+│   │   └── recipe/          # Other extension types (placeholder for future versions)
+│   │       ├── builtins/    # Built-in recipe implementations (placeholder)
+│   │       └── index.ts     # Recipe extensions exports
+│   ├── api/                 # API client
+│   │   └── AstralApiClient.ts # REST API communication
+│   ├── storage/             # Storage adapters
+│   │   └── StorageAdapter.ts # Storage interface
+│   └── utils/               # Utility functions
+│       ├── typeGuards.ts    # Type guard implementations
+│       └── validation.ts    # Validation utilities
+├── test/                    # Test files
+├── examples/                # Example usage
+└── docs/                    # Documentation
 ```
 
 **Module Organization:** Each folder (core, eas, api, etc.) encapsulates related functionality. This makes it easy for contributors to find relevant code and for tree-shaking tools to drop what isn't used. The entry `index.ts` re-exports key classes and functions from sub-modules that form the public API of the SDK.
