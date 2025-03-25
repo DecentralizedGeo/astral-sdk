@@ -1,8 +1,9 @@
 /**
- * Astral SDK - Offchain Module
- * 
- * This module provides functionality for the offchain workflow:
- * build → sign → optionally publish
+ * Offchain module for Astral SDK
+ *
+ * This will be implemented in a future phase.
+ * This is just a placeholder for now.
  */
 
-// Will export offchain-specific components in future implementations
+// This module will be implemented in phase 5
+export const offchainModulePlaceholder = true;

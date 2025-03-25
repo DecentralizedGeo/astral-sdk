@@ -167,8 +167,7 @@ export interface OnchainLocationProof {
   // Blockchain details
   chain: string;                    // blockchain where the attestation is stored
   txHash: string;                   // transaction hash of the attestation
-  blockNumber?: number;             // block the transaction was included in
-  registeredAt?: number;            // timestamp from the chain
+  blockNumber: number;             // block the transaction was included in
   
   // Extension metadata (our additions)
   _extensions?: {
@@ -244,8 +243,7 @@ When a proof is **registered** on-chain, the result is stored in the `LocationPr
 export interface RegistrationRecord {
   chain: string;           // e.g. "celo", "base", "arbitrum"
   txHash: string;          // transaction hash from EAS attest
-  blockNumber?: number;
-  registeredAt?: number;   // local or block timestamp from the chain
+  blockNumber: number;
 }
 ```
 

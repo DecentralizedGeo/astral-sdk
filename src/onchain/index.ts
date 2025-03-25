@@ -1,8 +1,9 @@
 /**
- * Astral SDK - Onchain Module
- * 
- * This module provides functionality for the onchain workflow:
- * build → register
+ * Onchain module for Astral SDK
+ *
+ * This will be implemented in a future phase.
+ * This is just a placeholder for now.
  */
 
-// Will export onchain-specific components in future implementations
+// This module will be implemented in phase 5
+export const onchainModulePlaceholder = true;

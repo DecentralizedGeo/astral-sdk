@@ -1,5 +1,5 @@
 ## **8. Documentation (Docs & Examples)**  
-   - [ ] *Description*: Create comprehensive documentation that clearly explains the architecture and guides developers through using both offchain and onchain attestation paths.
+  *Description*: Create comprehensive documentation that clearly explains the architecture and guides developers through using both offchain and onchain attestation paths.
    
    - *Sub-tasks*:
      - [ ] **Core Documentation Files**:

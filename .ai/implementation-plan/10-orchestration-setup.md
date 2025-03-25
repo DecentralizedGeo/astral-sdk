@@ -1,5 +1,5 @@
 ## **10. Orchestration & Project Setup Guide**  
-   - [ ] *Description*: Setting up the development environment and orchestrating contributions following best practices.
+  *Description*: Setting up the development environment and orchestrating contributions following best practices.
 
    - *Sub-tasks*: 
      - [ ] **Development Environment Preparation:**  

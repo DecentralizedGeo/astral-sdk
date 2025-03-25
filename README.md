@@ -8,10 +8,10 @@ Our SDK wraps this complex workflow into a developer-friendly, type-safe library
 
 - **Dual-Workflow Architecture**:
   - **Offchain Workflow**: Create proofs with EIP-712 signatures without blockchain transactions
-  - **Onchain Workflow**: Register proofs directly to the blockchain
+  - **Onchain Workflow**: Register proofs directly to any of our supported blockchains
   
 - **Location Format Support**:
-  - GeoJSON (point, polygon, linestring)
+  - GeoJSON (Point, Polygon, LineString, Feature, FeatureCollection)
   - Decimal coordinates (latitude, longitude)
   - WKT (Well-Known Text)
   - H3 (Hexagonal hierarchical geospatial indexing)

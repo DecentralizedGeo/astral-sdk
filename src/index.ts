@@ -1,21 +1,28 @@
 /**
  * Astral SDK
- * 
+ *
  * A TypeScript SDK for creating, verifying, and querying location proofs
  * using Ethereum Attestation Service (EAS).
- * 
+ *
  * @module @astral-protocol/sdk
  */
 
 // Core exports
-export { AstralSDK } from './core/AstralSDK';
-export * from './core/types';
-export * from './core/errors';
+export * from './core';
 
-// Type guards
-export * from './utils/typeGuards';
+// Utils exports
+export * from './utils';
+
+// Extension system exports
+export * from './extensions';
+
+// Workflow-specific exports
+export * from './offchain';
+export * from './onchain';
 
 // For advanced usage, also export internal components
 export { OffchainSigner } from './eas/OffchainSigner';
 export { OnchainRegistrar } from './eas/OnchainRegistrar';
+export { SchemaEncoder } from './eas/SchemaEncoder';
 export { AstralApiClient } from './api/AstralApiClient';
+export { StorageAdapter } from './storage/StorageAdapter';

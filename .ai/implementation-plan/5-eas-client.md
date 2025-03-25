@@ -1,5 +1,5 @@
 ## **5. EAS Client Integration**  
-   - [ ] *Description*: Develop the EAS integration module with separate components for offchain signing and onchain registration workflows, leveraging the EAS SDK for all core functionality.
+  *Description*: Develop the EAS integration module with separate components for offchain signing and onchain registration workflows, leveraging the EAS SDK for all core functionality.
    
    - *Sub-tasks*: 
      - [ ] Review `.ai/eas-context.md` to understand EAS capabilities, particularly the differences between offchain and onchain attestations

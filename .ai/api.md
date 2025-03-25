@@ -178,7 +178,7 @@ Registers an unsigned location proof directly on the blockchain by submitting an
    - Waits for the transaction to confirm, capturing the transaction hash and blockchain-generated UID.  
 3. **Object Creation:**  
    - Creates a new `OnchainLocationProof` object with all original data plus chain-specific details.
-   - Includes blockchain data such as `chain`, `txHash`, `blockNumber`, and `registeredAt`.
+   - Includes blockchain data such as `chain`, `txHash`, `blockNumber`.
 
 **Output (Promise resolving an `OnchainLocationProof`):**  
 - A new `OnchainLocationProof` object containing the attestation data and blockchain details.
@@ -282,7 +282,7 @@ async queryLocationProofs(
     - **`bbox?: [number, number, number, number]`** – a bounding box ([minLon, minLat, maxLon, maxLat])  
     - **`timeRange?: [Date, Date]` or `datetime?: string`** – filter by creation/attestation time.  
     - **`chain?: string`** – filter by chain name (e.g., `'celo'`, `'base'`).  
-    - **`attester?: string`** or `prover?: string` – filter by the address that created the proof.  
+    - **`attester?: Array<string>`** or `prover?: Arraystring` – filter by the address that created the proof.  
     - **`limit?: number`, `offset?: number`** – pagination parameters.  
     - And other potential fields if supported by Astral.  
   - **`FetchOptions?`** – same potential expansions as above (e.g., `includeMedia`).

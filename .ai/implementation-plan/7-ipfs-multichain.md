@@ -1,5 +1,5 @@
 ## **7. Multi-Chain & IPFS Support Enhancements**  
-   - [ ] *Description*: Enhance the SDK with multi-chain support and basic IPFS integration, focusing on practical implementation for both offchain and onchain workflows.
+  *Description*: Enhance the SDK with multi-chain support and basic IPFS integration, focusing on practical implementation for both offchain and onchain workflows.
    
    - *Sub-tasks*:
      - [ ] **Multi-Chain Support**:

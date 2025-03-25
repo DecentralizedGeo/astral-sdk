@@ -1,5 +1,5 @@
 ## **3. Extension System Implementation**  
-   - [ ] *Description*: Implement robust Location Type and Media Type extensions supporting common formats specified in the Astral documentation, working seamlessly with both offchain and onchain workflows.
+  *Description*: Implement robust Location Type and Media Type extensions supporting common formats specified in the Astral documentation, working seamlessly with both offchain and onchain workflows.
    
    - *Sub-tasks*: 
      - [ ] Review Astral documentation to identify core supported formats:

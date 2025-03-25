@@ -1,5 +1,5 @@
 ## **9. Final Review & QA**  
-   - [ ] *Description*: Before release, thoroughly review the codebase for consistency, performance, and completeness.  
+  *Description*: Before release, thoroughly review the codebase for consistency, performance, and completeness.  
    - *Sub-tasks*:
      - [ ] Conduct a full code review (maybe by a lead or pair programming if a team). Ensure naming is consistent, no leftover TODOs or debug logs, all public APIs are documented.
      - [ ] Run the test suite with coverage, ensure all critical paths are tested. Add tests if some branch is missing (aim for 90%+ coverage).

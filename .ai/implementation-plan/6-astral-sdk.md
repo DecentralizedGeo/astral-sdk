@@ -1,6 +1,6 @@
 ## **6. AstralSDK Class Implementation** 
  
-   - [ ] *Description*: Implement the main `AstralSDK` class that serves as the entry point for the library, providing a unified interface for both offchain and onchain workflows while maintaining their separation.
+  *Description*: Implement the main `AstralSDK` class that serves as the entry point for the library, providing a unified interface for both offchain and onchain workflows while maintaining their separation.
    
    - *Sub-tasks*: 
      - [ ] Review `.ai/api.md` to understand the complete API design
