@@ -53,6 +53,13 @@
        - [ ] Include examples for each supported format
        - [ ] Clearly document which media types are supported in v0.1
        - [ ] Add notes for planned future extensions
+       
+     - [ ] Implement ethical considerations documentation:
+       - [ ] Create ETHICS.md documenting key tensions and privacy considerations
+       - [ ] Create THREAT-MODELS.md outlining potential misuse scenarios 
+       - [ ] Create VALUES.md articulating guiding principles
+       - [ ] Add precision warnings for high-precision coordinates
+       - [ ] Document the offchain workflow as a privacy-preserving option
      
    - [ ] *Output*: 
      - [ ] Robust, well-tested utilities for handling all location formats in the Astral documentation
@@ -60,6 +67,7 @@
      - [ ] Clear interfaces that can be extended in the future
      - [ ] Good test coverage for all implemented features
      - [ ] Documentation that sets appropriate expectations
+     - [ ] Ethical considerations documentation establishing foundation for responsible use
    
    - *Technical considerations*: 
      - [ ] **Prioritize progress over completeness** - implement core functionality first
@@ -71,6 +79,9 @@
      - [ ] Ensure all utilities work with both offchain and onchain workflows
      - [ ] If implementation of a specific format becomes time-consuming, document the limitation and move on
      - [ ] Include appropriate error messages when unsupported formats are attempted
+     - [ ] Balance immediate implementation with future ethical enhancements
+     - [ ] Add PR template section for ethical considerations
+     - [ ] Make ethical documentation transparent about current capabilities and limitations
 
 Complete: ⬜️
 
