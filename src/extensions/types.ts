@@ -109,7 +109,7 @@ export interface LocationTypeExtension extends BaseExtension {
   /**
    * Parses a location string back to its original format
    *
-   * @param locationString - Location string to parse
+   * @param locationString - Location string to parse // CLAUDE: From what format?? Let's specify. Is it ALWAYS GeoJSON?
    * @returns Parsed location data
    */
   parseLocationString(locationString: string): unknown;

@@ -17,7 +17,7 @@ describe('GeoJSON Type Guards', () => {
     // Valid positions
     expect(isPosition([0, 0])).toBe(true);
     expect(isPosition([180, 90])).toBe(true);
-    expect(isPosition([-180, -90])).toBe(true);
+    expect(isPosition([-180, -90])).toBe(true); // CLAUDE: Does Position check for the correct range of lat and lon values??
     expect(isPosition([0, 0, 0])).toBe(true);
 
     // Invalid positions
@@ -113,7 +113,7 @@ describe('GeoJSONExtension', () => {
   });
 
   test('should have correct metadata', () => {
-    expect(extension.id).toBe('astral:location:geojson');
+    expect(extension.id).toBe('astral:location:geojson'); // CLAUDE: Again, what is this identifier?
     expect(extension.name).toBe('GeoJSON');
     expect(extension.locationType).toBe('geojson');
     expect(extension.validate()).toBe(true);
@@ -153,8 +153,8 @@ describe('GeoJSONExtension', () => {
     expect(JSON.parse(featureString)).toEqual(feature);
 
     // Should throw for invalid GeoJSON
-    expect(() => extension.locationToString(null)).toThrow();
-    expect(() => extension.locationToString('not an object')).toThrow();
+    expect(() => extension.locationToString(null)).toThrow(); // CLAUDE: We need to specify which type of error this is, no? We designed a whole error hierarchy for this!
+    expect(() => extension.locationToString('not an object')).toThrow(); // CLAUDE: We need to specify which type of error this is, no? We designed a whole error hierarchy for this!
   });
 
   test('locationToGeoJSON should pass through valid GeoJSON objects', () => {
@@ -165,8 +165,8 @@ describe('GeoJSONExtension', () => {
     expect(featureGeoJSON).toEqual(feature);
 
     // Should throw for invalid GeoJSON
-    expect(() => extension.locationToGeoJSON(null)).toThrow();
-    expect(() => extension.locationToGeoJSON('not an object')).toThrow();
+    expect(() => extension.locationToGeoJSON(null)).toThrow(); // CLAUDE: We need to specify which type of error this is, no? We designed a whole error hierarchy for this!
+    expect(() => extension.locationToGeoJSON('not an object')).toThrow(); // CLAUDE: We need to specify which type of error this is, no? We designed a whole error hierarchy for this!
   });
 
   test('parseLocationString should parse GeoJSON strings', () => {
@@ -180,8 +180,8 @@ describe('GeoJSONExtension', () => {
     expect(parsedFeature).toEqual(feature);
 
     // Should throw for invalid JSON strings
-    expect(() => extension.parseLocationString('not a JSON string')).toThrow();
-    expect(() => extension.parseLocationString('{"invalid": "json"}')).toThrow();
+    expect(() => extension.parseLocationString('not a JSON string')).toThrow(); // CLAUDE: We need to specify which type of error this is, no? We designed a whole error hierarchy for this!
+    expect(() => extension.parseLocationString('{"invalid": "json"}')).toThrow(); // CLAUDE: We need to specify which type of error this is, no? We designed a whole error hierarchy for this!
   });
 
   test('getAllCoordinates should extract all positions from a GeoJSON object', () => {
@@ -225,6 +225,7 @@ describe('GeoJSONExtension', () => {
     const geomCollectionCoords = extension.getAllCoordinates(geometryCollection);
     // We expect all 4 coordinates (1 from point + 3 from lineString)
     expect(geomCollectionCoords).toHaveLength(4);
+    // CLAUDE: Should we include a toEqual test here?
   });
 
   test('checkCoordinatePreservation should detect any coordinate changes', () => {
@@ -241,7 +242,7 @@ describe('GeoJSONExtension', () => {
       type: 'Point',
       coordinates: [10.0000001, 20], // Very small change
     };
-    expect(extension.checkCoordinatePreservation(point, modifiedPoint)).toBe(false);
+    expect(extension.checkCoordinatePreservation(point, modifiedPoint)).toBe(false); // CLAUDE: Future work — implementing a warning for a tolerance threshold, and an error above that tolerance. Dev can set the threshold as they see fit.
 
     // Test with completely different coordinates
     const differentPoint = {
@@ -256,3 +257,86 @@ describe('GeoJSONExtension', () => {
     expect(extension.checkCoordinatePreservation('not GeoJSON', point)).toBe(false);
   });
 });
+
+/*
+CLAUDE (for future work and the implementation report): 
+Missing or Could Be Enhanced:
+Coordinate Range Validation
+  The tests don't verify if longitude is within [-180, 180]
+  The tests don't verify if latitude is within [-90, 90]
+More Complex Geometry Types
+  MultiPoint
+  MultiLineString
+  MultiPolygon
+Polygon-Specific Rules
+  Linear ring closure (partially tested)
+  Counter-clockwise exterior rings
+  Clockwise interior rings (holes)
+  Self-intersecting polygons
+Edge Cases
+  Empty collections
+  Nested collections
+  Very large coordinates
+  Decimal precision handling
+  Additional coordinate dimensions (altitude, etc.)
+
+**Short Answer**: This test suite is *quite thorough* for common GeoJSON validation scenarios but is *not fully comprehensive* because GeoJSON has numerous edge cases and advanced features that aren’t covered (e.g., bounding boxes, multi-geometries, ring-closure rules, coordinate range checks, etc.). However, for typical use cases—Points, LineStrings, Polygons, Features, FeatureCollections, GeometryCollections—it provides a strong baseline.
+
+---
+
+## What This Suite Covers Well
+
+1. **Type Guards**  
+   - The `isPosition` and `isGeoJSON` tests cover valid/invalid inputs and confirm that correct objects pass while incorrect structures fail.  
+   - You’re checking everything from simple arrays to null/undefined to string/object mismatches.
+
+2. **Core GeoJSON Structures**  
+   - **Point**, **LineString**, **Polygon**, **Feature**, **FeatureCollection**, and **GeometryCollection**.  
+   - Tests demonstrate both successful and unsuccessful validations.
+
+3. **Integration with a GeoJSON Extension**  
+   - Tests for methods like `validateLocation`, `locationToString`, `locationToGeoJSON`, `parseLocationString`, and `getAllCoordinates`.  
+   - Each method is validated for correct and incorrect inputs, which ensures good coverage for the extension’s main entry points.
+
+4. **Coordinate Preservation**  
+   - Verifying that small numeric differences cause a failure.  
+   - Checking that identical copies pass, while different coordinates fail.
+
+---
+
+## Potential Gaps for Truly Comprehensive Testing
+
+1. **Multi-Geometries**  
+   - **MultiPoint**, **MultiLineString**, and **MultiPolygon** are core GeoJSON geometry types but appear only indirectly or not at all in tests.  
+   - You might want explicit tests for these if your application uses them.
+
+2. **Polygon Winding / Ring Closure Rules**  
+   - GeoJSON polygons require each “ring” to be closed (first and last coordinates must match).  
+   - You have a single test for a semantically invalid polygon that doesn’t close, but you could add more cases:
+     - Polygons with multiple rings (holes)  
+     - Correct vs. incorrect ring ordering  
+     - Precisely matching first and last coordinates  
+
+3. **Bounding Boxes**  
+   - GeoJSON optionally supports a `bbox` property at various levels (e.g., on a Feature or FeatureCollection).  
+   - If you need to validate or handle bounding boxes, additional tests would be needed.
+
+4. **Coordinate Range / CRS**  
+   - Strictly speaking, the default GeoJSON specification (RFC 7946) uses WGS84 (EPSG:4326) with longitude from -180 to 180 and latitude from -90 to 90.  
+   - Your `isPosition` test includes a comment questioning whether range checking is done for lat/lon, which suggests it’s not. If you need that in your domain, you’d need more tests (or custom logic) to enforce those ranges.
+
+5. **Optional Properties**  
+   - Some advanced or optional properties like `id`, `bbox`, or extended geometry definitions are not tested.  
+
+6. **Performance and Stress Testing**  
+   - If you expect very large GeoJSON inputs, you may want performance-oriented tests to ensure your validations handle big datasets efficiently (though this is less about correctness and more about reliability at scale).
+
+---
+
+### Conclusion
+
+Your test suite already provides a **solid coverage** of common GeoJSON shapes and validation scenarios, especially for typical usage with Points, LineStrings, Polygons, and FeatureCollections. For most day-to-day needs, this level of coverage is excellent.
+
+If you need *truly exhaustive* coverage of the GeoJSON specification—particularly for multi-geometries, ring rules, bounding boxes, or coordinate range checks—you’ll want to add a few more targeted tests. Otherwise, this suite is a great foundation for ensuring your code can handle the standard GeoJSON cases properly.
+
+*/

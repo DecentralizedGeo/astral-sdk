@@ -18,7 +18,7 @@
  */
 
 import { BaseExtension, LocationTypeExtension } from '../../types';
-import * as turf from '@turf/turf';
+import * as turf from '@turf/turf'; // CLAUDE: I don't think we need ALL the turf functions, do we?? ... ?
 import { Feature, FeatureCollection, Geometry, GeometryCollection, Position } from 'geojson';
 
 /**
@@ -78,7 +78,7 @@ export function isPosition(arr: unknown): arr is Position {
  * will convert to/from GeoJSON for interoperability.
  */
 export class GeoJSONExtension extends BaseExtension implements LocationTypeExtension {
-  readonly id = 'astral:location:geojson';
+  readonly id = 'astral:location:geojson'; // CLAUDE: What is this??? Where did you get this identifier?
   readonly name = 'GeoJSON';
   readonly description = 'Handles all GeoJSON formats (Point, LineString, Polygon, etc.)';
   readonly locationType = 'geojson';
@@ -144,10 +144,10 @@ export class GeoJSONExtension extends BaseExtension implements LocationTypeExten
         }
         return true;
       } catch (error) {
-        return false;
+        return false; // CLAUDE: We need to raise an error so the developer knows what went wrong!
       }
     } catch (error) {
-      return false;
+      return false; // CLAUDE: We need to raise an error so the developer knows what went wrong!
     }
   }
 
@@ -160,10 +160,18 @@ export class GeoJSONExtension extends BaseExtension implements LocationTypeExten
    */
   locationToString(location: unknown): string {
     if (!this.validateLocation(location)) {
-      throw new Error('Invalid GeoJSON data');
+      throw new Error('Invalid GeoJSON data'); // CLAUDE: We should specify which type of error this is, no? We designed a whole error hierarchy for this!
     }
 
     // JSON.stringify ensures a canonical representation
+    // CLAUDE: When canonicalizing GeoJSON, the JSON Canonicalization Scheme (JCS) can be applied. This involves:
+    // Omitting whitespace between JSON tokens.
+    // Using ECMAScript's "JSON.stringify()" method for serialization, which ensures consistent representation of numbers and escape sequences.
+    // Sorting object properties lexicographically based on UTF-16 code units. (NOTE: I don't love this because it means we strip the sort order of the original GeoJSON object, which might be important for the developer ... thoughts?)
+    // String data in canonical GeoJSON should be preserved "as is" without applying Unicode Normalization.
+    // The canonical form should not include floating-point numbers, leading zeros, or "minus 0" for integers.
+    // All map keys must be quoted and appear in sorted order.
+
     return JSON.stringify(location);
   }
 
@@ -176,11 +184,11 @@ export class GeoJSONExtension extends BaseExtension implements LocationTypeExten
    */
   locationToGeoJSON(location: unknown): object {
     if (!this.validateLocation(location)) {
-      throw new Error('Invalid GeoJSON data');
+      throw new Error('Invalid GeoJSON data'); // CLAUDE: We should specify which type of error this is, no? We designed a whole error hierarchy for this!
     }
 
     // For GeoJSON extension, this is a pass-through as we're already in GeoJSON format
-    return location as object;
+    return location as object; // CLAUDE: I'm not sure, but do we want an object, or some more specific type? (Your call on this! What's most useful elsewhere?)
   }
 
   /**
@@ -188,22 +196,22 @@ export class GeoJSONExtension extends BaseExtension implements LocationTypeExten
    *
    * @param locationString - The GeoJSON string to parse
    * @returns Parsed GeoJSON object
-   * @throws Error if the input string is not valid GeoJSON
+   * @throws Error if the input string is not valid GeoJSON // CLAUDE: What kind of error? Be specific!
    */
   parseLocationString(locationString: string): unknown {
     try {
       const parsed = JSON.parse(locationString);
 
       if (!this.validateLocation(parsed)) {
-        throw new Error('Invalid GeoJSON data');
+        throw new Error('Invalid GeoJSON data'); // CLAUDE: What kind of error? Be specific!
       }
 
       return parsed;
     } catch (error) {
       if (error instanceof SyntaxError) {
-        throw new Error(`Invalid GeoJSON string: ${error.message}`);
+        throw new Error(`Invalid GeoJSON string: ${error.message}`); // CLAUDE: What kind of error? Be specific!
       }
-      throw error;
+      throw error; // CLAUDE: What kind of error? Be as specific as we can!
     }
   }
 

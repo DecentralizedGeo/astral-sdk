@@ -62,7 +62,7 @@ export function convertLocationFormat(
   const targetExtension = extensions.find(ext => ext.locationType === targetType.split('-')[0]);
 
   if (!sourceExtension) {
-    throw new Error(`No extension found for source format: ${sourceType}`);
+    throw new Error(`No extension found for source format: ${sourceType}`); // CLAUDE: What kind of error? Be specific, if it makes sense to be specific.
   }
 
   if (!targetExtension) {
@@ -75,7 +75,7 @@ export function convertLocationFormat(
 
   try {
     // Convert to GeoJSON as the intermediate format
-    const geoJSON = sourceExtension.locationToGeoJSON(location);
+    const geoJSON = sourceExtension.locationToGeoJSON(location); // CLAUDE: Does this ensure that coordinates are strictly preserved?
 
     // If target is GeoJSON, we're done
     if (targetExtension.locationType === 'geojson') {
@@ -84,9 +84,9 @@ export function convertLocationFormat(
 
     // Otherwise, convert from GeoJSON to target format
     // This requires that all extensions know how to convert from GeoJSON
-    return targetExtension.parseLocationString(JSON.stringify(geoJSON));
+    return targetExtension.parseLocationString(JSON.stringify(geoJSON)); // CLAUDE: Are you confident that parseLocationString will always accept GeoJSON and return a valid location in whatever format?
   } catch (error) {
-    throw new Error(
+    throw new Error( // CLAUDE: What kind of error? Be specific!
       `Failed to convert from ${sourceType} to ${targetType}: ${error instanceof Error ? error.message : String(error)}`
     );
   }
