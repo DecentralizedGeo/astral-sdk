@@ -1,9 +1,9 @@
 /**
  * Application Media Extension
- * 
+ *
  * Handles application MIME types including:
  * - application/pdf
- * 
+ *
  * @module extensions/media/builtins/application
  */
 
@@ -13,7 +13,7 @@
  * @param data The application data (typically base64-encoded)
  * @returns Whether the application file is valid
  */
-export function validateApplication(mimeType: string, data: string): boolean {
+export function validateApplication(_mimeType: string, _data: string): boolean {
   // Placeholder for actual validation logic
   return true;
 }
@@ -36,9 +36,9 @@ export function formatApplication(mimeType: string, data: string): string {
  */
 export function isSupportedApplicationType(mimeType: string): boolean {
   const supportedTypes = [
-    'application/pdf'
+    'application/pdf',
     // More types can be added in future versions
   ];
-  
+
   return supportedTypes.includes(mimeType);
 }

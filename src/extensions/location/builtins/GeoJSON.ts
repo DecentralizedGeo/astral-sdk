@@ -1,15 +1,15 @@
 /**
  * GeoJSON Format Extension
- * 
+ *
  * Provides support for GeoJSON format in location proofs
  */
 
-export function validateGeoJSON(data: any): boolean {
+export function validateGeoJSON(_data: unknown): boolean {
   // Placeholder for validation logic
   return true;
 }
 
-export function formatGeoJSON(data: any): string {
+export function formatGeoJSON(data: unknown): string {
   // Placeholder for formatting logic
   return JSON.stringify(data);
 }

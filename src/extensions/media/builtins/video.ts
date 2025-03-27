@@ -1,10 +1,10 @@
 /**
  * Video Media Extension
- * 
+ *
  * Handles video MIME types including:
  * - video/mp4
  * - video/quicktime (MOV)
- * 
+ *
  * @module extensions/media/builtins/video
  */
 
@@ -14,7 +14,7 @@
  * @param data The video data (typically base64-encoded)
  * @returns Whether the video is valid
  */
-export function validateVideo(mimeType: string, data: string): boolean {
+export function validateVideo(_mimeType: string, _data: string): boolean {
   // Placeholder for actual validation logic
   return true;
 }
@@ -26,7 +26,7 @@ export function validateVideo(mimeType: string, data: string): boolean {
  * @returns Formatted video data
  * @note WE WANT TO STORE THE VIDEO DATA EXACTLY AS PROVIDED BY THE USER
  * @note SO I'M NOT SURE THIS FUNCTION IS APPROPRIATE
- * @note HOWEVER, we also want to visualize the video in the UI, so 
+ * @note HOWEVER, we also want to visualize the video in the UI, so
  * @note reformatting may be necessary for internal use
  */
 export function formatVideo(mimeType: string, data: string): string {
@@ -42,8 +42,8 @@ export function formatVideo(mimeType: string, data: string): string {
 export function isSupportedVideoType(mimeType: string): boolean {
   const supportedTypes = [
     'video/mp4',
-    'video/quicktime' // MOV format
+    'video/quicktime', // MOV format
   ];
-  
+
   return supportedTypes.includes(mimeType);
 }

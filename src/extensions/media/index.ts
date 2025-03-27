@@ -1,9 +1,9 @@
 /**
  * Media Extensions Module
- * 
+ *
  * This module exports media type handlers that manage validation, conversion,
  * and formatting of various media types for use with Astral SDK.
- * 
+ *
  * @module extensions/media
  */
 
@@ -21,7 +21,7 @@ import * as applicationExt from './builtins/application';
 export function validateMedia(mimeType: string, data: string): boolean {
   // Route to the appropriate handler based on MIME type category
   const category = mimeType.split('/')[0];
-  
+
   switch (category) {
     case 'image':
       return imageExt.validateImage(mimeType, data);
@@ -43,7 +43,7 @@ export function validateMedia(mimeType: string, data: string): boolean {
  */
 export function isSupportedMimeType(mimeType: string): boolean {
   const category = mimeType.split('/')[0];
-  
+
   switch (category) {
     case 'image':
       return imageExt.isSupportedImageType(mimeType);

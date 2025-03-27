@@ -1,12 +1,12 @@
 /**
  * Audio Media Extension
- * 
+ *
  * Handles audio MIME types including:
  * - audio/mpeg (MP3)
  * - audio/wav
  * - audio/ogg
  * - audio/aac
- * 
+ *
  * @module extensions/media/builtins/audio
  */
 
@@ -16,7 +16,7 @@
  * @param data The audio data (typically base64-encoded)
  * @returns Whether the audio is valid
  */
-export function validateAudio(mimeType: string, data: string): boolean {
+export function validateAudio(_mimeType: string, _data: string): boolean {
   // Placeholder for actual validation logic
   return true;
 }
@@ -28,7 +28,7 @@ export function validateAudio(mimeType: string, data: string): boolean {
  * @returns Formatted audio data
  * @note WE WANT TO STORE THE AUDIO DATA EXACTLY AS PROVIDED BY THE USER
  * @note SO I'M NOT SURE THIS FUNCTION IS APPROPRIATE
- * @note HOWEVER, we also want to use the audio in the UI, so 
+ * @note HOWEVER, we also want to use the audio in the UI, so
  * @note reformatting may be necessary for internal use
  */
 export function formatAudio(mimeType: string, data: string): string {
@@ -42,14 +42,15 @@ export function formatAudio(mimeType: string, data: string): string {
  * @returns Whether the MIME type is supported
  */
 export function isSupportedAudioType(mimeType: string): boolean {
-  const supportedTypes = [ // NOTE: This may be too much, 
-              // if it is difficult to handle all of these types
-              // we can remove some less common ones
+  const supportedTypes = [
+    // NOTE: This may be too much,
+    // if it is difficult to handle all of these types
+    // we can remove some less common ones
     'audio/mpeg', // MP3 format
     'audio/wav',
     'audio/ogg',
-    'audio/aac'
+    'audio/aac',
   ];
-  
+
   return supportedTypes.includes(mimeType);
 }

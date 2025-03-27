@@ -139,6 +139,38 @@ Commit hash: <todo>
 - Extensions are validated before registration
 - Warnings are issued when replacing existing extensions
 
+#### Additional Design Considerations:
+
+1. **Extension Priority**:
+   - Extensions should be registered in a deliberate order, with more specific formats taking precedence
+   - The `detectLocationFormat` method returns the first matching extension, so registration order matters
+   - Recommended order: GeoJSON, WKT, Coordinate, H3
+
+2. **Type Definitions**:
+   - We'll use `@types/geojson` for proper TypeScript typing of GeoJSON structures
+   - This will improve type safety when converting between different location formats
+
+3. **Warning Mechanism**:
+   - Currently using `console.warn` for extension replacements
+   - For a production library, we may want to implement a more sophisticated logging system
+   - This could be configurable via the SDK's debug/verbose settings
+
+4. **SDK Integration**:
+   - The AstralSDK class will initialize an ExtensionRegistry instance
+   - It will expose methods to register custom extensions
+   - Built-in extensions will be registered during SDK initialization
+   - Example: `sdk.extensions.registerLocationExtension(myCustomExtension)`
+
+5. **Conversion Precision**:
+   - We'll implement strict equality checks to detect ANY change in coordinate values
+   - This will involve comparing coordinates before and after format conversion
+   - If any coordinates change, we'll trigger appropriate warnings
+
+6. **Error Handling**:
+   - Clear error messages will be provided for validation failures
+   - Messages should help developers understand how to fix issues
+   - Extensions should validate input data thoroughly
+
 #### Next Steps:
 1. Implement location format extensions (GeoJSON, Coordinate, WKT, H3)
 2. Update media extensions to use the registry pattern
