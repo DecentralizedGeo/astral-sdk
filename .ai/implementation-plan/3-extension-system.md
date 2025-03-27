@@ -15,10 +15,11 @@
        - [x] Pre-register all built-in extensions by default
        - [x] Support custom extension registration
      
+     Task 2: Location Extensions
      - [ ] Create `src/extensions/location/index.ts` exporting all location extensions:
        - [ ] Implement location format handlers using established libraries:
          - [ ] `GeoJSONExtension`: Support ALL GeoJSON types (Point, LineString, Polygon, MultiPoint, MultiLineString, MultiPolygon, Feature, FeatureCollection) using @turf/turf
-         - [ ] `CoordinateExtension`: Parse/format decimal lat/lng coordinates
+         - [ ] `CoordinateExtension`: Parse/format decimal lat/lng coordinates as both array and object ([lat, lng] and {lat: 0, lng: 0})
          - [ ] `WKTExtension`: Well-Known Text format (wellknown library)
          - [ ] `H3Extension`: Hexagonal hierarchical geospatial indexing (h3-js)
          - [ ] Use GeoJSON as the central "hub" format for conversions between types

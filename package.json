@@ -52,6 +52,8 @@
   "license": "MIT",
   "dependencies": {
     "@ethereum-attestation-service/eas-sdk": "^2.7.0",
+    "@turf/turf": "7.2.0",
+    "@types/geojson": "7946.0.16",
     "ethers": "^6.13.0"
   },
   "devDependencies": {
