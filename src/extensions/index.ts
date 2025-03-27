@@ -6,16 +6,16 @@
  * proof recipes.
  */
 
-import { 
+import {
   ExtensionRegistry as IExtensionRegistry,
-  LocationTypeExtension, 
-  MediaAttachmentExtension, 
-  ProofRecipeExtension 
+  LocationTypeExtension,
+  MediaAttachmentExtension,
+  ProofRecipeExtension,
 } from './types';
 
 /**
  * ExtensionRegistry manages all extensions in the SDK.
- * 
+ *
  * This class allows registration and retrieval of location format, media type,
  * and proof recipe extensions. Each AstralSDK instance has its own registry,
  * allowing for customization without global state issues.
@@ -28,9 +28,9 @@ export class ExtensionRegistry implements IExtensionRegistry {
 
   /**
    * Creates a new ExtensionRegistry.
-   * 
+   *
    * By default, all built-in extensions are registered automatically.
-   * 
+   *
    * @param registerBuiltIns - Whether to register built-in extensions (default: true)
    */
   constructor(registerBuiltIns = true) {
@@ -39,7 +39,7 @@ export class ExtensionRegistry implements IExtensionRegistry {
     this.mediaExtensions = new Map();
     this.mediaTypeMapping = new Map();
     this.recipeExtensions = new Map();
-    
+
     // Register built-in extensions if requested
     if (registerBuiltIns) {
       this.registerBuiltInExtensions();
@@ -48,9 +48,9 @@ export class ExtensionRegistry implements IExtensionRegistry {
 
   /**
    * Registers a location format extension.
-   * 
+   *
    * If an extension with the same locationType already exists, it will be replaced and a warning will be issued.
-   * 
+   *
    * @param extension - The location format extension to register
    * @throws Error if the extension doesn't pass its own validation
    */
@@ -59,17 +59,26 @@ export class ExtensionRegistry implements IExtensionRegistry {
     if (!extension.validate()) {
       throw new Error(`Extension validation failed for ${extension.id}`);
     }
-    
+
+    // Check if an extension with this locationType already exists
+    const existingExtension = this.locationExtensions.get(extension.locationType);
+    if (existingExtension && existingExtension.id !== extension.id) {
+      console.warn(
+        `Warning: Replacing existing location extension (${existingExtension.id}) ` +
+          `for locationType '${extension.locationType}' with new extension (${extension.id})`
+      );
+    }
+
     // Register the extension using its locationType as the key
     this.locationExtensions.set(extension.locationType, extension);
   }
 
   /**
    * Registers a media type extension.
-   * 
+   *
    * The extension is registered for each of its supported media types.
    * If an extension for a specific media type already exists, it will be replaced and a warning will be issued.
-   * 
+   *
    * @param extension - The media type extension to register
    * @throws Error if the extension doesn't pass its own validation
    */
@@ -78,21 +87,37 @@ export class ExtensionRegistry implements IExtensionRegistry {
     if (!extension.validate()) {
       throw new Error(`Extension validation failed for ${extension.id}`);
     }
-    
+
+    // Check if an extension with this ID already exists
+    const existingExtension = this.mediaExtensions.get(extension.id);
+    if (existingExtension && existingExtension.id !== extension.id) {
+      console.warn(
+        `Warning: Replacing existing media extension (${existingExtension.id}) ` +
+          `with new extension (${extension.id})`
+      );
+    }
+
     // Register the extension by its ID
     this.mediaExtensions.set(extension.id, extension);
-    
+
     // Also register it for each of its supported media types for easy lookup
     for (const mediaType of extension.supportedMediaTypes) {
+      const existingMediaTypeHandler = this.mediaTypeMapping.get(mediaType);
+      if (existingMediaTypeHandler && existingMediaTypeHandler.id !== extension.id) {
+        console.warn(
+          `Warning: Replacing existing handler (${existingMediaTypeHandler.id}) ` +
+            `for mediaType '${mediaType}' with new extension (${extension.id})`
+        );
+      }
       this.mediaTypeMapping.set(mediaType, extension);
     }
   }
 
   /**
    * Registers a proof recipe extension.
-   * 
+   *
    * If an extension with the same recipeType already exists, it will be replaced and a warning will be issued.
-   * 
+   *
    * @param extension - The proof recipe extension to register
    * @throws Error if the extension doesn't pass its own validation
    */
@@ -101,26 +126,44 @@ export class ExtensionRegistry implements IExtensionRegistry {
     if (!extension.validate()) {
       throw new Error(`Extension validation failed for ${extension.id}`);
     }
-    
+
+    // Check if an extension with this recipeType already exists
+    const existingExtension = this.recipeExtensions.get(extension.recipeType);
+    if (existingExtension && existingExtension.id !== extension.id) {
+      console.warn(
+        `Warning: Replacing existing recipe extension (${existingExtension.id}) ` +
+          `for recipeType '${extension.recipeType}' with new extension (${extension.id})`
+      );
+    }
+
     // Register the extension using its recipeType as the key
     this.recipeExtensions.set(extension.recipeType, extension);
   }
 
   /**
    * Gets a location extension by type.
-   * 
-   * @param locationType - The location type to retrieve
+   *
+   * This method only attempts to match the first component of the Location Format Identifier
+   * (e.g., 'geojson', 'coordinate', 'wkt'). Subtypes and additional details are handled by
+   * the extension itself.
+   *
+   * @param locationType - The location type to retrieve (e.g., 'geojson', 'coordinate')
    * @returns The location extension or undefined if not found
    */
   getLocationExtension(locationType: string): LocationTypeExtension | undefined {
-    // CLAUDE: we only need to match this to the first component in the Location Format Identifier — subtypes will be handled by the extension itself.
-    return this.locationExtensions.get(locationType);
+    // Extract the base location type (first component of the format identifier)
+    const baseType = locationType.split('-')[0];
+    return this.locationExtensions.get(baseType);
   }
 
   /**
    * Gets a media extension by media type.
-   * 
-   * @param mediaType - The media MIME type to retrieve
+   *
+   * This method looks up the appropriate handler based on the full MIME type
+   * (e.g., 'image/jpeg', 'video/mp4'). Typically, extensions are registered
+   * to handle all subtypes for a primary MIME type.
+   *
+   * @param mediaType - The complete MIME type to retrieve handler for (e.g., 'image/jpeg')
    * @returns The media extension or undefined if not found
    */
   getMediaExtension(mediaType: string): MediaAttachmentExtension | undefined {
@@ -129,7 +172,7 @@ export class ExtensionRegistry implements IExtensionRegistry {
 
   /**
    * Gets a recipe extension by recipe type.
-   * 
+   *
    * @param recipeType - The recipe type to retrieve
    * @returns The recipe extension or undefined if not found
    */
@@ -139,7 +182,7 @@ export class ExtensionRegistry implements IExtensionRegistry {
 
   /**
    * Gets all registered location extensions.
-   * 
+   *
    * @returns Array of all registered location extensions
    */
   getAllLocationExtensions(): LocationTypeExtension[] {
@@ -148,7 +191,7 @@ export class ExtensionRegistry implements IExtensionRegistry {
 
   /**
    * Gets all registered media extensions.
-   * 
+   *
    * @returns Array of all registered media extensions
    */
   getAllMediaExtensions(): MediaAttachmentExtension[] {
@@ -157,26 +200,27 @@ export class ExtensionRegistry implements IExtensionRegistry {
 
   /**
    * Gets all registered recipe extensions.
-   * 
+   *
    * @returns Array of all registered recipe extensions
    */
   getAllRecipeExtensions(): ProofRecipeExtension[] {
     return Array.from(this.recipeExtensions.values());
   }
-  
+
   /**
    * Detect the format of a location object.
-   * 
+   *
    * This method tries all registered location extensions to find one that can
    * validate the given location data, returning the locationType of the first
    * matching extension.
-   * 
+   *
    * @param location - The location data to detect the format of
    * @returns The detected locationType, or undefined if no match is found
    */
   detectLocationFormat(location: unknown): string | undefined {
     for (const extension of this.locationExtensions.values()) {
-      if (extension.validateLocation(location)) { // CLAUDE: This is good, but I can imagine a case where a location might be valid for multiple extensions. So we should register location extensions in our preferred order — and return the first match. (I'm not sure if this is a problem, but it's something to be aware of.)
+      if (extension.validateLocation(location)) {
+        // CLAUDE: This is good, but I can imagine a case where a location might be valid for multiple extensions. So we should register location extensions in our preferred order — and return the first match. (I'm not sure if this is a problem, but it's something to be aware of.)
         return extension.locationType;
       }
     }
@@ -185,19 +229,17 @@ export class ExtensionRegistry implements IExtensionRegistry {
 
   /**
    * Registers all built-in extensions.
-   * 
+   *
    * This method is called automatically during construction unless disabled.
    * It registers all built-in location format and media type extensions.
-   * 
+   *
    * Note: Actual implementations will be added after creating the extension classes.
    */
   private registerBuiltInExtensions(): void {
     // This will be implemented once the extension classes are created
     // For now, this is a placeholder
-    
     // TODO: Register built-in location extensions
     // e.g., this.registerLocationExtension(new GeoJSONExtension());
-    
     // TODO: Register built-in media extensions
     // e.g., this.registerMediaExtension(new ImageExtension());
   }

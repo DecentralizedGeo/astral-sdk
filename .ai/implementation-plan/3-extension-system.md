@@ -8,12 +8,12 @@
        - [x] Location formats: `coordinate-decimal`, `geojson`, `wkt`, `h3`
        - [x] Media types: `image`, `video`, `audio`, `document`. Focus on the most commonly-used subtypes only (JPEG, PNG, mp4, mp3, PDF, maybe others if it's easy)
      
-     - [ ] Implement `ExtensionRegistry` system in `src/extensions/index.ts`:
-       - [ ] Design extension registry to manage all extension types
-       - [ ] Implement methods to register and retrieve extensions
-       - [ ] Ensure AstralSDK instances have their own extension registries
-       - [ ] Pre-register all built-in extensions by default
-       - [ ] Support custom extension registration
+     - [x] Implement `ExtensionRegistry` system in `src/extensions/index.ts`:
+       - [x] Design extension registry to manage all extension types
+       - [x] Implement methods to register and retrieve extensions
+       - [x] Ensure AstralSDK instances have their own extension registries
+       - [x] Pre-register all built-in extensions by default
+       - [x] Support custom extension registration
      
      - [ ] Create `src/extensions/location/index.ts` exporting all location extensions:
        - [ ] Implement location format handlers using established libraries:
@@ -97,4 +97,49 @@ Commit hash: <todo>
 
 ## Implementation Report:
 
-[TODO]
+### Task 1: ExtensionRegistry Implementation
+
+#### Initial Implementation:
+- Created the `ExtensionRegistry` class in `src/extensions/index.ts`
+- Implemented registration methods for location, media, and recipe extensions
+- Added retrieval methods to get extensions by their respective types
+- Implemented a format detection method for location data
+- Set up a placeholder for registering built-in extensions
+- Created comprehensive tests for the registry functionality
+
+#### Dev Review & Discussion:
+- Identified the need for warnings when replacing existing extensions
+- Clarified the approach for handling Location Format Identifiers:
+  - Extensions should be registered by their base type (e.g., 'geojson', 'coordinate')
+  - The registry extracts the base type from complex identifiers like 'geojson-point'
+  - Subtypes and additional details are handled by the extension itself
+- Discussed Media Extension design:
+  - Media Extensions align with primary MIME types ('image', 'video', etc.)
+  - Each extension handles all subtypes for its primary type
+  - Full MIME types are used for lookup in the registry
+- Noted potential ambiguity with multiple valid extensions for a location
+  - Solution: Register extensions in preferred order and return the first match
+- Confirmed approach for Solidity `bytes` compatibility:
+  - Uint8Array is a good JavaScript representation for binary data
+  - For Solidity integration, conversion between Uint8Array and hex strings will be handled
+
+#### Enhancements:
+- Implemented warning system for overwriting extensions
+- Updated location extension retrieval to extract base types from format identifiers
+- Added detailed documentation for extension matching behavior
+- Improved test coverage for warnings and base type extraction
+- Added comments clarifying design decisions
+
+#### Technical Notes:
+- The ExtensionRegistry follows a per-instance pattern, with each SDK instance having its own registry
+- Extensions are registered in maps for efficient lookup
+- Media extensions use a dual mapping system:
+  - By extension ID (for getAllMediaExtensions)
+  - By MIME type (for getMediaExtension)
+- Extensions are validated before registration
+- Warnings are issued when replacing existing extensions
+
+#### Next Steps:
+1. Implement location format extensions (GeoJSON, Coordinate, WKT, H3)
+2. Update media extensions to use the registry pattern
+3. Integrate the extension system with the core SDK workflow
