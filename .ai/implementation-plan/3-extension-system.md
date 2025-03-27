@@ -1,17 +1,22 @@
 ## **3. Extension System Implementation**  
   *Description*: Implement robust Location Type and Media Type extensions supporting common formats specified in the Astral documentation, working seamlessly with both offchain and onchain workflows.
+
+  The overall goal is to allow developers to add location data formatted in the supported types, and have it validated and added to the location proof. 
    
    - *Sub-tasks*: 
-     - [ ] Review Astral documentation to identify core supported formats:
-       - [ ] Location formats: GeoJSON, decimal coordinates, WKT, H3
-       - [ ] Media types: Focus on common web formats only (JPEG, PNG, PDF)
+     - [ ] Review Astral documentation (.ai/docs/*) to understand our designs and identify core supported formats:
+       - [ ] Location formats: `coordinate-decimal`, `geojson`, `wkt`, `h3`
+       - [ ] Media types: `image`, `video`, `audio`, `document`. Focus on the most commonly-used subtypes only (JPEG, PNG, mp4, mp3, PDF, maybe others if it's easy)
      
      - [ ] Create `src/extensions/location/index.ts` exporting all location utilities:
        - [ ] Implement comprehensive location format handlers:
-         - [ ] `GeoJSONHandler`: Support point, polygon, linestring with validation (primary focus)
-         - [ ] `DecimalCoordinatesHandler`: Parse/format decimal lat/lng coordinates
+         - [ ] `GeoJSONHandler`: Support point, polygon, linestring with validation (primary focus). Use well-known libraries for parsing and formatting. Which do you recommend? 
+         - [ ] `CoordinatesHandler`: Parse/format decimal lat/lng coordinates
          - [ ] `WKTHandler`: Well-Known Text format parsing/formatting
          - [ ] `H3Handler`: Hexagonal hierarchical geospatial indexing system
+         Do note that all the handlers should retain the original input data exactly as it was received. If it needs to be modified in order to conform to the format, make sure to keep a copy of the original data and raise a warning.
+         If the developer specifies a `targetLocationFormat`, convert the data to that format before returning an `UnsignedLocationProof` object.
+         The purpose of this workflow is to accommodate different location formats, and to ensure that the location data is always in the correct format before being added to the location proof. This is important for downstream workflows that use the location data — we need it coerced into a format we can interpret.
          
        - [ ] Create unified interface for all location formats:
          - [ ] `formatLocation(data: any, format: LocationFormat): string` - Convert to standardized format. Include a return locationType string that adheres to the Location Type Format Identifier Naming Convention.
@@ -24,8 +29,15 @@
          - [ ] Support for JPEG and PNG formats
          - [ ] Simple validation of image data
          - [ ] Base64 encoding/decoding utilities
-         
-       - [ ] **Priority 2**: Add minimal support for common document formats
+      - [ ] **Priority 2**: Implement basic video handling
+        - [ ] Support for mp4 formats
+        - [ ] Simple validation of video data
+        - [ ] Base64 encoding/decoding utilities
+      - [ ] **Priority 3**: Add minimal support for common audio formats
+        - [ ] Support for mp3 formats
+        - [ ] Simple validation of audio data
+        - [ ] Base64 encoding/decoding utilities
+      - [ ] **Priority 4**: Add minimal support for common document formats
          - [ ] Basic PDF handling
          - [ ] Simple MIME type validation
          

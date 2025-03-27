@@ -56,6 +56,8 @@ Assemble and normalize all relevant location proof data into an **unsigned** obj
   - The SDK's location extensions convert these to the canonical form required by EAS.
 - **`locationType?: string`**  
   - An optional identifier specifying how to interpret `location`. For instance, `'geojson-point'`, `'wkt-polygon'`, or `'h3'`.
+- **`targetLocationFormat?: string`**
+  - An optional identifier specifying the format the location data should be converted to. 
 - **`media?: MediaInput[]`**  
   - Optional media attachments (images, videos, etc.). Each must specify a `mediaType` (MIME) and `data`.
 - **`memo?: string`**  

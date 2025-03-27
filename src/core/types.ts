@@ -200,6 +200,7 @@ export interface PublicationRecord {
  *
  * @property location - Location data in various formats (GeoJSON, WKT, coordinate pair, H3)
  * @property locationType - Recommended hint about the format of the location data
+ * @property targetLocationFormat - Optional identifier specifying the format the location data should be converted to.
  * @property timestamp - When the location event occurred (defaults to current time)
  * @property media - Optional media attachments
  * @property memo - Optional textual note
@@ -209,7 +210,7 @@ export interface LocationProofInput {
   // Location data (flexible format)
   readonly location: unknown;
   readonly locationType?: string;
-
+  readonly targetLocationFormat?: string;
   // Timing
   readonly timestamp?: Date;
 
