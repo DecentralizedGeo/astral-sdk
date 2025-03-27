@@ -44,10 +44,13 @@ class MockLocationExtension implements LocationTypeExtension {
 }
 
 class MockMediaExtension implements MediaAttachmentExtension {
-  readonly id = 'mock-media';
+  readonly id = 'mock';
   readonly name = 'Mock Media Extension';
   readonly description = 'A mock media extension for testing';
-  readonly supportedMediaTypes = ['image/mock', 'video/mock'];
+  readonly supportedMediaTypes = ['mock/mock1', 'mock/mock2']; // CLAUDE: I am currently thinking Media Extensions should align to MIME type,
+  //  and subtypes should be handled by the extension itself. 
+  // Meaning the first part of the MIME type identifier should probably be the extension identifier.
+  // What do you think about this?
 
   validate(): boolean {
     return true;
@@ -80,7 +83,7 @@ class MockRecipeExtension implements ProofRecipeExtension {
     return true;
   }
 
-  recipeToString(recipeData: unknown): Uint8Array {
+  recipeToString(recipeData: unknown): Uint8Array { // CLAUDE: I am not sure if Uint8Array is compatible with Solidity `bytes` type. Can you confirm?
     return new Uint8Array([1, 2, 3]);
   }
 
@@ -116,11 +119,11 @@ describe('ExtensionRegistry', () => {
   test('should register and retrieve media extensions by MIME type', () => {
     registry.registerMediaExtension(mediaExt);
     
-    const retrievedImage = registry.getMediaExtension('image/mock');
-    const retrievedVideo = registry.getMediaExtension('video/mock');
+    const retrievedMock1 = registry.getMediaExtension('mock/mock1'); // CLAUDE: Does this need to be refactored based on the above comment?
+    const retrievedMock2 = registry.getMediaExtension('mock/mock2');
     
-    expect(retrievedImage).toBe(mediaExt);
-    expect(retrievedVideo).toBe(mediaExt);
+    expect(retrievedMock1).toBe(mediaExt);
+    expect(retrievedMock2).toBe(mediaExt);
   });
 
   test('should register and retrieve recipe extensions', () => {
@@ -155,7 +158,7 @@ describe('ExtensionRegistry', () => {
     const validLocation = { lat: 10, lon: 20 };
     const invalidLocation = 'not an object';
     
-    const detectedFormat = registry.detectLocationFormat(validLocation);
+    const detectedFormat = registry.detectLocationFormat(validLocation); // CLAUDE: Is this going to work?
     const unknownFormat = registry.detectLocationFormat(invalidLocation);
     
     expect(detectedFormat).toBe('mock-location-type');
@@ -171,7 +174,7 @@ describe('ExtensionRegistry', () => {
     }).toThrow();
   });
 
-  test('should replace extensions with the same identifier', () => {
+  test('should replace extensions with the same identifier and issue a warning', () => { // CLAUDE: You still need to implement the warning system.
     registry.registerLocationExtension(locationExt);
     
     const newLocationExt = new MockLocationExtension();

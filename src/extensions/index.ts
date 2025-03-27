@@ -49,7 +49,7 @@ export class ExtensionRegistry implements IExtensionRegistry {
   /**
    * Registers a location format extension.
    * 
-   * If an extension with the same locationType already exists, it will be replaced.
+   * If an extension with the same locationType already exists, it will be replaced and a warning will be issued.
    * 
    * @param extension - The location format extension to register
    * @throws Error if the extension doesn't pass its own validation
@@ -68,7 +68,7 @@ export class ExtensionRegistry implements IExtensionRegistry {
    * Registers a media type extension.
    * 
    * The extension is registered for each of its supported media types.
-   * If an extension for a specific media type already exists, it will be replaced.
+   * If an extension for a specific media type already exists, it will be replaced and a warning will be issued.
    * 
    * @param extension - The media type extension to register
    * @throws Error if the extension doesn't pass its own validation
@@ -91,7 +91,7 @@ export class ExtensionRegistry implements IExtensionRegistry {
   /**
    * Registers a proof recipe extension.
    * 
-   * If an extension with the same recipeType already exists, it will be replaced.
+   * If an extension with the same recipeType already exists, it will be replaced and a warning will be issued.
    * 
    * @param extension - The proof recipe extension to register
    * @throws Error if the extension doesn't pass its own validation
@@ -113,6 +113,7 @@ export class ExtensionRegistry implements IExtensionRegistry {
    * @returns The location extension or undefined if not found
    */
   getLocationExtension(locationType: string): LocationTypeExtension | undefined {
+    // CLAUDE: we only need to match this to the first component in the Location Format Identifier — subtypes will be handled by the extension itself.
     return this.locationExtensions.get(locationType);
   }
 
@@ -175,7 +176,7 @@ export class ExtensionRegistry implements IExtensionRegistry {
    */
   detectLocationFormat(location: unknown): string | undefined {
     for (const extension of this.locationExtensions.values()) {
-      if (extension.validateLocation(location)) {
+      if (extension.validateLocation(location)) { // CLAUDE: This is good, but I can imagine a case where a location might be valid for multiple extensions. So we should register location extensions in our preferred order — and return the first match. (I'm not sure if this is a problem, but it's something to be aware of.)
         return extension.locationType;
       }
     }
