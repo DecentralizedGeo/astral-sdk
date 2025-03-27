@@ -42,7 +42,7 @@ Where:
 | Images   | `image`     | `jpeg`, `png`, `gif`, `webp`, `tiff`, `svg+xml` | `image/jpeg`, `image/png`, `image/svg+xml` | Limited Support | Standard web image formats; SVG supports vector graphics |
 | Videos   | `video`     | `mp4`, `webm`, `ogg`, `quicktime` | `video/mp4`, `video/webm` | Limited Support | Common video formats for web and mobile |
 | Audio    | `audio`     | `mp3`, `wav`, `ogg`, `aac` | `audio/mpeg`, `audio/wav` | Limited Support | Standard audio formats |
-| Documents| `application` | `pdf`, `msword`, `vnd.openxmlformats-officedocument.wordprocessingml.document` | `application/pdf` | Limited Support | Document formats, with PDF as primary supported type |
+| Documents| `application` | `json`, `pdf`, `msword`, `vnd.openxmlformats-officedocument.wordprocessingml.document` | `application/pdf` | Limited Support | Document formats, with JSON as primary supported type — JSON objects can serve as attribute tables. PDFs also supported in v0.1 |
 | 3D Models | `model`    | `gltf-binary`, `gltf+json`, `vnd.usdz+zip` | `model/gltf-binary` | Future | 3D model formats for AR/VR applications |
 | Point Clouds | `application` | `vnd.las`, `vnd.e57` | `application/vnd.las` | Future | Specialized formats for LiDAR and 3D scanning |
 | Sensor Data | `application` | `octet-stream`, `json` | `application/json` | Future | Raw or structured sensor data |
