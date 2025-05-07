@@ -1,123 +1,116 @@
 ## **3. Extension System Implementation**  
-  *Description*: Implement robust Location Type and Media Type extensions supporting common formats specified in the Astral documentation, working seamlessly with both offchain and onchain workflows.
+  *Description*: Implement a focused Extension System MVP supporting GeoJSON location format and image media type, with clean integration into both offchain and onchain workflows.
 
-  The overall goal is to allow developers to add location data formatted in the supported types, have it validated, and gracefully added to the location proof. The system should be flexible enough to accommodate different formats while ensuring data integrity.
+  The goal for the MVP is to deliver a working extension system with the most essential formats (GeoJSON for location, JPEG/PNG for images) that integrates properly with the SDK. This will provide immediate value while setting up the architecture for additional formats later.
    
    - *Sub-tasks*: 
-     - [x] Review Astral documentation (.ai/docs/*) to understand our designs and identify core supported formats:
-       - [x] Location formats: `coordinate-decimal`, `geojson`, `wkt`, `h3`
-       - [x] Media types: `image`, `video`, `audio`, `document`. Focus on the most commonly-used subtypes only (JPEG, PNG, mp4, mp3, PDF, maybe others if it's easy)
-     
+     - [x] Review Astral documentation (.ai/docs/*) to understand our designs and identify core supported formats
      - [x] Implement `ExtensionRegistry` system in `src/extensions/index.ts`:
        - [x] Design extension registry to manage all extension types
        - [x] Implement methods to register and retrieve extensions
        - [x] Ensure AstralSDK instances have their own extension registries
        - [x] Pre-register all built-in extensions by default
        - [x] Support custom extension registration
-     
-     Task 2: Location Extensions
-     - [x] Create `src/extensions/location/index.ts` exporting all location extensions:
-       - [ ] Implement location format handlers using established libraries:
-         - [x] `GeoJSONExtension`: Support ALL GeoJSON types (Point, LineString, Polygon, MultiPoint, MultiLineString, MultiPolygon, Feature, FeatureCollection) using @turf/turf
-         - [ ] `CoordinateExtension`: Parse/format decimal lat/lng coordinates as both array and object ([lat, lng] and {lat: 0, lng: 0})
-         - [ ] `WKTExtension`: Well-Known Text format (wellknown library)
-         - [ ] `H3Extension`: Hexagonal hierarchical geospatial indexing (h3-js)
-         - [x] Use GeoJSON as the central "hub" format for conversions between types
-         - [x] Implement warning system that triggers on ANY coordinate value changes during conversion
-         - [ ] Preserve original input data in `_originalInputs` field 
-       
-       - [x] Implement helper functions to simplify usage:
-         - [x] `detectLocationFormat(location: unknown): string` - Auto-detect format
-         - [x] `getLocationExtension(locationType: string): LocationTypeExtension` - Get handler
-         - [x] `convertLocationFormat(location: unknown, sourceType: string, targetType: string): unknown` - Convert between formats
-     
-     Task 3: GeoJSON Extension Refinements (Based on Dev Review)
-     - [ ] Enhance error handling in GeoJSON extension:
-       - [ ] Use specific error types from our error hierarchy instead of generic Error instances (LocationFormatError, ConversionError, etc.)
-       - [ ] Provide detailed error messages that help developers understand what went wrong
-     - [ ] Optimize Turf.js imports:
-       - [ ] Import only the specific functions we need instead of the entire library
-       - [ ] Measure the bundle size reduction
-     - [ ] Add coordinate range validation:
-       - [ ] Validate longitude is within [-180, 180]
-       - [ ] Validate latitude is within [-90, 90]
-     - [ ] Enhance coordinate preservation in conversions:
-       - [ ] Use checkCoordinatePreservation in the conversion process
-       - [ ] Add support for tolerance thresholds (configurable)
-     - [ ] Clarify parseLocationString purpose:
-       - [ ] Update JSDoc comments to clearly explain the expected format
-       - [ ] Document the flow between different format conversions
-     - [ ] Extension ID format documentation:
-       - [ ] Document the URI-like namespace pattern (astral:location:geojson)
-       - [ ] Decide on standardization across all extensions
-     - [ ] Address type specificity questions:
-       - [ ] Evaluate the benefits/drawbacks of stricter return types
-       - [ ] Make consistent decisions across all extensions
-     - [ ] Remove in-code review comments after addressing them
 
+     ## MVP Priority Tasks
+     
+     Task 1: GeoJSON Extension Refinement
+     - [x] Create `src/extensions/location/index.ts` exporting location extensions
+     - [x] `GeoJSONExtension`: Support ALL GeoJSON types using @turf/turf
+     - [x] Implement helper functions for location handling:
+       - [x] `detectLocationFormat(location: unknown): string` - Auto-detect format
+       - [x] `getLocationExtension(locationType: string): LocationTypeExtension` - Get handler
+       - [x] `convertLocationFormat(location: unknown, sourceType: string, targetType: string): unknown` - Convert between formats
+     - [ ] Critical GeoJSON improvements:
+       - [ ] Use specific error types from our error hierarchy instead of generic Error instances
+       - [ ] Optimize Turf.js imports to reduce bundle size
+       - [ ] Add coordinate range validation (longitude [-180, 180], latitude [-90, 90])
+       - [ ] Use checkCoordinatePreservation in the conversion process
+       - [ ] Update JSDoc comments to clearly explain format expectations
+     
+     Task 2: Image Extension Implementation
      - [ ] Create `src/extensions/media/index.ts` with focused scope:
-       - [ ] **Priority 1**: Implement basic image handling
-         - [ ] Support for JPEG and PNG formats
+       - [ ] Implement basic image handling (Priority 1):
+         - [ ] Support for JPEG and PNG formats only
          - [ ] Light validation of image data (using file-type)
          - [ ] Base64 encoding/decoding utilities
-      - [ ] **Priority 2**: Implement basic video handling
-        - [ ] Support for mp4 formats
-        - [ ] Simple MIME type validation
-      - [ ] **Priority 3**: Add minimal support for common audio formats
-        - [ ] Support for mp3 formats
-        - [ ] Simple MIME type validation
-      - [ ] **Priority 4**: Add minimal support for common document formats
-         - [ ] Basic PDF handling
-         - [ ] Simple MIME type validation
-         
-       - [ ] Create helper functions for media handling:
+       - [ ] Create essential helper functions for media handling:
          - [ ] `isValidMediaType(mimeType: string): boolean` - Check if MIME type is supported
          - [ ] `getMediaExtension(mediaType: string): MediaAttachmentExtension` - Get handler
          - [ ] `validateMediaData(mediaType: string, data: string): boolean` - Basic validation
      
+     Task 3: SDK Integration
      - [ ] Integrate extensions with SDK workflow:
-       - [ ] Update AstralSDK.buildLocationProof to use extensions
-       - [ ] Allow for targetLocationFormat conversion
+       - [ ] Update AstralSDK.buildLocationProof to use the GeoJSON extension
+       - [ ] Add support for targetLocationFormat conversion in SDK interface
        - [ ] Implement warning system for data modifications
-       - [ ] Document extension usage in examples
+       - [ ] Create at least one example showing extension usage
      
-     - [ ] Write focused tests:
-       - [x] Full test coverage for GeoJSON format
+     Task 4: Testing and Documentation
+     - [x] Full test coverage for GeoJSON format
+     - [ ] Tests for image handling (JPEG, PNG)
+     - [ ] Test compatibility with both offchain and onchain workflows
+     - [ ] Document the MVP extensions:
+       - [ ] Add JSDoc comments to all public functions
+       - [ ] Document which formats are supported in MVP
+       - [ ] Document the extension ID format convention
+       - [ ] Note which formats are planned for future versions
+     
+     ## v0.1 Full Implementation (Deferred)
+     
+     Task 5: Additional Location Format Extensions
+     - [ ] Implement `CoordinateExtension`: Parse/format decimal lat/lng coordinates as both array and object
+     - [ ] Implement `WKTExtension`: Well-Known Text format using wellknown library
+     - [ ] Implement `H3Extension`: Hexagonal hierarchical geospatial indexing using h3-js
+     - [ ] Preserve original input data in `_originalInputs` field 
+     - [ ] Full test coverage for additional location formats:
        - [ ] Full test coverage for Coordinate format
        - [ ] Full test coverage for WKT format
        - [ ] Full test coverage for H3 format
-       - [ ] Tests for the priority media types (JPEG, PNG)
-       - [ ] Test compatibility with both offchain and onchain workflows
-       - [ ] Clearly mark "TODO" for future media format tests
      
-     - [ ] Document all extensions thoroughly:
-       - [ ] Add detailed JSDoc comments to all functions
-       - [ ] Include examples for each supported format
-       - [ ] Clearly document which media types are supported in v0.1
-       - [ ] Add notes for planned future extensions
+     Task 6: Additional Media Type Extensions
+     - [ ] Implement video handling (Priority 2):
+       - [ ] Support for mp4 formats
+       - [ ] Simple MIME type validation
+     - [ ] Implement audio handling (Priority 3):
+       - [ ] Support for mp3 formats
+       - [ ] Simple MIME type validation
+     - [ ] Implement document handling (Priority 4):
+       - [ ] Basic PDF handling
+       - [ ] Simple MIME type validation
+     - [ ] Tests for additional media types
      
-   - [ ] *Output*: 
-     - [ ] Robust, well-tested utilities for handling all location formats in the Astral documentation
-     - [ ] Focused media handling for the most common web formats (JPEG, PNG, PDF)
-     - [ ] Clear extension registry system that supports custom extensions
-     - [ ] Good test coverage for all implemented features
-     - [ ] Documentation that sets appropriate expectations
+     Task 7: Extension System Refinements
+     - [ ] Address type specificity questions:
+       - [ ] Evaluate the benefits/drawbacks of stricter return types
+       - [ ] Make consistent decisions across all extensions
+     - [ ] Extension ID format standardization:
+       - [ ] Standardize the URI-like namespace pattern (astral:location:geojson)
+       - [ ] Apply consistently across all extensions
+     - [ ] Remove in-code review comments after addressing them
+     - [ ] Enhance documentation with examples for each supported format
+     - [ ] Add appropriate warnings for non-coordinate data modifications
+   
+   - [ ] *MVP Output*: 
+     - [ ] Fully functional GeoJSON support with proper error handling
+     - [ ] Basic image handling for JPEG and PNG formats
+     - [ ] Extension registry that allows for custom extensions
+     - [ ] Good test coverage for the MVP features
+     - [ ] Clear documentation of supported formats and usage
    
    - *Technical considerations*: 
      - [x] **Prioritize progress over completeness** - implement core functionality first
      - [x] Use established libraries rather than implementing from scratch:
-       - [x] @turf/turf for GeoJSON operations
-       - [ ] wellknown for WKT parsing
-       - [ ] h3-js for H3 index handling
-       - [ ] file-type for basic media validation
+       - [x] @turf/turf for GeoJSON operations (optimize imports)
+       - [ ] file-type for basic image validation
+       - [ ] wellknown for WKT parsing (deferred)
+       - [ ] h3-js for H3 index handling (deferred)
      - [x] Design extensions to be developer-friendly - gracefully handle minor issues
      - [x] Use GeoJSON as the central conversion format for all location types
      - [ ] For media, focus on validation rather than conversion
-     - [ ] Make note of potential enhancements for future versions
-     - [ ] Ensure all extensions work with both offchain and onchain workflows
-     - [ ] If implementation of a specific format becomes time-consuming, document the limitation and move on
+     - [ ] Document limitations clearly and note planned future enhancements
+     - [ ] Ensure the MVP extensions work with both offchain and onchain workflows
      - [x] Issue warnings for ANY coordinate value changes during conversion to maintain data integrity
-     - [ ] Include appropriate warnings for other non-coordinate data modifications
 
 Complete: ⬜️
 
