@@ -242,11 +242,11 @@ export class ExtensionRegistry implements IExtensionRegistry {
    */
   private async registerBuiltInExtensions(): Promise<void> {
     try {
-      // Import the location extensions
+      // Import and register location extensions
       const geoJSONModule = await import('./location/builtins/GeoJSON');
       this.registerLocationExtension(geoJSONModule.geoJSONExtension);
 
-      // In the future, we'll import all extensions from a centralized location module
+      // In the future, we'll import additional location extensions
     } catch (error) {
       console.warn(
         `Failed to register built-in location extensions: ${
@@ -255,8 +255,19 @@ export class ExtensionRegistry implements IExtensionRegistry {
       );
     }
 
-    // TODO: Register built-in media extensions once implemented
-    // e.g., this.registerMediaExtension(new ImageExtension());
+    try {
+      // Import and register media extensions
+      const imageModule = await import('./media/builtins/imageExtension');
+      this.registerMediaExtension(imageModule.imageExtension);
+
+      // In the future, we'll import additional media extensions
+    } catch (error) {
+      console.warn(
+        `Failed to register built-in media extensions: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
   }
 }
 
