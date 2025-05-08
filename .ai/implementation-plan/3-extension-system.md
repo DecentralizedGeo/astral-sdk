@@ -40,11 +40,11 @@
          - [x] `validateMediaData(mediaType: string, data: string): boolean` - Basic validation
      
      Task 3: SDK Integration
-     - [ ] Integrate extensions with SDK workflow:
-       - [ ] Update AstralSDK.buildLocationProof to use the GeoJSON extension
-       - [ ] Add support for targetLocationFormat conversion in SDK interface
-       - [ ] Implement warning system for data modifications
-       - [ ] Create at least one example showing extension usage
+     - [x] Integrate extensions with SDK workflow:
+       - [x] Update AstralSDK.buildLocationProof to use the GeoJSON extension
+       - [x] Add support for targetLocationFormat conversion in SDK interface
+       - [x] Implement warning system for data modifications
+       - [x] Create at least one example showing extension usage
      
      Task 4: Testing and Documentation
      - [x] Full test coverage for GeoJSON format
