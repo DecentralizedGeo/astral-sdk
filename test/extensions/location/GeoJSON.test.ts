@@ -9,18 +9,53 @@ import {
   GeoJSONExtension,
   isGeoJSON,
   isPosition,
+  isValidLatitude,
+  isValidLongitude
 } from '../../../src/extensions/location/builtins/GeoJSON';
+import { LocationValidationError } from '../../../src/core/errors';
 import { Feature, FeatureCollection, GeometryCollection, LineString, Point } from 'geojson';
 
 describe('GeoJSON Type Guards', () => {
+  test('isValidLongitude should validate longitude values', () => {
+    // Valid longitudes (within [-180, 180])
+    expect(isValidLongitude(0)).toBe(true);
+    expect(isValidLongitude(180)).toBe(true);
+    expect(isValidLongitude(-180)).toBe(true);
+    expect(isValidLongitude(179.999999)).toBe(true);
+    expect(isValidLongitude(-179.999999)).toBe(true);
+    
+    // Invalid longitudes
+    expect(isValidLongitude(180.00001)).toBe(false);
+    expect(isValidLongitude(-180.00001)).toBe(false);
+    expect(isValidLongitude(NaN)).toBe(false);
+    expect(isValidLongitude(Infinity)).toBe(false);
+    expect(isValidLongitude(-Infinity)).toBe(false);
+  });
+  
+  test('isValidLatitude should validate latitude values', () => {
+    // Valid latitudes (within [-90, 90])
+    expect(isValidLatitude(0)).toBe(true);
+    expect(isValidLatitude(90)).toBe(true);
+    expect(isValidLatitude(-90)).toBe(true);
+    expect(isValidLatitude(89.999999)).toBe(true);
+    expect(isValidLatitude(-89.999999)).toBe(true);
+    
+    // Invalid latitudes
+    expect(isValidLatitude(90.00001)).toBe(false);
+    expect(isValidLatitude(-90.00001)).toBe(false);
+    expect(isValidLatitude(NaN)).toBe(false);
+    expect(isValidLatitude(Infinity)).toBe(false);
+    expect(isValidLatitude(-Infinity)).toBe(false);
+  });
+
   test('isPosition should correctly identify GeoJSON positions', () => {
     // Valid positions
     expect(isPosition([0, 0])).toBe(true);
     expect(isPosition([180, 90])).toBe(true);
-    expect(isPosition([-180, -90])).toBe(true); // CLAUDE: Does Position check for the correct range of lat and lon values??
+    expect(isPosition([-180, -90])).toBe(true);
     expect(isPosition([0, 0, 0])).toBe(true);
 
-    // Invalid positions
+    // Invalid positions due to structure
     expect(isPosition([])).toBe(false);
     expect(isPosition([0])).toBe(false);
     expect(isPosition([0, 0, 0, 0])).toBe(false);
@@ -29,6 +64,12 @@ describe('GeoJSON Type Guards', () => {
     expect(isPosition(undefined)).toBe(false);
     expect(isPosition('not a position')).toBe(false);
     expect(isPosition({ lat: 0, lng: 0 })).toBe(false);
+    
+    // Invalid positions due to coordinate range
+    expect(isPosition([181, 0])).toBe(false); // longitude out of range
+    expect(isPosition([0, 91])).toBe(false); // latitude out of range
+    expect(isPosition([-181, 0])).toBe(false); // longitude out of range
+    expect(isPosition([0, -91])).toBe(false); // latitude out of range
   });
 
   test('isGeoJSON should correctly identify GeoJSON objects', () => {
@@ -152,9 +193,9 @@ describe('GeoJSONExtension', () => {
     expect(JSON.parse(pointString)).toEqual(point);
     expect(JSON.parse(featureString)).toEqual(feature);
 
-    // Should throw for invalid GeoJSON
-    expect(() => extension.locationToString(null)).toThrow(); // CLAUDE: We need to specify which type of error this is, no? We designed a whole error hierarchy for this!
-    expect(() => extension.locationToString('not an object')).toThrow(); // CLAUDE: We need to specify which type of error this is, no? We designed a whole error hierarchy for this!
+    // Should throw LocationValidationError for invalid GeoJSON
+    expect(() => extension.locationToString(null)).toThrow(LocationValidationError);
+    expect(() => extension.locationToString('not an object')).toThrow(LocationValidationError);
   });
 
   test('locationToGeoJSON should pass through valid GeoJSON objects', () => {
@@ -164,9 +205,9 @@ describe('GeoJSONExtension', () => {
     expect(pointGeoJSON).toEqual(point);
     expect(featureGeoJSON).toEqual(feature);
 
-    // Should throw for invalid GeoJSON
-    expect(() => extension.locationToGeoJSON(null)).toThrow(); // CLAUDE: We need to specify which type of error this is, no? We designed a whole error hierarchy for this!
-    expect(() => extension.locationToGeoJSON('not an object')).toThrow(); // CLAUDE: We need to specify which type of error this is, no? We designed a whole error hierarchy for this!
+    // Should throw LocationValidationError for invalid GeoJSON
+    expect(() => extension.locationToGeoJSON(null)).toThrow(LocationValidationError);
+    expect(() => extension.locationToGeoJSON('not an object')).toThrow(LocationValidationError);
   });
 
   test('parseLocationString should parse GeoJSON strings', () => {
@@ -179,9 +220,9 @@ describe('GeoJSONExtension', () => {
     expect(parsedPoint).toEqual(point);
     expect(parsedFeature).toEqual(feature);
 
-    // Should throw for invalid JSON strings
-    expect(() => extension.parseLocationString('not a JSON string')).toThrow(); // CLAUDE: We need to specify which type of error this is, no? We designed a whole error hierarchy for this!
-    expect(() => extension.parseLocationString('{"invalid": "json"}')).toThrow(); // CLAUDE: We need to specify which type of error this is, no? We designed a whole error hierarchy for this!
+    // Should throw LocationValidationError for invalid JSON strings
+    expect(() => extension.parseLocationString('not a JSON string')).toThrow(LocationValidationError);
+    expect(() => extension.parseLocationString('{"invalid": "json"}')).toThrow(LocationValidationError);
   });
 
   test('getAllCoordinates should extract all positions from a GeoJSON object', () => {

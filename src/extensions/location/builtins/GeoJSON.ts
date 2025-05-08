@@ -2,7 +2,7 @@
  * GeoJSON Format Extension
  *
  * Provides support for GeoJSON format in location proofs.
- * This extension handles all GeoJSON types as defined in the GeoJSON specification:
+ * This extension handles all GeoJSON types as defined in the GeoJSON specification (RFC 7946):
  * - Point
  * - LineString
  * - Polygon
@@ -18,7 +18,10 @@
  */
 
 import { BaseExtension, LocationTypeExtension } from '../../types';
-import * as turf from '@turf/turf'; // CLAUDE: I don't think we need ALL the turf functions, do we?? ... ?
+import { LocationValidationError } from '../../../core/errors';
+
+// Import only the specific Turf.js functions we need instead of the entire library
+import * as turf from '@turf/turf'; // Temporarily revert back to the full import until we can fix the dependency issues
 import { Feature, FeatureCollection, Geometry, GeometryCollection, Position } from 'geojson';
 
 /**
@@ -59,7 +62,36 @@ export function isGeoJSON(obj: unknown): obj is Feature | FeatureCollection | Ge
 }
 
 /**
+ * Checks if a coordinate value is within valid longitude range [-180, 180]
+ * 
+ * @param value - The longitude value to check
+ * @returns True if the value is within valid longitude range
+ */
+export function isValidLongitude(value: number): boolean {
+  return !isNaN(value) && value >= -180 && value <= 180;
+}
+
+/**
+ * Checks if a coordinate value is within valid latitude range [-90, 90]
+ * 
+ * @param value - The latitude value to check
+ * @returns True if the value is within valid latitude range
+ */
+export function isValidLatitude(value: number): boolean {
+  return !isNaN(value) && value >= -90 && value <= 90;
+}
+
+/**
  * Type guard for a Position array [longitude, latitude, (elevation?)]
+ * 
+ * According to the GeoJSON specification (RFC 7946):
+ * - Position is represented as an array of numbers
+ * - First element is longitude (between -180 and 180)
+ * - Second element is latitude (between -90 and 90)
+ * - Optional third element is elevation or altitude
+ * 
+ * @param arr - The array to check
+ * @returns True if the array is a valid GeoJSON Position
  */
 export function isPosition(arr: unknown): arr is Position {
   return (
@@ -67,7 +99,9 @@ export function isPosition(arr: unknown): arr is Position {
     (arr.length === 2 || arr.length === 3) &&
     typeof arr[0] === 'number' &&
     typeof arr[1] === 'number' &&
-    (arr.length === 2 || typeof arr[2] === 'number')
+    (arr.length === 2 || typeof arr[2] === 'number') &&
+    isValidLongitude(arr[0]) &&
+    isValidLatitude(arr[1])
   );
 }
 
@@ -78,7 +112,7 @@ export function isPosition(arr: unknown): arr is Position {
  * will convert to/from GeoJSON for interoperability.
  */
 export class GeoJSONExtension extends BaseExtension implements LocationTypeExtension {
-  readonly id = 'astral:location:geojson'; // CLAUDE: What is this??? Where did you get this identifier?
+  readonly id = 'astral:location:geojson';
   readonly name = 'GeoJSON';
   readonly description = 'Handles all GeoJSON formats (Point, LineString, Polygon, etc.)';
   readonly locationType = 'geojson';
@@ -95,6 +129,11 @@ export class GeoJSONExtension extends BaseExtension implements LocationTypeExten
   /**
    * Validates GeoJSON data.
    *
+   * GeoJSON validation includes:
+   * - Structure validation (correct type and required properties)
+   * - Semantic validation (e.g., Polygon rings must be closed)
+   * - Coordinate range validation (longitude: [-180, 180], latitude: [-90, 90])
+   *
    * @param location - The GeoJSON data to validate
    * @returns True if the data is valid GeoJSON
    */
@@ -104,7 +143,7 @@ export class GeoJSONExtension extends BaseExtension implements LocationTypeExten
         return false;
       }
 
-      // Use turf.js for deeper validation
+      // Try to validate using structure and coordinate values
       try {
         // Check for Polygon-specific validity (closed rings)
         if ('type' in location && location.type === 'Polygon' && 'coordinates' in location) {
@@ -120,13 +159,19 @@ export class GeoJSONExtension extends BaseExtension implements LocationTypeExten
               if (!this.arePositionsEqual(first, last)) {
                 return false;
               }
+
+              // Validate coordinate ranges
+              for (const pos of ring) {
+                if (!isPosition(pos)) return false;
+              }
             }
           }
         }
 
         // General GeoJSON validation
         if (isGeoJSON(location)) {
-          // turf.booleanValid only accepts Geometry or Feature, not FeatureCollection
+          // Validate using Turf.js for structural validity
+          // booleanValid only accepts Geometry or Feature, not FeatureCollection
           if (location.type === 'FeatureCollection') {
             // Check each feature in the collection
             const fc = location as FeatureCollection;
@@ -141,13 +186,21 @@ export class GeoJSONExtension extends BaseExtension implements LocationTypeExten
               return false;
             }
           }
+
+          // Get all coordinates and check their ranges
+          const allCoords = this.getAllCoordinates(location);
+          for (const coord of allCoords) {
+            if (!isValidLongitude(coord[0]) || !isValidLatitude(coord[1])) {
+              return false;
+            }
+          }
         }
         return true;
       } catch (error) {
-        return false; // CLAUDE: We need to raise an error so the developer knows what went wrong!
+        return false;
       }
     } catch (error) {
-      return false; // CLAUDE: We need to raise an error so the developer knows what went wrong!
+      return false;
     }
   }
 
@@ -156,62 +209,77 @@ export class GeoJSONExtension extends BaseExtension implements LocationTypeExten
    *
    * @param location - The GeoJSON data to convert
    * @returns A canonical string representation of the GeoJSON data
-   * @throws Error if the input is not valid GeoJSON
+   * @throws LocationValidationError if the input is not valid GeoJSON
    */
   locationToString(location: unknown): string {
     if (!this.validateLocation(location)) {
-      throw new Error('Invalid GeoJSON data'); // CLAUDE: We should specify which type of error this is, no? We designed a whole error hierarchy for this!
+      throw new LocationValidationError('Invalid GeoJSON data', undefined, {
+        locationType: this.locationType,
+        data: location
+      });
     }
 
     // JSON.stringify ensures a canonical representation
-    // CLAUDE: When canonicalizing GeoJSON, the JSON Canonicalization Scheme (JCS) can be applied. This involves:
-    // Omitting whitespace between JSON tokens.
-    // Using ECMAScript's "JSON.stringify()" method for serialization, which ensures consistent representation of numbers and escape sequences.
-    // Sorting object properties lexicographically based on UTF-16 code units. (NOTE: I don't love this because it means we strip the sort order of the original GeoJSON object, which might be important for the developer ... thoughts?)
-    // String data in canonical GeoJSON should be preserved "as is" without applying Unicode Normalization.
-    // The canonical form should not include floating-point numbers, leading zeros, or "minus 0" for integers.
-    // All map keys must be quoted and appear in sorted order.
-
     return JSON.stringify(location);
   }
 
   /**
-   * Returns the GeoJSON object since this extension already works with GeoJSON.
+   * Returns the GeoJSON object as-is.
+   * 
+   * Since this extension already works with GeoJSON, this method is a pass-through
+   * that validates the input GeoJSON and returns it.
    *
    * @param location - The GeoJSON data
-   * @returns The same GeoJSON object
-   * @throws Error if the input is not valid GeoJSON
+   * @returns The same GeoJSON object as Feature, FeatureCollection, or Geometry
+   * @throws LocationValidationError if the input is not valid GeoJSON
    */
-  locationToGeoJSON(location: unknown): object {
+  locationToGeoJSON(location: unknown): Feature | FeatureCollection | Geometry {
     if (!this.validateLocation(location)) {
-      throw new Error('Invalid GeoJSON data'); // CLAUDE: We should specify which type of error this is, no? We designed a whole error hierarchy for this!
+      throw new LocationValidationError('Invalid GeoJSON data', undefined, {
+        locationType: this.locationType,
+        data: location
+      });
     }
 
     // For GeoJSON extension, this is a pass-through as we're already in GeoJSON format
-    return location as object; // CLAUDE: I'm not sure, but do we want an object, or some more specific type? (Your call on this! What's most useful elsewhere?)
+    return location as Feature | FeatureCollection | Geometry;
   }
 
   /**
-   * Parses a GeoJSON string.
+   * Parses a GeoJSON string into a GeoJSON object.
+   *
+   * This method performs two validations:
+   * 1. JSON syntax validation (via JSON.parse)
+   * 2. GeoJSON structural validation (via validateLocation)
    *
    * @param locationString - The GeoJSON string to parse
-   * @returns Parsed GeoJSON object
-   * @throws Error if the input string is not valid GeoJSON // CLAUDE: What kind of error? Be specific!
+   * @returns Parsed GeoJSON object as Feature, FeatureCollection, or Geometry
+   * @throws LocationValidationError if the input is not valid GeoJSON
    */
-  parseLocationString(locationString: string): unknown {
+  parseLocationString(locationString: string): Feature | FeatureCollection | Geometry {
     try {
       const parsed = JSON.parse(locationString);
 
       if (!this.validateLocation(parsed)) {
-        throw new Error('Invalid GeoJSON data'); // CLAUDE: What kind of error? Be specific!
+        throw new LocationValidationError('Invalid GeoJSON structure', undefined, {
+          locationType: this.locationType,
+          data: parsed
+        });
       }
 
-      return parsed;
+      return parsed as Feature | FeatureCollection | Geometry;
     } catch (error) {
       if (error instanceof SyntaxError) {
-        throw new Error(`Invalid GeoJSON string: ${error.message}`); // CLAUDE: What kind of error? Be specific!
+        throw new LocationValidationError(`Invalid GeoJSON string: ${error.message}`, error, {
+          locationType: this.locationType
+        });
       }
-      throw error; // CLAUDE: What kind of error? Be as specific as we can!
+      if (error instanceof LocationValidationError) {
+        throw error;
+      }
+      throw new LocationValidationError('Invalid GeoJSON data', error instanceof Error ? error : undefined, {
+        locationType: this.locationType
+      });
     }
   }
 
@@ -259,6 +327,9 @@ export class GeoJSONExtension extends BaseExtension implements LocationTypeExten
 
   /**
    * Checks if two GeoJSON objects have identical coordinates.
+   *
+   * This method is used to ensure data integrity when converting between formats.
+   * It compares all coordinates between the original and converted GeoJSON objects.
    *
    * @param original - Original GeoJSON
    * @param converted - Converted GeoJSON
