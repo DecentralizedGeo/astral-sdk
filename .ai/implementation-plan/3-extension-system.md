@@ -21,12 +21,12 @@
        - [x] `detectLocationFormat(location: unknown): string` - Auto-detect format
        - [x] `getLocationExtension(locationType: string): LocationTypeExtension` - Get handler
        - [x] `convertLocationFormat(location: unknown, sourceType: string, targetType: string): unknown` - Convert between formats
-     - [ ] Critical GeoJSON improvements:
-       - [ ] Use specific error types from our error hierarchy instead of generic Error instances
-       - [ ] Optimize Turf.js imports to reduce bundle size
-       - [ ] Add coordinate range validation (longitude [-180, 180], latitude [-90, 90])
-       - [ ] Use checkCoordinatePreservation in the conversion process
-       - [ ] Update JSDoc comments to clearly explain format expectations
+     - [x] Critical GeoJSON improvements:
+       - [x] Use specific error types from our error hierarchy instead of generic Error instances
+       - [x] Optimize Turf.js imports to reduce bundle size (partial - identified imports but temporarily kept full import for compatibility)
+       - [x] Add coordinate range validation (longitude [-180, 180], latitude [-90, 90])
+       - [x] Use checkCoordinatePreservation in the conversion process
+       - [x] Update JSDoc comments to clearly explain format expectations
      
      Task 2: Image Extension Implementation
      - [ ] Create `src/extensions/media/index.ts` with focused scope:
