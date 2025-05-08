@@ -29,15 +29,15 @@
        - [x] Update JSDoc comments to clearly explain format expectations
      
      Task 2: Image Extension Implementation
-     - [ ] Create `src/extensions/media/index.ts` with focused scope:
-       - [ ] Implement basic image handling (Priority 1):
-         - [ ] Support for JPEG and PNG formats only
-         - [ ] Light validation of image data (using file-type)
-         - [ ] Base64 encoding/decoding utilities
-       - [ ] Create essential helper functions for media handling:
-         - [ ] `isValidMediaType(mimeType: string): boolean` - Check if MIME type is supported
-         - [ ] `getMediaExtension(mediaType: string): MediaAttachmentExtension` - Get handler
-         - [ ] `validateMediaData(mediaType: string, data: string): boolean` - Basic validation
+     - [x] Create `src/extensions/media/index.ts` with focused scope:
+       - [x] Implement basic image handling (Priority 1):
+         - [x] Support for JPEG and PNG formats only
+         - [x] Light validation of image data (using file signature checks instead of external library)
+         - [x] Base64 encoding/decoding utilities
+       - [x] Create essential helper functions for media handling:
+         - [x] `isSupportedMimeType(mimeType: string): boolean` - Check if MIME type is supported
+         - [x] `getMediaExtension(mediaType: string): MediaAttachmentExtension` - Get handler
+         - [x] `validateMediaData(mediaType: string, data: string): boolean` - Basic validation
      
      Task 3: SDK Integration
      - [ ] Integrate extensions with SDK workflow:
@@ -48,10 +48,10 @@
      
      Task 4: Testing and Documentation
      - [x] Full test coverage for GeoJSON format
-     - [ ] Tests for image handling (JPEG, PNG)
+     - [x] Tests for image handling (JPEG, PNG)
      - [ ] Test compatibility with both offchain and onchain workflows
      - [ ] Document the MVP extensions:
-       - [ ] Add JSDoc comments to all public functions
+       - [x] Add JSDoc comments to all public functions
        - [ ] Document which formats are supported in MVP
        - [ ] Document the extension ID format convention
        - [ ] Note which formats are planned for future versions
