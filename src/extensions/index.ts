@@ -257,7 +257,7 @@ export class ExtensionRegistry implements IExtensionRegistry {
 
     try {
       // Import and register media extensions
-      const imageModule = await import('./media/builtins/imageExtension');
+      const imageModule = await import('./media/builtins/image');
       this.registerMediaExtension(imageModule.imageExtension);
 
       // In the future, we'll import additional media extensions
