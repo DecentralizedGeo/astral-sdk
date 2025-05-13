@@ -1,13 +1,15 @@
 ## **4. EAS Client Integration**  
-  *Description*: Develop the EAS integration module with separate components for offchain signing and onchain registration workflows, leveraging the EAS SDK for all core functionality.
+  *Description*: Develop the EAS integration module with separate components for offchain signing and onchain registration workflows, leveraging the EAS SDK for all core functionality. Each SDK instance will be bound to a single chain.
    
    - *Sub-tasks*: 
      - [ ] Review `.ai/eas-context.md` to understand EAS capabilities, particularly the differences between offchain and onchain attestations. Review EAS SDK documentation to understand the different methods and options available.
      
-     - [ ] Create shared utilities in `src/eas/utils.ts`:
-       - [ ] Constants for schema UID and schema string
-       - [ ] Contract address mapping per supported chain
-       - [ ] Type conversion helpers to align our types with EAS SDK expected formats
+     - [ ] Implement `src/eas/chains.ts`:
+       - [ ] Function to load chain configuration from `config/EAS-config.json`
+       - [ ] Helper function `getChainConfig(chainId)` to retrieve config for a specific chain
+       - [ ] Utility functions to convert between chain names and IDs
+       - [ ] Initially focus on Sepolia testnet for development and testing
+       - [ ] Single chain loading pattern aligned with SDK initialization
      
      - [ ] Implement `src/eas/SchemaEncoder.ts`:
        - [ ] Thin wrapper around EAS SDK's `SchemaEncoder` class
@@ -22,55 +24,63 @@
          - [ ] Return complete OffchainLocationProof with signature
        
        - [ ] Method `verifyOffchainLocationProof(proof: OffchainLocationProof): Promise<boolean>`
-         - [ ] **Use EAS SDK's built-in verification methods** for signature verification
-         - [ ] Validate our specific proof data format
+         - [ ] **Use EAS SDK's built-in verification methods** for basic signature verification
+         - [ ] Keep validation focused on signature correctness for MVP
      
      - [ ] Implement `src/eas/OnchainRegistrar.ts` for the onchain workflow:
-       - [ ] Constructor accepting ethers Provider/Signer and optional chain
+       - [ ] Constructor accepting ethers Provider/Signer and specific chain ID/name
+       - [ ] Initialize a single EAS instance for the specified chain
        - [ ] Method `registerOnchainLocationProof(unsignedProof: UnsignedLocationProof, options: OnchainProofOptions): Promise<OnchainLocationProof>`
          - [ ] **Use EAS SDK's `EAS.attest` method** directly for submitting attestations
          - [ ] Configure EAS instance using EAS SDK's connection methods
-         - [ ] Return OnchainLocationProof with transaction details and UID
+         - [ ] Return OnchainLocationProof with transaction details, UID, and chain information
        
        - [ ] Method `verifyOnchainLocationProof(proof: OnchainLocationProof): Promise<boolean>`
          - [ ] **Use EAS SDK's `EAS.getAttestation` method** to retrieve attestation data
-         - [ ] Verify attestation exists and matches our proof data
+         - [ ] Implement simple existence check for MVP verification
+         - [ ] Use chain information from the proof object to verify on the correct chain
        
        - [ ] Method `revokeOnchainLocationProof(proof: OnchainLocationProof): Promise<void>`
          - [ ] **Use EAS SDK's `EAS.revoke` method** to submit revocation
      
-     - [ ] Create configuration utilities:
-       - [ ] Initialize EAS SDK instances properly for each chain
-       - [ ] Set up providers and signers according to EAS SDK requirements
-     
-     - [ ] Add robust error handling:
-       - [ ] Wrap EAS SDK errors in our own error classes
+     - [ ] Add streamlined error handling:
+       - [ ] Create basic error classes for common failure scenarios
        - [ ] Provide clear context for each error
+       - [ ] Focus on helpful error messages that guide developers
      
-     - [ ] Write comprehensive tests:
+     - [ ] Update AstralSDK to specify chain at initialization:
+       - [ ] Document that each SDK instance works with a single chain
+       - [ ] Make chain ID/name a required parameter for onchain operations
+       - [ ] Clarify in documentation that multi-chain operations require multiple SDK instances
+     
+     - [ ] Write targeted tests:
        - [ ] **Unit tests**:
-         - [ ] Mock EAS SDK methods to test our integration
+         - [ ] Mock EAS SDK methods to test core integration paths
+         - [ ] Focus on testing happy paths and common error cases
          - [ ] Verify correct parameters are passed to EAS SDK
        
-       - [ ] **Integration tests** (if possible):
-         - [ ] Test with actual EAS contracts on testnets
-         - [ ] Verify entire workflows with the real EAS SDK
+       - [ ] **Integration tests**:
+         - [ ] Test with actual EAS contracts on Sepolia testnet
+         - [ ] Focus on end-to-end testing of the primary workflows
    
    - [ ] *Output*: 
      - [ ] Two distinct client implementations that leverage EAS SDK functionality for their respective workflows
-     - [ ] Clean integration with minimal code duplication
+     - [ ] Chain-specific SDK design with clear documentation
      - [ ] Type-safe wrappers around EAS SDK functionality
    
    - *Technical considerations*: 
-     - [ ] Use EAS SDK functionality rather than reimplementing any cryptographic or blockchain operations whenever you can
+     - [ ] Design for single-chain operation - each SDK instance connects to one specific chain
+     - [ ] Use EAS SDK functionality rather than reimplementing any cryptographic or blockchain operations
      - [ ] Properly import and initialize all EAS SDK components according to their documentation
      - [ ] Follow EAS SDK patterns and best practices
+     - [ ] Document that for multi-chain read operations, Astral API is the recommended path
      - [ ] Handle EAS SDK versioning appropriately (currently v2.7.0+)
-     - [ ] Document any EAS SDK limitations or quirks
-     - [ ] Ensure proper error propagation from EAS SDK
+     - [ ] Ensure proper error propagation from EAS SDK with helpful context
      - [ ] Set up ethers providers and signers exactly as recommended by EAS documentation
      - [ ] Keep our wrappers thin and focused on converting between our domain models and EAS requirements
-     - [ ] Add JSDoc references to relevant EAS documentation where appropriate
+     - [ ] Make it clear in documentation that multiple SDK instances are needed for multi-chain operations
+     - [ ] Focus on Sepolia testnet first, then expand to other chains in subsequent iterations
+     - [ ] Prioritize working core functionality over comprehensive edge case handling for MVP
 
 Complete: ⬜️
 
