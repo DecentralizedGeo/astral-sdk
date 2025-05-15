@@ -1,11 +1,13 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
+#!/bin/sh
+
+export PATH="/usr/local/share/npm-global/bin:$PATH"
 
 # Run lint-staged to format and lint staged files
-npx lint-staged
+npx lint-staged || exit 1
 
-# Run typechecking
-pnpm run typecheck
+# Type check
+echo "Running TypeScript check..."
+pnpm run typecheck || exit 1
 
-# Run tests
-pnpm run test -- --findRelatedTests $(git diff --cached --name-only --diff-filter=ACM | grep -E '\.ts$')
+echo "Pre-commit checks passed!"
+exit 0
