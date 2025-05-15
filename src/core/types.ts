@@ -379,11 +379,13 @@ export interface AstralSDKConfig {
  *
  * @property signer - Ethereum signer for creating signatures
  * @property privateKey - Private key to create an in-memory signer
+ * @property chainId - ID of the blockchain to sign for
  * @property schemaUID - EAS schema UID for location proofs
  */
 export interface OffchainSignerConfig {
-  readonly signer?: unknown; // Will be refined to ethers.Signer
+  readonly signer?: unknown; // ethers.Signer
   readonly privateKey?: string;
+  readonly chainId?: number;
   readonly schemaUID?: string;
 }
 

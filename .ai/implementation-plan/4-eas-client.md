@@ -34,40 +34,40 @@
        - [x] Create a semantic commit when complete: `feat(eas): implement schema encoder wrapper`
        - Commit hash: 672ab10
      
-     - [ ] Implement `src/eas/OffchainSigner.ts` for the offchain workflow:
-       - [ ] Constructor accepting ethers Signer
-       - [ ] Properly type ethers v6 Signer and refine the signer property in OffchainSignerConfig
-       - [ ] Method `signOffchainLocationProof(unsignedProof: UnsignedLocationProof): Promise<OffchainLocationProof>`
-         - [ ] **Use EAS SDK's `EAS.getOffchainAttestationSignature` method** for obtaining signatures
-         - [ ] **Use EAS SDK's offchain modules** for all EIP-712 type construction
-         - [ ] Define correct signature format based on EAS SDK implementation (string vs. v,r,s object)
-         - [ ] Return complete OffchainLocationProof with signature
+     - [x] Implement `src/eas/OffchainSigner.ts` for the offchain workflow:
+       - [x] Constructor accepting ethers Signer
+       - [x] Properly type ethers v6 Signer and refine the signer property in OffchainSignerConfig
+       - [x] Method `signOffchainLocationProof(unsignedProof: UnsignedLocationProof): Promise<OffchainLocationProof>`
+         - [x] **Use EAS SDK's `Offchain.signOffchainAttestation` method** for obtaining signatures
+         - [x] **Use EAS SDK's offchain modules** for all EIP-712 type construction
+         - [x] Define correct signature format based on EAS SDK implementation (string vs. v,r,s object)
+         - [x] Return complete OffchainLocationProof with signature
        
-       - [ ] Method `verifyOffchainLocationProof(proof: OffchainLocationProof): Promise<boolean>`
-         - [ ] **Use EAS SDK's built-in verification methods** for basic signature verification
-         - [ ] Keep validation focused on signature correctness for MVP
-       - [ ] Create a semantic commit when complete: `feat(eas): implement offchain signer for location proofs`
+       - [x] Method `verifyOffchainLocationProof(proof: OffchainLocationProof): Promise<VerificationResult>`
+         - [x] **Use EAS SDK's built-in verification methods** for basic signature verification
+         - [x] Keep validation focused on signature correctness for MVP
+       - [x] Create a semantic commit when complete: `feat(eas): implement offchain signer for location proofs`
        - Commit hash: ________
      
-     - [ ] Implement `src/eas/OnchainRegistrar.ts` for the onchain workflow:
-       - [ ] Constructor accepting ethers Provider/Signer and specific chain ID/name
-       - [ ] Properly type ethers v6 Provider/Signer and refine the provider/signer properties in OnchainRegistrarConfig
-       - [ ] Initialize a single EAS instance for the specified chain
-       - [ ] Method `registerOnchainLocationProof(unsignedProof: UnsignedLocationProof, options: OnchainProofOptions): Promise<OnchainLocationProof>`
-         - [ ] **Use EAS SDK's `EAS.attest` method** directly for submitting attestations
-         - [ ] Configure EAS instance using EAS SDK's connection methods
-         - [ ] Leverage EAS SDK's built-in transaction handling
-         - [ ] Return OnchainLocationProof with transaction details, UID, and chain information
+     - [x] Implement `src/eas/OnchainRegistrar.ts` for the onchain workflow:
+       - [x] Constructor accepting ethers Provider/Signer and specific chain ID/name
+       - [x] Properly type ethers v6 Provider/Signer and refine the provider/signer properties in OnchainRegistrarConfig
+       - [x] Initialize a single EAS instance for the specified chain
+       - [x] Method `registerOnchainLocationProof(unsignedProof: UnsignedLocationProof, options: OnchainProofOptions): Promise<OnchainLocationProof>`
+         - [x] **Use EAS SDK's `EAS.attest` method** directly for submitting attestations
+         - [x] Configure EAS instance using EAS SDK's connection methods
+         - [x] Leverage EAS SDK's built-in transaction handling
+         - [x] Return OnchainLocationProof with transaction details, UID, and chain information
        
-       - [ ] Method `verifyOnchainLocationProof(proof: OnchainLocationProof): Promise<boolean>`
-         - [ ] **Use EAS SDK's `EAS.getAttestation` method** to retrieve attestation data
-         - [ ] Implement simple existence check for MVP verification
-         - [ ] Use chain information from the proof object to verify on the correct chain
+       - [x] Method `verifyOnchainLocationProof(proof: OnchainLocationProof): Promise<VerificationResult>`
+         - [x] **Use EAS SDK's `EAS.getAttestation` method** to retrieve attestation data
+         - [x] Implement simple existence check for MVP verification
+         - [x] Use chain information from the proof object to verify on the correct chain
        
-       - [ ] Method `revokeOnchainLocationProof(proof: OnchainLocationProof): Promise<void>`
-         - [ ] **Use EAS SDK's `EAS.revoke` method** to submit revocation
-       - [ ] Create a semantic commit when complete: `feat(eas): implement onchain registrar for location proofs`
-       - Commit hash: ________
+       - [x] Method `revokeOnchainLocationProof(proof: OnchainLocationProof): Promise<unknown>`
+         - [x] **Use EAS SDK's `EAS.revoke` method** to submit revocation
+       - [x] Create a semantic commit when complete: `feat(eas): implement onchain registrar for location proofs`
+       - Commit hash: (Pending commit)
      
      - [ ] Implement schema extensibility:
        - [ ] Define `SchemaExtension` interface extending `BaseExtension`

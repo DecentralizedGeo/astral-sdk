@@ -69,14 +69,14 @@ export function convertLocationFormat(
   if (!sourceExtension) {
     throw new ExtensionError(`No extension found for source format: ${sourceType}`, undefined, {
       sourceType,
-      availableExtensions: extensions.map(ext => ext.locationType)
+      availableExtensions: extensions.map(ext => ext.locationType),
     });
   }
 
   if (!targetExtension) {
     throw new ExtensionError(`No extension found for target format: ${targetType}`, undefined, {
       targetType,
-      availableExtensions: extensions.map(ext => ext.locationType)
+      availableExtensions: extensions.map(ext => ext.locationType),
     });
   }
 
@@ -104,13 +104,15 @@ export function convertLocationFormat(
       if (geoJSONExt && 'checkCoordinatePreservation' in geoJSONExt) {
         // Safe to assume geoJSONExtension is GeoJSONExtension implementation with checkCoordinatePreservation
         const reconverted = targetExtension.locationToGeoJSON(converted);
-        
+
         // Check if coordinates were preserved during conversion using dynamic method access
-        const checkFn = (geoJSONExt as any).checkCoordinatePreservation;
+        const checkFn = (
+          geoJSONExt as { checkCoordinatePreservation: (a: unknown, b: unknown) => boolean }
+        ).checkCoordinatePreservation;
         if (typeof checkFn === 'function' && !checkFn.call(geoJSONExt, geoJSON, reconverted)) {
           console.warn(
             `Warning: Coordinate values changed during conversion from ${sourceType} to ${targetType}. ` +
-            `This may indicate precision loss or data transformation.`
+              `This may indicate precision loss or data transformation.`
           );
         }
       }
@@ -121,14 +123,14 @@ export function convertLocationFormat(
     if (error instanceof ExtensionError || error instanceof LocationValidationError) {
       throw error;
     }
-    
+
     throw new ExtensionError(
       `Failed to convert from ${sourceType} to ${targetType}`,
       error instanceof Error ? error : undefined,
       {
         sourceType,
         targetType,
-        errorDetails: error instanceof Error ? error.message : String(error)
+        errorDetails: error instanceof Error ? error.message : String(error),
       }
     );
   }
