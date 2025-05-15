@@ -13,26 +13,26 @@
     - Example: `feat(eas): implement chain configuration loader`
    
    - *Sub-tasks*: 
-     - [ ] Review `.ai/eas-context.md` to understand EAS capabilities, particularly the differences between offchain and onchain attestations. Review EAS SDK documentation to understand the different methods and options available.
-       - [ ] Create a semantic commit when complete: `docs(eas): review EAS capabilities and SDK documentation`
+     - [x] Review `.ai/eas-context.md` to understand EAS capabilities, particularly the differences between offchain and onchain attestations. Review EAS SDK documentation to understand the different methods and options available.
+       - [x] Create a semantic commit when complete: `docs(eas): review EAS capabilities and SDK documentation`
      
-     - [ ] Implement `src/eas/chains.ts`:
-       - [ ] Function to load chain configuration from `config/EAS-config.json`
-       - [ ] Helper function `getChainConfig(chainId)` to retrieve config for a specific chain
-       - [ ] Utility functions to convert between chain names and IDs
-       - [ ] Initially focus on Sepolia testnet for development and testing
-       - [ ] Single chain loading pattern aligned with SDK initialization
-       - [ ] Support for version-specific schema loading from EAS-config.json
-       - [ ] Create a semantic commit when complete: `feat(eas): implement chain configuration loader`
-       - Commit hash: ________
+     - [x] Implement `src/eas/chains.ts`:
+       - [x] Function to load chain configuration from `config/EAS-config.json`
+       - [x] Helper function `getChainConfig(chainId)` to retrieve config for a specific chain
+       - [x] Utility functions to convert between chain names and IDs
+       - [x] Initially focus on Sepolia testnet for development and testing
+       - [x] Single chain loading pattern aligned with SDK initialization
+       - [x] Support for version-specific schema loading from EAS-config.json
+       - [x] Create a semantic commit when complete: `feat(eas): implement chain configuration loader`
+       - Commit hash: b13e632
      
-     - [ ] Implement `src/eas/SchemaEncoder.ts`:
-       - [ ] Thin wrapper around EAS SDK's `SchemaEncoder` class
-       - [ ] Use the EAS SDK `SchemaEncoder` directly for encoding operations
-       - [ ] Add convenience methods to convert between our types and EAS format
-       - [ ] Define interfaces for schema data validation
-       - [ ] Create a semantic commit when complete: `feat(eas): implement schema encoder wrapper`
-       - Commit hash: ________
+     - [x] Implement `src/eas/SchemaEncoder.ts`:
+       - [x] Thin wrapper around EAS SDK's `SchemaEncoder` class
+       - [x] Use the EAS SDK `SchemaEncoder` directly for encoding operations
+       - [x] Add convenience methods to convert between our types and EAS format
+       - [x] Define interfaces for schema data validation
+       - [x] Create a semantic commit when complete: `feat(eas): implement schema encoder wrapper`
+       - Commit hash: 672ab10
      
      - [ ] Implement `src/eas/OffchainSigner.ts` for the offchain workflow:
        - [ ] Constructor accepting ethers Signer
