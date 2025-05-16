@@ -63,7 +63,7 @@ export function isGeoJSON(obj: unknown): obj is Feature | FeatureCollection | Ge
 
 /**
  * Checks if a coordinate value is within valid longitude range [-180, 180]
- * 
+ *
  * @param value - The longitude value to check
  * @returns True if the value is within valid longitude range
  */
@@ -73,7 +73,7 @@ export function isValidLongitude(value: number): boolean {
 
 /**
  * Checks if a coordinate value is within valid latitude range [-90, 90]
- * 
+ *
  * @param value - The latitude value to check
  * @returns True if the value is within valid latitude range
  */
@@ -83,13 +83,13 @@ export function isValidLatitude(value: number): boolean {
 
 /**
  * Type guard for a Position array [longitude, latitude, (elevation?)]
- * 
+ *
  * According to the GeoJSON specification (RFC 7946):
  * - Position is represented as an array of numbers
  * - First element is longitude (between -180 and 180)
  * - Second element is latitude (between -90 and 90)
  * - Optional third element is elevation or altitude
- * 
+ *
  * @param arr - The array to check
  * @returns True if the array is a valid GeoJSON Position
  */
@@ -215,7 +215,7 @@ export class GeoJSONExtension extends BaseExtension implements LocationTypeExten
     if (!this.validateLocation(location)) {
       throw new LocationValidationError('Invalid GeoJSON data', undefined, {
         locationType: this.locationType,
-        data: location
+        data: location,
       });
     }
 
@@ -225,7 +225,7 @@ export class GeoJSONExtension extends BaseExtension implements LocationTypeExten
 
   /**
    * Returns the GeoJSON object as-is.
-   * 
+   *
    * Since this extension already works with GeoJSON, this method is a pass-through
    * that validates the input GeoJSON and returns it.
    *
@@ -237,7 +237,7 @@ export class GeoJSONExtension extends BaseExtension implements LocationTypeExten
     if (!this.validateLocation(location)) {
       throw new LocationValidationError('Invalid GeoJSON data', undefined, {
         locationType: this.locationType,
-        data: location
+        data: location,
       });
     }
 
@@ -263,7 +263,7 @@ export class GeoJSONExtension extends BaseExtension implements LocationTypeExten
       if (!this.validateLocation(parsed)) {
         throw new LocationValidationError('Invalid GeoJSON structure', undefined, {
           locationType: this.locationType,
-          data: parsed
+          data: parsed,
         });
       }
 
@@ -271,15 +271,19 @@ export class GeoJSONExtension extends BaseExtension implements LocationTypeExten
     } catch (error) {
       if (error instanceof SyntaxError) {
         throw new LocationValidationError(`Invalid GeoJSON string: ${error.message}`, error, {
-          locationType: this.locationType
+          locationType: this.locationType,
         });
       }
       if (error instanceof LocationValidationError) {
         throw error;
       }
-      throw new LocationValidationError('Invalid GeoJSON data', error instanceof Error ? error : undefined, {
-        locationType: this.locationType
-      });
+      throw new LocationValidationError(
+        'Invalid GeoJSON data',
+        error instanceof Error ? error : undefined,
+        {
+          locationType: this.locationType,
+        }
+      );
     }
   }
 
