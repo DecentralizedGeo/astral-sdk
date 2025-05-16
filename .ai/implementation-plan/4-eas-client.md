@@ -99,14 +99,14 @@
        - [x] Implement verifyOffchainLocationProof method to verify signed proofs
        - [x] Update example/create-location-attestation.ts to use AstralSDK directly
        - [x] Create a semantic commit when complete: `feat(sdk): integrate OffchainSigner with AstralSDK`
-       - Commit hash: Implemented in this session
+       - Commit hash: 788345f
      
      - [x] Add minimal error handling for MVP:
        - [x] Create basic error class(es) for common EAS operations failures
        - [x] Ensure friendly error messages for signature failures
        - [x] Add validation for proof formats before signing
        - [x] Create a semantic commit when complete: `feat(eas): add basic error handling for EAS operations`
-       - Commit hash: Implemented in this session
+       - Commit hash: 788345f (included in SDK integration commit)
      
      - [x] Write focused MVP tests:
        - [x] Test the integration of AstralSDK with OffchainSigner:
@@ -114,14 +114,14 @@
          - [x] Test verification of signed proofs
          - [x] Test with simplified examples focusing on the happy path
        - [x] Create a semantic commit when complete: `test(eas): add basic tests for OffchainSigner integration`
-       - Commit hash: Implemented in this session
+       - Commit hash: 788345f (included in SDK integration commit)
        
      - [x] Enhance documentation with usage examples:
        - [x] Add detailed comments in create-location-attestation.ts example
        - [x] Create a simplified README section for quick start with offchain attestations
        - [x] Document chain configuration requirements
        - [x] Create a semantic commit when complete: `docs(examples): update with functional attestation examples`
-       - Commit hash: Implemented in this session
+       - Commit hash: 788345f (included in SDK integration commit)
    
    - [x] *Output*: 
      - [x] Two distinct client implementations that leverage EAS SDK functionality for their respective workflows
@@ -153,10 +153,10 @@ Completed tasks:
 - ✅ OnchainRegistrar implementation - Commit: 68a1623
 - ✅ SchemaEncoder initialization fix - Commit: 5526b0e
 - ✅ Schema extensions - Commit: 6dc2a5f
-- ✅ Integration with AstralSDK - Implemented in this session
-- ✅ Error handling for EAS operations - Implemented in this session
-- ✅ Tests for OffchainSigner integration - Implemented in this session
-- ✅ Documentation and examples - Implemented in this session
+- ✅ Integration with AstralSDK - Commit: 788345f
+- ✅ Error handling for EAS operations - Commit: 788345f
+- ✅ Tests for OffchainSigner integration - Commit: 788345f
+- ✅ Documentation and examples - Commit: 788345f
 
 ## Implementation Report:
 
