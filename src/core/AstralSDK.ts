@@ -8,9 +8,18 @@
 
 import { ExtensionRegistry } from '../extensions';
 import { AstralError, ExtensionError, ValidationError } from './errors';
-import { AstralSDKConfig, LocationProofInput, UnsignedLocationProof } from './types';
+import {
+  AstralSDKConfig,
+  LocationProofInput,
+  UnsignedLocationProof,
+  OffchainLocationProof,
+  VerificationResult,
+  OffchainProofOptions,
+} from './types';
 import { SchemaValue } from '../eas/SchemaEncoder';
 import { CustomSchemaExtensionOptions } from '../extensions/schema/helpers';
+import { OffchainSigner } from '../eas/OffchainSigner';
+import { getChainId } from '../eas/chains';
 
 /**
  * AstralSDK is the main entry point for the Astral SDK.
@@ -27,6 +36,9 @@ export class AstralSDK {
 
   /** Debug mode flag */
   private readonly debug: boolean;
+
+  /** OffchainSigner instance for offchain workflow */
+  private offchainSigner?: OffchainSigner;
 
   /**
    * Creates a new AstralSDK instance.
@@ -47,8 +59,136 @@ export class AstralSDK {
     // Initialize extension registry with built-in extensions
     this.extensions = new ExtensionRegistry(true);
 
+    // Initialize OffchainSigner if we have a signer
+    if (this.config.signer) {
+      this.initializeOffchainSigner();
+    }
+
     if (this.debug) {
       console.log('AstralSDK initialized with config:', this.config);
+    }
+  }
+
+  /**
+   * Initialize OffchainSigner with current configuration
+   *
+   * @private
+   */
+  private initializeOffchainSigner(): void {
+    // Get chain ID from the chain name or use default
+    const chainId = getChainId(this.config.defaultChain || 'sepolia');
+
+    try {
+      this.offchainSigner = new OffchainSigner({
+        signer: this.config.signer,
+        chainId,
+      });
+
+      if (this.debug) {
+        console.log(
+          `OffchainSigner initialized for chain ${chainId} (${this.config.defaultChain})`
+        );
+      }
+    } catch (error) {
+      console.warn(
+        `Failed to initialize OffchainSigner: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
+  }
+
+  /**
+   * Ensures the OffchainSigner is initialized
+   *
+   * @param options - Optional offchain proof options
+   * @throws {ValidationError} If the OffchainSigner is not initialized
+   * @private
+   */
+  private ensureOffchainSignerInitialized(options?: OffchainProofOptions): void {
+    // Check if we have an OffchainSigner
+    if (!this.offchainSigner) {
+      // If we don't have an OffchainSigner, try to initialize one with options
+      if (options && (options.signer || options.privateKey)) {
+        const chainId = getChainId(this.config.defaultChain || 'sepolia');
+        this.offchainSigner = new OffchainSigner({
+          signer: options.signer,
+          privateKey: options.privateKey,
+          chainId,
+        });
+      } else {
+        // If we still don't have a signer, throw an error
+        throw new ValidationError(
+          'No signer available for offchain operations. Provide a signer in SDK constructor or options.',
+          undefined,
+          { config: this.config, options }
+        );
+      }
+    }
+  }
+
+  /**
+   * Signs an unsigned location proof to create an offchain location proof
+   *
+   * This method uses the OffchainSigner component to create an EIP-712 signature
+   * for the location proof, resulting in a complete OffchainLocationProof.
+   *
+   * @param unsignedProof - The unsigned location proof to sign
+   * @param options - Optional configuration for the signing process
+   * @returns A complete OffchainLocationProof with signature
+   * @throws {ValidationError} If no signer is available
+   * @throws {SigningError} If the signing process fails
+   */
+  public async signOffchainLocationProof(
+    unsignedProof: UnsignedLocationProof,
+    options?: OffchainProofOptions
+  ): Promise<OffchainLocationProof> {
+    // Ensure we have an OffchainSigner
+    this.ensureOffchainSignerInitialized(options);
+
+    if (this.debug) {
+      console.log('Signing location proof:', unsignedProof);
+    }
+
+    // Sign the proof using OffchainSigner
+    return await this.offchainSigner!.signOffchainLocationProof(unsignedProof);
+  }
+
+  /**
+   * Verifies an offchain location proof's signature
+   *
+   * This method checks that the EIP-712 signature in the proof is valid
+   * and was created by the expected signer.
+   *
+   * @param proof - The offchain location proof to verify
+   * @param options - Optional configuration for the verification process
+   * @returns The verification result including validity status
+   */
+  public async verifyOffchainLocationProof(
+    proof: OffchainLocationProof,
+    options?: OffchainProofOptions
+  ): Promise<VerificationResult> {
+    try {
+      // Initialize OffchainSigner if we don't have one yet
+      this.ensureOffchainSignerInitialized(options);
+
+      if (this.debug) {
+        console.log('Verifying offchain location proof:', {
+          uid: proof.uid,
+          signer: proof.signer,
+          version: proof.version,
+        });
+      }
+
+      // Verify using OffchainSigner
+      return await this.offchainSigner!.verifyOffchainLocationProof(proof);
+    } catch (error) {
+      // Return a verification result with failure details
+      return {
+        isValid: false,
+        proof,
+        reason: error instanceof Error ? error.message : 'Unknown verification error',
+      };
     }
   }
 
@@ -226,21 +366,29 @@ export class AstralSDK {
   /**
    * Create an offchain location proof by signing the input data.
    *
-   * This is a placeholder implementation that will be expanded in future phases.
-   * In the current MVP, it builds the unsigned proof but doesn't actually sign it.
+   * This method:
+   * 1. Builds an unsigned location proof from the input data
+   * 2. Signs it using EIP-712 signatures to create an offchain location proof
    *
    * @param input - Location proof input data
-   * @returns Promise resolving to the unsigned location proof (placeholder)
+   * @param options - Optional configuration for the signing process
+   * @returns Promise resolving to a signed offchain location proof
+   * @throws {ValidationError} If no signer is available
+   * @throws {SigningError} If the signing process fails
    */
-  async createOffchainLocationProof(input: LocationProofInput): Promise<UnsignedLocationProof> {
+  async createOffchainLocationProof(
+    input: LocationProofInput,
+    options?: OffchainProofOptions
+  ): Promise<OffchainLocationProof> {
+    // First build the unsigned proof
     const unsignedProof = await this.buildLocationProof(input);
 
-    // The actual signing functionality will be implemented in a future phase
     if (this.debug) {
-      console.log('Created unsigned location proof (signing not yet implemented):', unsignedProof);
+      console.log('Created unsigned location proof, proceeding to sign:', unsignedProof);
     }
 
-    return unsignedProof;
+    // Sign the proof using our signOffchainLocationProof method
+    return await this.signOffchainLocationProof(unsignedProof, options);
   }
 
   /**

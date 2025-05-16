@@ -10,8 +10,8 @@
  */
 
 import { ethers } from 'ethers';
-import { OffchainSigner } from '../src/eas/OffchainSigner';
-import { UnsignedLocationProof } from '../src/core/types';
+import { AstralSDK } from '../src/core/AstralSDK';
+import { LocationProofInput } from '../src/core/types';
 
 async function main() {
   try {
@@ -25,47 +25,45 @@ async function main() {
     );
     console.log(`Using wallet address: ${wallet.address}`);
 
-    // Create an OffchainSigner instance
-    const signer = new OffchainSigner({
+    // Initialize the AstralSDK with a signer and chain info
+    const sdk = new AstralSDK({
       signer: wallet,
-      chainId: 11155111, // Sepolia testnet
+      defaultChain: 'sepolia',
+      debug: true, // Enable debug logging
     });
 
-    // Create an unsigned location proof with GeoJSON data
-    const unsignedProof: UnsignedLocationProof = {
-      eventTimestamp: Math.floor(Date.now() / 1000),
-      srs: 'EPSG:4326', // Standard spatial reference system
-      locationType: 'geojson',
-      location: JSON.stringify({
+    // Create location proof input with GeoJSON data
+    const locationInput: LocationProofInput = {
+      location: {
         type: 'Point',
         coordinates: [-122.4194, 37.7749], // San Francisco coordinates
-      }),
-      // These fields can be populated for more complex attestations
-      recipeTypes: [],
-      recipePayloads: [],
-      mediaTypes: [],
-      mediaData: [],
-      memo: 'Example location attestation',
+      },
+      locationType: 'geojson',
+      memo: 'Example location attestation created with AstralSDK',
+      // Optional: provide a timestamp or it will use current time
+      timestamp: new Date(),
     };
 
-    console.log('\nCreated unsigned location proof:', {
-      ...unsignedProof,
-      location: JSON.parse(unsignedProof.location), // Parse for better display
-    });
+    console.log('\nLocation input:', locationInput);
 
-    // Sign the proof to create an offchain location attestation
-    console.log('\nSigning the location proof...');
-    const offchainProof = await signer.signOffchainLocationProof(unsignedProof);
+    // Create and sign an offchain location proof in one step
+    console.log('\nCreating and signing the location proof...');
+    const offchainProof = await sdk.createOffchainLocationProof(locationInput);
 
     console.log('\nOffchain attestation created successfully!');
     console.log('UID:', offchainProof.uid);
     console.log('Signer:', offchainProof.signer);
     console.log('Version:', offchainProof.version);
-    console.log('Signature (truncated):', offchainProof.signature.substring(0, 64) + '...');
+    console.log(
+      'Signature (truncated):',
+      typeof offchainProof.signature === 'string'
+        ? offchainProof.signature.substring(0, 64) + '...'
+        : 'Non-string signature'
+    );
 
     // Verify the signed proof
     console.log('\nVerifying the attestation...');
-    const verificationResult = await signer.verifyOffchainLocationProof(offchainProof);
+    const verificationResult = await sdk.verifyOffchainLocationProof(offchainProof);
 
     if (verificationResult.isValid) {
       console.log('✅ Attestation verified successfully!');

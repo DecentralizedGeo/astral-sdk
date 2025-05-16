@@ -19,7 +19,7 @@ import {
   VerificationResult,
   VerificationError,
 } from '../core/types';
-import { ValidationError, SigningError } from '../core/errors';
+import { ValidationError, SigningError, EASError } from '../core/errors';
 import { getChainConfig, getSchemaUID, getSchemaString } from './chains';
 
 /**
@@ -90,10 +90,11 @@ export class OffchainSigner {
       const schemaString = getSchemaString();
       this.schemaEncoder = new SchemaEncoder(schemaString);
     } catch (error) {
-      throw new ValidationError(
+      throw EASError.forComponent(
+        'initialization',
+        'setup',
         'Failed to initialize EAS modules',
-        error instanceof Error ? error : undefined,
-        { chainId: this.chainId, schemaUID: this.schemaUID }
+        error instanceof Error ? error : undefined
       );
     }
   }
@@ -101,30 +102,33 @@ export class OffchainSigner {
   /**
    * Ensures the offchain module is initialized
    *
-   * @throws {ValidationError} If the offchain module is not initialized
+   * @throws {EASError} If the offchain module is not initialized
    */
   private ensureOffchainModuleInitialized(): void {
     if (!this.offchainModule) {
-      throw new ValidationError(
-        'OffchainSigner not properly initialized. The offchain module is missing.',
-        undefined,
-        { chainId: this.chainId, schemaUID: this.schemaUID }
+      throw EASError.forComponent(
+        'OffchainModule',
+        'initialization',
+        'The offchain module is missing',
+        undefined
       );
     }
 
     if (!this.schemaEncoder) {
-      throw new ValidationError(
-        'OffchainSigner not properly initialized. The schema encoder is missing.',
-        undefined,
-        { chainId: this.chainId, schemaUID: this.schemaUID }
+      throw EASError.forComponent(
+        'SchemaEncoder',
+        'initialization',
+        'The schema encoder is missing',
+        undefined
       );
     }
 
     if (!this.signer) {
-      throw new ValidationError(
-        'OffchainSigner not properly initialized. The signer is missing.',
-        undefined,
-        { chainId: this.chainId, schemaUID: this.schemaUID }
+      throw EASError.forComponent(
+        'OffchainSigner',
+        'initialization',
+        'No valid signer provided',
+        undefined
       );
     }
   }
@@ -134,6 +138,7 @@ export class OffchainSigner {
    *
    * @param proof - The unsigned location proof
    * @returns Encoded data string for EAS attestation
+   * @throws {EASError} If formatting or encoding fails
    */
   private formatProofForEAS(proof: UnsignedLocationProof): string {
     try {
@@ -154,13 +159,30 @@ export class OffchainSigner {
         schemaItems.push({ name: 'memo', value: proof.memo, type: 'string' });
       }
 
-      // Encode the data using SchemaEncoder
-      return this.schemaEncoder!.encodeData(schemaItems);
+      try {
+        // Encode the data using SchemaEncoder
+        return this.schemaEncoder!.encodeData(schemaItems);
+      } catch (error) {
+        // Specific error for SchemaEncoder failures
+        throw EASError.forComponent(
+          'SchemaEncoder',
+          'encoding',
+          'Failed to encode proof data according to schema',
+          error instanceof Error ? error : undefined
+        );
+      }
     } catch (error) {
-      throw new ValidationError(
-        'Failed to format location proof for EAS',
-        error instanceof Error ? error : undefined,
-        { proof }
+      // Re-throw EASErrors as is
+      if (error instanceof EASError) {
+        throw error;
+      }
+
+      // Otherwise, create a new EASError for generic formatting issues
+      throw EASError.forComponent(
+        'OffchainSigner',
+        'formatting',
+        'Failed to format location proof for EAS encoding',
+        error instanceof Error ? error : undefined
       );
     }
   }
@@ -170,6 +192,7 @@ export class OffchainSigner {
    *
    * @param unsignedProof - The unsigned location proof to sign
    * @returns A complete OffchainLocationProof with signature
+   * @throws {EASError} If the signing process fails
    */
   public async signOffchainLocationProof(
     unsignedProof: UnsignedLocationProof
@@ -197,26 +220,42 @@ export class OffchainSigner {
         data: encodedData,
       };
 
-      // Sign the attestation using EAS SDK
-      const signedAttestation = await this.offchainModule!.signOffchainAttestation(
-        attestationParams,
-        this.signer!
-      );
+      try {
+        // Sign the attestation using EAS SDK
+        const signedAttestation = await this.offchainModule!.signOffchainAttestation(
+          attestationParams,
+          this.signer!
+        );
 
-      // Get the signer's address
-      const signerAddress = await this.signer!.getAddress();
+        // Get the signer's address
+        const signerAddress = await this.signer!.getAddress();
 
-      // Construct the offchain location proof
-      const offchainProof: OffchainLocationProof = {
-        ...unsignedProof,
-        uid: signedAttestation.uid,
-        signature: JSON.stringify(signedAttestation.signature),
-        signer: signerAddress,
-        version: SDK_VERSION,
-      };
+        // Construct the offchain location proof
+        const offchainProof: OffchainLocationProof = {
+          ...unsignedProof,
+          uid: signedAttestation.uid,
+          signature: JSON.stringify(signedAttestation.signature),
+          signer: signerAddress,
+          version: SDK_VERSION,
+        };
 
-      return offchainProof;
+        return offchainProof;
+      } catch (error) {
+        // Specific error handling for EAS SDK signing failures
+        throw EASError.forComponent(
+          'OffchainModule',
+          'signing',
+          'Failed to generate EIP-712 signature',
+          error instanceof Error ? error : undefined
+        );
+      }
     } catch (error) {
+      // Re-throw EASErrors as is
+      if (error instanceof EASError) {
+        throw error;
+      }
+
+      // Wrap any other errors in a SigningError
       throw new SigningError(
         'Failed to sign offchain location proof',
         error instanceof Error ? error : undefined,
@@ -238,45 +277,65 @@ export class OffchainSigner {
       // Ensure offchain module is initialized
       this.ensureOffchainModuleInitialized();
 
-      // For verification, we use a simplified approach in this implementation
-      // We could parse the signature and verify it with EAS, but for MVP we'll use
-      // a basic approach focused on core functionality
+      try {
+        // For verification, we use a simplified approach in this implementation
+        // We could parse the signature and verify it with EAS, but for MVP we'll use
+        // a basic approach focused on core functionality
 
-      // This implementation assumes we trust the stored UID and signer in the proof
-      // A more comprehensive implementation would reconstruct and verify the attestation data
+        // This implementation assumes we trust the stored UID and signer in the proof
+        // A more comprehensive implementation would reconstruct and verify the attestation data
 
-      // For testing purposes, consider all proofs from known signers as valid
-      // This can be replaced with actual signature verification in production
-      const isValid = true;
+        // For testing purposes, consider all proofs from known signers as valid
+        // This can be replaced with actual signature verification in production
+        const isValid = true;
 
-      // Check if proof is expired
-      const isExpired =
-        proof.expirationTime !== undefined && proof.expirationTime < Math.floor(Date.now() / 1000);
+        // Check if proof is expired
+        const isExpired =
+          proof.expirationTime !== undefined &&
+          proof.expirationTime < Math.floor(Date.now() / 1000);
 
-      // Construct verification result
-      if (!isValid) {
-        return {
-          isValid: false,
-          signerAddress: proof.signer,
-          proof,
-          reason: VerificationError.INVALID_SIGNATURE,
-        };
-      } else if (isExpired) {
-        return {
-          isValid: false,
-          signerAddress: proof.signer,
-          proof,
-          reason: VerificationError.PROOF_EXPIRED,
-        };
-      } else {
-        return {
-          isValid: true,
-          signerAddress: proof.signer,
-          proof,
-        };
+        // Construct verification result
+        if (!isValid) {
+          return {
+            isValid: false,
+            signerAddress: proof.signer,
+            proof,
+            reason: VerificationError.INVALID_SIGNATURE,
+          };
+        } else if (isExpired) {
+          return {
+            isValid: false,
+            signerAddress: proof.signer,
+            proof,
+            reason: VerificationError.PROOF_EXPIRED,
+          };
+        } else {
+          return {
+            isValid: true,
+            signerAddress: proof.signer,
+            proof,
+          };
+        }
+      } catch (error) {
+        // Specific error handling for signature verification failures
+        throw EASError.forComponent(
+          'OffchainModule',
+          'verification',
+          'Failed to verify EIP-712 signature',
+          error instanceof Error ? error : undefined
+        );
       }
     } catch (error) {
-      // Return verification error
+      // Handle EASErrors specifically
+      if (error instanceof EASError) {
+        return {
+          isValid: false,
+          proof,
+          reason: `EAS error: ${error.message}`,
+        };
+      }
+
+      // Return verification error for other errors
       return {
         isValid: false,
         proof,
