@@ -47,7 +47,7 @@
          - [x] **Use EAS SDK's built-in verification methods** for basic signature verification
          - [x] Keep validation focused on signature correctness for MVP
        - [x] Create a semantic commit when complete: `feat(eas): implement offchain signer for location proofs`
-       - Commit hash: ________
+       - Commit hash: 68a1623 (implemented alongside OnchainRegistrar)
      
      - [x] Implement `src/eas/OnchainRegistrar.ts` for the onchain workflow:
        - [x] Constructor accepting ethers Provider/Signer and specific chain ID/name
