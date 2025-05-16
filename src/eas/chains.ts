@@ -297,6 +297,25 @@ export function getSchemaUID(chainIdOrName: number | string, version?: string): 
 }
 
 /**
+ * Gets the raw schema string for use with SchemaEncoder
+ *
+ * @param version - Optional specific version to use (defaults to latest)
+ * @returns The raw schema string for the SchemaEncoder
+ * @throws {ChainConnectionError} If schema string is not found
+ */
+export function getSchemaString(version?: string): string {
+  const schemaConfig = getSchemaConfig(version);
+
+  if (!schemaConfig.rawString) {
+    throw new ChainConnectionError('Schema string not found in configuration', undefined, {
+      version: version || 'latest',
+    });
+  }
+
+  return schemaConfig.rawString;
+}
+
+/**
  * Default export for convenience
  */
 export default {
@@ -311,4 +330,5 @@ export default {
   getSupportedChainNames,
   getSchemaConfig,
   getSchemaUID,
+  getSchemaString,
 };

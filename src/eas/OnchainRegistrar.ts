@@ -16,7 +16,7 @@ import {
   VerificationError,
 } from '../core/types';
 import { ValidationError, RegistrationError, ChainConnectionError } from '../core/errors';
-import { getChainConfig, getSchemaUID } from './chains';
+import { getChainConfig, getSchemaUID, getSchemaString } from './chains';
 
 /**
  * OnchainRegistrar handles the registration of attestations on the blockchain
@@ -153,8 +153,10 @@ export class OnchainRegistrar {
         this.eas.connect(this.provider);
       }
 
-      // Create SchemaEncoder
-      this.schemaEncoder = new SchemaEncoder(this.schemaUID);
+      // Create SchemaEncoder with the schema string (not the UID)
+      // This is the critical fix - SchemaEncoder needs a schema string, not a UID
+      const schemaString = getSchemaString();
+      this.schemaEncoder = new SchemaEncoder(schemaString);
     } catch (error) {
       throw new ChainConnectionError(
         'Failed to initialize EAS modules',
