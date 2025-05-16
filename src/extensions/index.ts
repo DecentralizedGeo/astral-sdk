@@ -11,13 +11,14 @@ import {
   LocationTypeExtension,
   MediaAttachmentExtension,
   ProofRecipeExtension,
+  SchemaExtension,
 } from './types';
 
 /**
  * ExtensionRegistry manages all extensions in the SDK.
  *
  * This class allows registration and retrieval of location format, media type,
- * and proof recipe extensions. Each AstralSDK instance has its own registry,
+ * schema, and proof recipe extensions. Each AstralSDK instance has its own registry,
  * allowing for customization without global state issues.
  */
 export class ExtensionRegistry implements IExtensionRegistry {
@@ -25,6 +26,7 @@ export class ExtensionRegistry implements IExtensionRegistry {
   private mediaExtensions: Map<string, MediaAttachmentExtension>;
   private mediaTypeMapping: Map<string, MediaAttachmentExtension>;
   private recipeExtensions: Map<string, ProofRecipeExtension>;
+  private schemaExtensions: Map<string, SchemaExtension>;
 
   /**
    * Creates a new ExtensionRegistry.
@@ -39,6 +41,7 @@ export class ExtensionRegistry implements IExtensionRegistry {
     this.mediaExtensions = new Map();
     this.mediaTypeMapping = new Map();
     this.recipeExtensions = new Map();
+    this.schemaExtensions = new Map();
 
     // Register built-in extensions if requested
     if (registerBuiltIns) {
@@ -148,6 +151,33 @@ export class ExtensionRegistry implements IExtensionRegistry {
   }
 
   /**
+   * Registers a schema extension.
+   *
+   * If an extension with the same schemaType already exists, it will be replaced and a warning will be issued.
+   *
+   * @param extension - The schema extension to register
+   * @throws Error if the extension doesn't pass its own validation
+   */
+  registerSchemaExtension(extension: SchemaExtension): void {
+    // Validate the extension before registering
+    if (!extension.validate()) {
+      throw new Error(`Extension validation failed for ${extension.id}`);
+    }
+
+    // Check if an extension with this schemaType already exists
+    const existingExtension = this.schemaExtensions.get(extension.schemaType);
+    if (existingExtension && existingExtension.id !== extension.id) {
+      console.warn(
+        `Warning: Replacing existing schema extension (${existingExtension.id}) ` +
+          `for schemaType '${extension.schemaType}' with new extension (${extension.id})`
+      );
+    }
+
+    // Register the extension using its schemaType as the key
+    this.schemaExtensions.set(extension.schemaType, extension);
+  }
+
+  /**
    * Gets a location extension by type.
    *
    * This method only attempts to match the first component of the Location Format Identifier
@@ -188,6 +218,16 @@ export class ExtensionRegistry implements IExtensionRegistry {
   }
 
   /**
+   * Gets a schema extension by schema type.
+   *
+   * @param schemaType - The schema type to retrieve
+   * @returns The schema extension or undefined if not found
+   */
+  getSchemaExtension(schemaType: string): SchemaExtension | undefined {
+    return this.schemaExtensions.get(schemaType);
+  }
+
+  /**
    * Gets all registered location extensions.
    *
    * @returns Array of all registered location extensions
@@ -212,6 +252,15 @@ export class ExtensionRegistry implements IExtensionRegistry {
    */
   getAllRecipeExtensions(): ProofRecipeExtension[] {
     return Array.from(this.recipeExtensions.values());
+  }
+
+  /**
+   * Gets all registered schema extensions.
+   *
+   * @returns Array of all registered schema extensions
+   */
+  getAllSchemaExtensions(): SchemaExtension[] {
+    return Array.from(this.schemaExtensions.values());
   }
 
   /**
@@ -268,8 +317,25 @@ export class ExtensionRegistry implements IExtensionRegistry {
         }`
       );
     }
+
+    try {
+      // Import and register schema extensions
+      const locationSchemaModule = await import('./schema/builtins/LocationSchema');
+      this.registerSchemaExtension(locationSchemaModule.locationSchemaExtension);
+
+      // In the future, we'll import additional schema extensions
+    } catch (error) {
+      console.warn(
+        `Failed to register built-in schema extensions: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
   }
 }
 
-// Export all extension-related types
+// Export all extension-related types and extensions
 export * from './types';
+export * from './location';
+export * from './media';
+export * from './schema';

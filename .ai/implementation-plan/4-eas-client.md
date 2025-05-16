@@ -69,27 +69,28 @@
        - [x] Create a semantic commit when complete: `feat(eas): implement onchain registrar for location proofs`
        - Commit hash: 68a1623
      
-     - [ ] Fix SchemaEncoder initialization in OffchainSigner and OnchainRegistrar:
-       - [ ] Update initializeEASModules method in OffchainSigner to use schema string instead of schema UID
-         - [ ] Load schema string from config/EAS-config.json
-         - [ ] Initialize SchemaEncoder with schema string instead of UID
-       - [ ] Update initializeEASModules method in OnchainRegistrar to use schema string instead of schema UID
-         - [ ] Load schema string from config/EAS-config.json
-         - [ ] Initialize SchemaEncoder with schema string instead of UID
-       - [ ] Add getSchemaString utility function to chains.ts for better architecture
-       - [ ] Implement proper signature verification in verifyOffchainLocationProof
-       - [ ] Add simple example script showing how to create a valid location attestation
-       - [ ] Create a semantic commit when complete: `fix(eas): correct SchemaEncoder initialization with schema string`
-       - Commit hash: ________
+     - [x] Fix SchemaEncoder initialization in OffchainSigner and OnchainRegistrar:
+       - [x] Update initializeEASModules method in OffchainSigner to use schema string instead of schema UID
+         - [x] Load schema string from config/EAS-config.json
+         - [x] Initialize SchemaEncoder with schema string instead of UID
+       - [x] Update initializeEASModules method in OnchainRegistrar to use schema string instead of schema UID
+         - [x] Load schema string from config/EAS-config.json
+         - [x] Initialize SchemaEncoder with schema string instead of UID
+       - [x] Add getSchemaString utility function to chains.ts for better architecture
+       - [x] Implement proper signature verification in verifyOffchainLocationProof
+       - [x] Add simple example script showing how to create a valid location attestation
+       - [x] Create a semantic commit when complete: `fix(eas): correct SchemaEncoder initialization with schema string`
+       - Commit hash: 5526b0e
        
-     - [ ] Implement schema extensibility:
-       - [ ] Define `SchemaExtension` interface extending `BaseExtension`
-       - [ ] Add schema extension support to `ExtensionRegistry`
-       - [ ] Create built-in schema extension(s) for Astral location schema
-       - [ ] Add methods for registering custom schema extensions
-       - [ ] Provide schema validation helpers using the existing pattern
-       - [ ] Create a semantic commit when complete: `feat(extensions): add schema extensions for EAS schemas`
-       - Commit hash: ________
+     - [x] Implement schema extensibility:
+       - [x] Define `SchemaExtension` interface extending `BaseExtension`
+       - [x] Add schema extension support to `ExtensionRegistry`
+       - [x] Create built-in schema extension(s) for Astral location schema
+       - [x] Add methods for registering custom schema extensions
+       - [x] Provide schema validation helpers using the existing pattern
+       - [x] Update AstralSDK to leverage schema extensions
+       - [x] Create a semantic commit when complete: `feat(extensions): add schema extensions for EAS schemas`
+       - Commit hash: tbd
      
      - [ ] Add streamlined error handling:
        - [ ] Create basic error classes for common failure scenarios (e.g., SchemaError, EASConnectionError)
@@ -104,7 +105,7 @@
        - [ ] Make chain ID/name a required parameter for onchain operations
        - [ ] Clarify in documentation that multi-chain operations require multiple SDK instances
        - [ ] Ensure seamless integration with the existing extension system for location and media formats
-       - [ ] Update SDK to use schema extensions when encoding/decoding data
+       - [x] Update SDK to use schema extensions when encoding/decoding data
        - [ ] Create a semantic commit when complete: `feat(sdk): integrate EAS client with AstralSDK`
        - Commit hash: ________
      

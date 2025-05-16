@@ -9,6 +9,8 @@
 import { ExtensionRegistry } from '../extensions';
 import { AstralError, ExtensionError, ValidationError } from './errors';
 import { AstralSDKConfig, LocationProofInput, UnsignedLocationProof } from './types';
+import { SchemaValue } from '../eas/SchemaEncoder';
+import { CustomSchemaExtensionOptions } from '../extensions/schema/helpers';
 
 /**
  * AstralSDK is the main entry point for the Astral SDK.
@@ -191,6 +193,23 @@ export class AstralSDK {
           : {}),
       };
 
+      // Validate against the schema if one is available
+      const schemaExtension = this.extensions.getSchemaExtension('location');
+      if (schemaExtension) {
+        const isValid = schemaExtension.validateSchemaData(
+          unsignedProof as unknown as Record<string, SchemaValue>
+        );
+        if (!isValid) {
+          throw new ValidationError('Generated proof does not match the schema', undefined, {
+            proof: unsignedProof,
+          });
+        }
+
+        if (this.debug) {
+          console.log('Validated proof against schema:', schemaExtension.schemaType);
+        }
+      }
+
       return unsignedProof;
     } catch (error) {
       if (error instanceof AstralError) {
@@ -245,5 +264,123 @@ export class AstralSDK {
     }
 
     return unsignedProof;
+  }
+
+  /**
+   * Encodes location proof data according to the schema
+   *
+   * This method uses the appropriate schema extension to encode the proof data.
+   *
+   * @param proof - The location proof to encode
+   * @param schemaType - Optional schema type to use (defaults to 'location')
+   * @returns Encoded data as a hex string
+   * @throws ExtensionError if no schema extension is found
+   * @throws ValidationError if the data is invalid for the schema
+   */
+  encodeLocationProof(proof: UnsignedLocationProof, schemaType: string = 'location'): string {
+    const schemaExtension = this.extensions.getSchemaExtension(schemaType);
+
+    if (!schemaExtension) {
+      throw new ExtensionError(`No schema extension found for type: ${schemaType}`, undefined, {
+        schemaType,
+        availableExtensions: this.extensions.getAllSchemaExtensions().map(ext => ext.schemaType),
+      });
+    }
+
+    return schemaExtension.encodeData(proof as unknown as Record<string, SchemaValue>);
+  }
+
+  /**
+   * Decodes encoded location proof data according to the schema
+   *
+   * This method uses the appropriate schema extension to decode the proof data.
+   *
+   * @param encodedData - The encoded proof data as a hex string
+   * @param schemaType - Optional schema type to use (defaults to 'location')
+   * @returns Decoded location proof data
+   * @throws ExtensionError if no schema extension is found
+   * @throws ValidationError if the encoded data is invalid
+   */
+  decodeLocationProof(
+    encodedData: string,
+    schemaType: string = 'location'
+  ): Record<string, SchemaValue> {
+    const schemaExtension = this.extensions.getSchemaExtension(schemaType);
+
+    if (!schemaExtension) {
+      throw new ExtensionError(`No schema extension found for type: ${schemaType}`, undefined, {
+        schemaType,
+        availableExtensions: this.extensions.getAllSchemaExtensions().map(ext => ext.schemaType),
+      });
+    }
+
+    return schemaExtension.decodeData(encodedData);
+  }
+
+  /**
+   * Gets the schema UID for a specific chain and schema type
+   *
+   * @param chainId - The chain ID to get the schema UID for
+   * @param schemaType - Optional schema type to use (defaults to 'location')
+   * @returns The schema UID for the specified chain
+   * @throws ExtensionError if no schema extension is found
+   */
+  getSchemaUID(chainId: number, schemaType: string = 'location'): string {
+    const schemaExtension = this.extensions.getSchemaExtension(schemaType);
+
+    if (!schemaExtension) {
+      throw new ExtensionError(`No schema extension found for type: ${schemaType}`, undefined, {
+        schemaType,
+        availableExtensions: this.extensions.getAllSchemaExtensions().map(ext => ext.schemaType),
+      });
+    }
+
+    return schemaExtension.getSchemaUID(chainId);
+  }
+
+  /**
+   * Gets the raw schema string for a specific schema type
+   *
+   * @param schemaType - Optional schema type to use (defaults to 'location')
+   * @returns The raw schema string
+   * @throws ExtensionError if no schema extension is found
+   */
+  getSchemaString(schemaType: string = 'location'): string {
+    const schemaExtension = this.extensions.getSchemaExtension(schemaType);
+
+    if (!schemaExtension) {
+      throw new ExtensionError(`No schema extension found for type: ${schemaType}`, undefined, {
+        schemaType,
+        availableExtensions: this.extensions.getAllSchemaExtensions().map(ext => ext.schemaType),
+      });
+    }
+
+    return schemaExtension.getSchemaString();
+  }
+
+  /**
+   * Registers a custom schema extension with the SDK
+   *
+   * @param options - Configuration options for the custom schema extension
+   * @returns The registered schema extension
+   */
+  registerCustomSchema(options: CustomSchemaExtensionOptions): void {
+    // Import helper function dynamically to avoid circular dependencies
+    import('../extensions/schema/helpers')
+      .then(({ createCustomSchemaExtension }) => {
+        const extension = createCustomSchemaExtension(options);
+        this.extensions.registerSchemaExtension(extension);
+
+        if (this.debug) {
+          console.log(`Registered custom schema extension: ${options.schemaType}`);
+        }
+      })
+      .catch(error => {
+        throw new ExtensionError(
+          'Failed to register custom schema extension',
+          error instanceof Error ? error : undefined,
+          { options }
+        );
+      });
   }
 }

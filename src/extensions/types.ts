@@ -5,6 +5,8 @@
  * to be extended with new location formats, media types, and proof recipes.
  */
 
+import { SchemaValue } from '../eas/SchemaEncoder';
+
 /**
  * BaseExtension provides common functionality for all extensions.
  *
@@ -194,6 +196,59 @@ export interface ProofRecipeExtension extends BaseExtension {
 }
 
 /**
+ * SchemaExtension interface for handling EAS schema data.
+ *
+ * This interface defines the methods required to work with different schema formats
+ * for EAS attestations. Schema extensions provide a way to customize how data is
+ * encoded and decoded for attestations.
+ */
+export interface SchemaExtension extends BaseExtension {
+  /**
+   * Schema identifier (e.g., "location", "identity", "social")
+   */
+  readonly schemaType: string;
+
+  /**
+   * Gets the raw schema string for this extension
+   *
+   * @returns The raw schema string used for EAS attestations
+   */
+  getSchemaString(): string;
+
+  /**
+   * Gets the schema UID for a specific chain
+   *
+   * @param chainId - The chain ID to get the schema UID for
+   * @returns The schema UID for the specified chain
+   */
+  getSchemaUID(chainId: number): string;
+
+  /**
+   * Validates data against the schema
+   *
+   * @param data - Data to validate against the schema
+   * @returns True if the data is valid for this schema
+   */
+  validateSchemaData(data: Record<string, SchemaValue>): boolean;
+
+  /**
+   * Encodes data according to the schema
+   *
+   * @param data - Data to encode
+   * @returns Encoded data as a hex string
+   */
+  encodeData(data: Record<string, SchemaValue>): string;
+
+  /**
+   * Decodes hex data according to the schema
+   *
+   * @param encodedData - Hex data to decode
+   * @returns Decoded data as a Record
+   */
+  decodeData(encodedData: string): Record<string, SchemaValue>;
+}
+
+/**
  * ExtensionRegistry manages all extensions in the SDK.
  *
  * This interface defines methods for registering and retrieving extensions.
@@ -221,6 +276,13 @@ export interface ExtensionRegistry {
   registerRecipeExtension(extension: ProofRecipeExtension): void;
 
   /**
+   * Registers a schema extension
+   *
+   * @param extension - The schema extension to register
+   */
+  registerSchemaExtension(extension: SchemaExtension): void;
+
+  /**
    * Gets a location extension by type
    *
    * @param locationType - The location type to retrieve
@@ -243,4 +305,12 @@ export interface ExtensionRegistry {
    * @returns The recipe extension or undefined if not found
    */
   getRecipeExtension(recipeType: string): ProofRecipeExtension | undefined;
+
+  /**
+   * Gets a schema extension by schema type
+   *
+   * @param schemaType - The schema type to retrieve
+   * @returns The schema extension or undefined if not found
+   */
+  getSchemaExtension(schemaType: string): SchemaExtension | undefined;
 }
