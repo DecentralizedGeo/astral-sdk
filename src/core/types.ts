@@ -267,12 +267,16 @@ export interface OffchainProofOptions extends ProofOptions {
  * This interface belongs to the onchain workflow.
  *
  * @property chain - Which blockchain to register the proof on
+ * @property provider - Optional custom provider to use instead of the default
+ * @property signer - Optional custom signer to use instead of the default
  * @property txOverrides - Optional transaction parameter overrides
  * @property allowDifferentSigner - Whether to allow the transaction sender to differ from the proof signer
  */
 export interface OnchainProofOptions extends ProofOptions {
   readonly chain?: string;
-  readonly txOverrides?: Record<string, unknown>; // CLAUDE: What is this for???
+  readonly provider?: unknown; // Will be refined to ethers.Provider once we have the dependency
+  readonly signer?: unknown; // Will be refined to ethers.Signer once we have the dependency
+  readonly txOverrides?: Record<string, unknown>;
   readonly allowDifferentSigner?: boolean;
 }
 

@@ -1,4 +1,4 @@
-## **5. Astral API Client Module**  
+## **6. Astral API Client Module**  
   *Description*: Implement the API client module that communicates with Astral's REST API, supporting both offchain and onchain proof retrieval and queries.
    
    - *Sub-tasks*: 

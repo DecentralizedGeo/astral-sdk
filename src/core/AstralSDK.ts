@@ -7,18 +7,21 @@
  */
 
 import { ExtensionRegistry } from '../extensions';
-import { AstralError, ExtensionError, ValidationError } from './errors';
+import { AstralError, ExtensionError, ValidationError, VerificationError } from './errors';
 import {
   AstralSDKConfig,
   LocationProofInput,
   UnsignedLocationProof,
   OffchainLocationProof,
+  OnchainLocationProof,
   VerificationResult,
   OffchainProofOptions,
+  OnchainProofOptions,
 } from './types';
 import { SchemaValue } from '../eas/SchemaEncoder';
 import { CustomSchemaExtensionOptions } from '../extensions/schema/helpers';
 import { OffchainSigner } from '../eas/OffchainSigner';
+import { OnchainRegistrar } from '../eas/OnchainRegistrar';
 import { getChainId } from '../eas/chains';
 
 /**
@@ -39,6 +42,9 @@ export class AstralSDK {
 
   /** OffchainSigner instance for offchain workflow */
   private offchainSigner?: OffchainSigner;
+
+  /** OnchainRegistrar instance for onchain workflow */
+  private onchainRegistrar?: OnchainRegistrar;
 
   /**
    * Creates a new AstralSDK instance.
@@ -62,6 +68,11 @@ export class AstralSDK {
     // Initialize OffchainSigner if we have a signer
     if (this.config.signer) {
       this.initializeOffchainSigner();
+    }
+
+    // Initialize OnchainRegistrar if we have a provider or signer
+    if (this.config.provider || this.config.signer) {
+      this.initializeOnchainRegistrar();
     }
 
     if (this.debug) {
@@ -99,6 +110,31 @@ export class AstralSDK {
   }
 
   /**
+   * Initialize OnchainRegistrar with current configuration
+   *
+   * @private
+   */
+  private initializeOnchainRegistrar(): void {
+    try {
+      this.onchainRegistrar = new OnchainRegistrar({
+        provider: this.config.provider,
+        signer: this.config.signer,
+        chain: this.config.defaultChain || 'sepolia',
+      });
+
+      if (this.debug) {
+        console.log(`OnchainRegistrar initialized for chain ${this.config.defaultChain}`);
+      }
+    } catch (error) {
+      console.warn(
+        `Failed to initialize OnchainRegistrar: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
+  }
+
+  /**
    * Ensures the OffchainSigner is initialized
    *
    * @param options - Optional offchain proof options
@@ -120,6 +156,38 @@ export class AstralSDK {
         // If we still don't have a signer, throw an error
         throw new ValidationError(
           'No signer available for offchain operations. Provide a signer in SDK constructor or options.',
+          undefined,
+          { config: this.config, options }
+        );
+      }
+    }
+  }
+
+  /**
+   * Ensures the OnchainRegistrar is initialized
+   *
+   * @param options - Optional onchain proof options
+   * @throws {ValidationError} If the OnchainRegistrar is not initialized and can't be initialized with the provided options
+   * @private
+   */
+  private ensureOnchainRegistrarInitialized(options?: OnchainProofOptions): void {
+    // Check if we have an OnchainRegistrar
+    if (!this.onchainRegistrar) {
+      // If we don't have an OnchainRegistrar, try to initialize one with options
+      if (options && (options.provider || options.signer)) {
+        this.onchainRegistrar = new OnchainRegistrar({
+          provider: options.provider || this.config.provider,
+          signer: options.signer || this.config.signer,
+          chain: options.chain || this.config.defaultChain || 'sepolia',
+        });
+
+        if (this.debug) {
+          console.log('OnchainRegistrar initialized from options');
+        }
+      } else {
+        // If we still don't have a provider or signer, throw an error
+        throw new ValidationError(
+          'No provider or signer available for onchain operations. Provide a provider or signer in SDK constructor or options.',
           undefined,
           { config: this.config, options }
         );
@@ -394,24 +462,180 @@ export class AstralSDK {
   /**
    * Create an onchain location proof by registering the input data.
    *
-   * This is a placeholder implementation that will be expanded in future phases.
-   * In the current MVP, it builds the unsigned proof but doesn't actually register it.
+   * This method:
+   * 1. Builds an unsigned location proof from the input data
+   * 2. Registers it on the blockchain using the OnchainRegistrar
    *
    * @param input - Location proof input data
-   * @returns Promise resolving to the unsigned location proof (placeholder)
+   * @param options - Optional configuration for the registration process
+   * @returns Promise resolving to an onchain location proof with transaction details
+   * @throws {ValidationError} If no provider or signer is available
+   * @throws {RegistrationError} If the onchain registration fails
    */
-  async createOnchainLocationProof(input: LocationProofInput): Promise<UnsignedLocationProof> {
-    const unsignedProof = await this.buildLocationProof(input);
+  async createOnchainLocationProof(
+    input: LocationProofInput,
+    options?: OnchainProofOptions
+  ): Promise<OnchainLocationProof> {
+    try {
+      // First build the unsigned proof
+      const unsignedProof = await this.buildLocationProof(input);
 
-    // The actual registration functionality will be implemented in a future phase
-    if (this.debug) {
-      console.log(
-        'Created unsigned location proof (registration not yet implemented):',
-        unsignedProof
+      if (this.debug) {
+        console.log('Created unsigned location proof, proceeding to register:', unsignedProof);
+      }
+
+      // Ensure OnchainRegistrar is initialized
+      this.ensureOnchainRegistrarInitialized(options);
+
+      // Register the proof using OnchainRegistrar
+      const onchainProof = await this.onchainRegistrar!.registerOnchainLocationProof(
+        unsignedProof,
+        options
+      );
+
+      if (this.debug) {
+        console.log('Successfully registered onchain location proof:', {
+          uid: onchainProof.uid,
+          txHash: onchainProof.txHash,
+          chain: onchainProof.chain,
+        });
+      }
+
+      return onchainProof;
+    } catch (error) {
+      // Propagate AstralError instances
+      if (error instanceof AstralError) {
+        throw error;
+      }
+
+      // Otherwise wrap in a validation error
+      throw new ValidationError(
+        `Failed to create onchain location proof: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+        error instanceof Error ? error : undefined,
+        { input, options }
       );
     }
+  }
 
-    return unsignedProof;
+  /**
+   * Encodes location proof data according to the schema
+   *
+   * This method uses the appropriate schema extension to encode the proof data.
+   *
+   * @param proof - The location proof to encode
+   * @param schemaType - Optional schema type to use (defaults to 'location')
+   * @returns Encoded data as a hex string
+   * @throws ExtensionError if no schema extension is found
+   * @throws ValidationError if the data is invalid for the schema
+   */
+  /**
+   * Verifies an onchain location proof to ensure its validity
+   *
+   * This method checks that the proof exists on the blockchain and has not been revoked.
+   *
+   * @param proof - The onchain location proof to verify
+   * @param options - Optional configuration for the verification process
+   * @returns A verification result including validity status and details
+   * @throws {ValidationError} If no provider is available for blockchain interaction
+   */
+  async verifyOnchainLocationProof(
+    proof: OnchainLocationProof,
+    options?: OnchainProofOptions
+  ): Promise<VerificationResult> {
+    try {
+      // Ensure OnchainRegistrar is initialized
+      this.ensureOnchainRegistrarInitialized(options);
+
+      if (this.debug) {
+        console.log('Verifying onchain location proof:', {
+          uid: proof.uid,
+          chain: proof.chain,
+          txHash: proof.txHash,
+        });
+      }
+
+      // Call the OnchainRegistrar to verify the proof
+      const verificationResult = await this.onchainRegistrar!.verifyOnchainLocationProof(proof);
+
+      if (this.debug) {
+        console.log('Verification result:', verificationResult);
+      }
+
+      return verificationResult;
+    } catch (error) {
+      // Return a failed verification result with the error details
+      return {
+        isValid: false,
+        proof,
+        reason: error instanceof Error ? error.message : 'Unknown verification error',
+      };
+    }
+  }
+
+  /**
+   * Revokes an onchain location proof
+   *
+   * This method sends a transaction to revoke an existing attestation on the blockchain.
+   * Only the original attester can revoke their attestations, and only if they were created
+   * with the revocable flag set to true.
+   *
+   * @param proof - The onchain location proof to revoke
+   * @param options - Optional configuration for the revocation process
+   * @returns The transaction response from the revocation
+   * @throws {ValidationError} If no signer is available or the proof is not revocable
+   * @throws {RegistrationError} If the revocation transaction fails
+   */
+  async revokeOnchainLocationProof(
+    proof: OnchainLocationProof,
+    options?: OnchainProofOptions
+  ): Promise<unknown> {
+    try {
+      // Ensure OnchainRegistrar is initialized
+      this.ensureOnchainRegistrarInitialized(options);
+
+      // Verify the proof is revocable
+      if (!proof.revocable) {
+        throw new ValidationError('This location proof is not revocable', undefined, { proof });
+      }
+
+      // Verify the proof is not already revoked
+      if (proof.revoked) {
+        throw new ValidationError('This location proof is already revoked', undefined, { proof });
+      }
+
+      if (this.debug) {
+        console.log('Revoking onchain location proof:', {
+          uid: proof.uid,
+          chain: proof.chain,
+          txHash: proof.txHash,
+        });
+      }
+
+      // Call the OnchainRegistrar to revoke the proof
+      const response = await this.onchainRegistrar!.revokeOnchainLocationProof(proof);
+
+      if (this.debug) {
+        console.log('Revocation successful, transaction response:', response);
+      }
+
+      return response;
+    } catch (error) {
+      // Propagate AstralError instances
+      if (error instanceof AstralError) {
+        throw error;
+      }
+
+      // Otherwise wrap in a verification error
+      throw new VerificationError(
+        `Failed to revoke onchain location proof: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+        error instanceof Error ? error : undefined,
+        { proof }
+      );
+    }
   }
 
   /**
