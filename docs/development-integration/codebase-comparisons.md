@@ -1,6 +1,6 @@
 # Codebase comparison: Understanding how to integrate features from `eas-sandbox` into `astral-sdk`
 
-table of contents
+**Jumplinks**
 
 - [Core Functionality Overlap](#core-functionality-overlap)
 - [Key Architectural Differences](#key-architectural-differences)
