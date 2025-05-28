@@ -200,6 +200,7 @@ export interface PublicationRecord {
  *
  * @property location - Location data in various formats (GeoJSON, WKT, coordinate pair, H3)
  * @property locationType - Recommended hint about the format of the location data
+ * @property targetLocationFormat - Optional identifier specifying the format the location data should be converted to.
  * @property timestamp - When the location event occurred (defaults to current time)
  * @property media - Optional media attachments
  * @property memo - Optional textual note
@@ -209,7 +210,7 @@ export interface LocationProofInput {
   // Location data (flexible format)
   readonly location: unknown;
   readonly locationType?: string;
-
+  readonly targetLocationFormat?: string;
   // Timing
   readonly timestamp?: Date;
 
@@ -266,12 +267,16 @@ export interface OffchainProofOptions extends ProofOptions {
  * This interface belongs to the onchain workflow.
  *
  * @property chain - Which blockchain to register the proof on
+ * @property provider - Optional custom provider to use instead of the default
+ * @property signer - Optional custom signer to use instead of the default
  * @property txOverrides - Optional transaction parameter overrides
  * @property allowDifferentSigner - Whether to allow the transaction sender to differ from the proof signer
  */
 export interface OnchainProofOptions extends ProofOptions {
   readonly chain?: string;
-  readonly txOverrides?: Record<string, unknown>; // CLAUDE: What is this for???
+  readonly provider?: unknown; // Will be refined to ethers.Provider once we have the dependency
+  readonly signer?: unknown; // Will be refined to ethers.Signer once we have the dependency
+  readonly txOverrides?: Record<string, unknown>;
   readonly allowDifferentSigner?: boolean;
 }
 
@@ -378,11 +383,13 @@ export interface AstralSDKConfig {
  *
  * @property signer - Ethereum signer for creating signatures
  * @property privateKey - Private key to create an in-memory signer
+ * @property chainId - ID of the blockchain to sign for
  * @property schemaUID - EAS schema UID for location proofs
  */
 export interface OffchainSignerConfig {
-  readonly signer?: unknown; // Will be refined to ethers.Signer
+  readonly signer?: unknown; // ethers.Signer
   readonly privateKey?: string;
+  readonly chainId?: number;
   readonly schemaUID?: string;
 }
 

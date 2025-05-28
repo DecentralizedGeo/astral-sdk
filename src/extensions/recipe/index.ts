@@ -1,9 +1,9 @@
 /**
  * Recipe Extensions Module
- * 
+ *
  * This module is a placeholder for future versions, which will support
  * custom recipe extensions.
- * 
+ *
  * @module extensions/recipe
  */
 
