@@ -1,6 +1,82 @@
 # Codebase comparison: Understanding how to integrate features from `eas-sandbox` into `astral-sdk`
 
-## Onchain Attestations
+table of contents
+
+- [Core Functionality Overlap](#core-functionality-overlap)
+- [Key Architectural Differences](#key-architectural-differences)
+- [Functional Completeness Comparison](#functional-completeness-comparison)
+- [Similarity Assessment](#similarity-assessment-~70)
+- [Onchain Attestations Sequence Diagram](#onchain-attestations-sequence-diagram)
+- [Off-chain Attestations Sequence Diagram](#off-chain-attestations-sequence-diagram)
+- [Schema Creation and Registration Sequence Diagram](#schema-creation-and-registration-sequence-diagram)
+
+## Core Functionality Overlap
+
+Looking at both codebases, there's significant functional overlap but they serve different purposes and have different architectural approaches:
+
+Both codebases implement these key EAS features:
+
+### 1. **Schema Management**
+
+- **astral-sdk**: `getSchemaUID`, `getSchemaString`, `registerCustomSchema`
+- **eas-sandbox**: `registerSchema`, `fetchSchema`, `checkExistingSchema`
+
+### 2. **On-chain Attestations**
+
+- **astral-sdk**: `OnchainRegistrar` class with `registerOnchainLocationProof` and `verifyOnchainLocationProof`
+- **eas-sandbox**: `createOnChainAttestation`, `getAttestation`, `revokeOnChainAttestation`
+
+### 3. **Off-chain Attestations**
+
+- **astral-sdk**: `OffchainSigner` class with `signOffchainLocationProof` and `verifyOffchainLocationProof`
+- **eas-sandbox**: `createOffChainAttestation` with local storage via `saveOffChainAttestation`
+
+## Key Architectural Differences
+
+### **astral-sdk** - Production SDK
+
+- **Purpose**: Location-proof focused SDK for production use
+- **Architecture**: Clean, modular class-based design with `AstralSDK` as main entry point
+- **Extensions**: Sophisticated extension system for different location/media types via `ExtensionRegistry`
+- **Data Model**: Strongly typed with `UnsignedLocationProof`, `OffchainLocationProof`, `OnchainLocationProof`
+- **Error Handling**: Custom error classes like `ValidationError`, `SigningError`
+
+### **eas-sandbox** - Development/Testing Environment
+
+- **Purpose**: Learning, experimentation, and workflow demonstrations
+- **Architecture**: Function-based utilities with extensive examples
+- **Examples**: Rich set of example scripts in examples/ folder
+- **Workflows**: Complete workflow demonstrations like `workflow-geocaching.ts`
+- **Configuration**: YAML-based configuration system via `config-helpers.ts`
+- **Testing Features**: Gas estimation, GraphQL queries, private data proofs
+
+## Functional Completeness Comparison
+
+| Feature                | astral-sdk            | eas-sandbox           |
+| ---------------------- | --------------------- | --------------------- |
+| Schema registration    | ✅ (via extensions)   | ✅ (direct functions) |
+| On-chain attestations  | ✅ (location-focused) | ✅ (general purpose)  |
+| Off-chain attestations | ✅ (location-focused) | ✅ (general purpose)  |
+| Verification           | ✅ (both types)       | ✅ (on-chain only)    |
+| Revocation             | ⚠️ (planned)          | ✅ (implemented)      |
+| Local storage          | ⚠️ (placeholder)      | ✅ (JSON files)       |
+| Gas estimation         | ❌                    | ✅                    |
+| GraphQL queries        | ❌                    | ✅                    |
+| Batch operations       | ❌                    | ✅                    |
+| Private data proofs    | ❌                    | ✅                    |
+
+## Similarity Assessment
+
+The codebases roughly have 70% overlap in terms of functionality and share substantial EAS integration patterns. However, they differ significantly in:
+
+1. **Scope**: astral-sdk is specialized for location proofs; eas-sandbox is general-purpose EAS
+2. **Maturity**: astral-sdk has production-ready architecture; eas-sandbox is experimental
+3. **Completeness**: eas-sandbox has more complete EAS feature coverage
+4. **Use Case**: astral-sdk for embedding in applications; eas-sandbox for learning/testing
+
+The eas-sandbox could serve as a valuable reference for implementing missing features in astral-sdk, particularly around revocation, storage, and advanced EAS operations.
+
+## Onchain Attestations Sequence Diagram
 
 Onchain attestations and how they are created using the `astral-sdk` and `eas-sandbox` SDKs.
 
@@ -79,14 +155,17 @@ sequenceDiagram
 ### Architectural Comparison
 
 1. **Abstraction Level:**
+
    - **astral-sdk**: High-level, domain-specific (location proofs)
    - **eas-sandbox**: Low-level, general-purpose EAS operations
 
 2. **Error Handling:**
+
    - **astral-sdk**: Custom error classes with detailed context
    - **eas-sandbox**: Try-catch with detailed logging and gas reporting
 
 3. **Data Processing:**
+
    - **astral-sdk**: Extension system for location/media types
    - **eas-sandbox**: Direct schema encoding with validation helpers
 
@@ -96,7 +175,7 @@ sequenceDiagram
 
 The diagram clearly shows that while both aim to create on-chain attestations, astral-sdk provides a higher-level, production-ready API focused on location proofs, while eas-sandbox offers more granular control over the EAS attestation process with additional features like gas estimation and detailed transaction reporting.
 
-## Off-chain Attestations
+## Off-chain Attestations Sequence Diagram
 
 Offchain attestations and how they are created using the `astral-sdk` and `eas-sandbox` SDKs.
 
@@ -173,7 +252,7 @@ Both flows ultimately use EIP-712 signatures through the EAS SDK, but they diffe
 
 The diagram clearly shows that astral-sdk provides a more production-ready, developer-friendly API for location proofs, while eas-sandbox offers more direct control over EAS attestation processes with additional utility features.
 
-## Schema Creation and Registration
+## Schema Creation and Registration Sequence Diagram
 
 Schema creation and registration workflows in both the `astral-sdk` and `eas-sandbox` SDKs.
 
@@ -230,7 +309,7 @@ sequenceDiagram
     Provider-->>EAS_S: provider
     EAS_S->>SchemaRegistry: connect(provider)
     EAS_S->>SchemaRegistry: getSchema({uid})
-    
+
     alt Schema exists
         SchemaRegistry-->>EAS_S: existing schema record
         EAS_S-->>Client: existing UID
@@ -247,12 +326,12 @@ sequenceDiagram
     Note over Client, Blockchain: Workflow Schema Validation
     Client->>EAS_S: ensureSchemaRegistered(signer)
     EAS_S->>EAS_S: checkExistingSchema(workflowSchema)
-    
+
     opt Schema validation
         EAS_S->>EAS_S: fetchSchema(providedUID)
         EAS_S->>EAS_S: Validate schema string matches
     end
-    
+
     alt Schema not found
         EAS_S->>EAS_S: registerSchema(signer, schemaData)
         EAS_S-->>Client: new schema UID
@@ -284,14 +363,17 @@ sequenceDiagram
 ### Architectural Philosophy Comparison
 
 1. **Schema as Configuration vs. Schema as Data**:
+
    - **astral-sdk**: Treats schemas as configuration that's part of the SDK setup
    - **eas-sandbox**: Treats schemas as data that needs to be managed on the blockchain
 
 2. **Abstraction Level**:
+
    - **astral-sdk**: High-level abstraction with extension system
    - **eas-sandbox**: Direct blockchain interaction with utility functions
 
 3. **Flexibility**:
+
    - **astral-sdk**: Extensible through custom schema extensions
    - **eas-sandbox**: Flexible through direct function parameters and dynamic registration
 
