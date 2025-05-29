@@ -11,6 +11,8 @@
  * Note: This requires a funded wallet on Sepolia testnet to pay for gas.
  * For testing without spending gas, the actual registration is commented out.
  */
+// override the eslint no-console rule for this example
+/* eslint-disable no-console */
 
 import { ethers } from 'ethers';
 import { AstralSDK } from '../src/core/AstralSDK';

@@ -8,6 +8,8 @@
  * 1. Ensure the SDK is built: pnpm run build
  * 2. Run this example: npx ts-node examples/create-location-attestation.ts
  */
+// override the eslint no-console rule for this example
+/* eslint-disable no-console */
 
 import { ethers } from 'ethers';
 import { AstralSDK } from '../src/core/AstralSDK';

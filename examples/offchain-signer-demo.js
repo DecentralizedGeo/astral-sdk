@@ -1,9 +1,11 @@
 /**
  * OffchainSigner Demo script
- * 
+ *
  * This demonstrates the OffchainSigner component's capabilities
  * for creating EIP-712 signatures for location attestations.
  */
+// override the eslint no-console rule for this example
+/* eslint-disable no-console */
 
 // Import ethers
 const { ethers } = require('ethers');
@@ -29,15 +31,16 @@ async function main() {
       signer: wallet,
       chainId: 11155111, // Sepolia testnet
     });
-    
+
     console.log('\nOffchainSigner initialized successfully!');
-    
+
     // Print the available methods on OffchainSigner
     console.log('\nAvailable methods on OffchainSigner:');
-    const methods = Object.getOwnPropertyNames(Object.getPrototypeOf(offchainSigner))
-      .filter(name => name !== 'constructor');
+    const methods = Object.getOwnPropertyNames(Object.getPrototypeOf(offchainSigner)).filter(
+      name => name !== 'constructor'
+    );
     methods.forEach(method => console.log(`- ${method}`));
-    
+
     console.log('\nOffchainSigner Component Purpose:');
     console.log('The OffchainSigner component is responsible for:');
     console.log('- Creating EIP-712 signatures for location attestations');
@@ -53,7 +56,7 @@ async function main() {
       locationType: 'geojson',
       location: JSON.stringify({
         type: 'Point',
-        coordinates: [-122.4194, 37.7749] // San Francisco coordinates
+        coordinates: [-122.4194, 37.7749], // San Francisco coordinates
       }),
       recipeTypes: [],
       recipePayloads: [],
@@ -62,20 +65,22 @@ async function main() {
       memo: 'Demo location attestation',
       expirationTime: Math.floor(Date.now() / 1000) + 86400, // 24 hours from now
       revocable: true,
-      recipient: ethers.ZeroAddress
+      recipient: ethers.ZeroAddress,
     };
-    
+
     console.log(JSON.stringify(unsignedProofFormat, null, 2));
-    
+
     // Note on usage
     console.log('\nNormal Usage Pattern:');
     console.log('In a typical application, you would:');
     console.log('1. Create an AstralSDK instance with your signer');
     console.log('2. Use AstralSDK.createOffchainLocationProof() to generate proofs');
     console.log('3. Use AstralSDK.verifyOffchainLocationProof() to verify proofs');
-    
+
     console.log('\nError Handling:');
-    console.log('The OffchainSigner provides detailed error information through the EASError class');
+    console.log(
+      'The OffchainSigner provides detailed error information through the EASError class'
+    );
     console.log('Example error format:');
     const sampleError = new EASError(
       'EAS SchemaEncoder error during encoding: Failed to encode proof data',
@@ -83,20 +88,20 @@ async function main() {
       { component: 'SchemaEncoder', operation: 'encoding' }
     );
     console.log(sampleError);
-    
+
     console.log('\n' + '='.repeat(60));
     console.log('DEMO COMPLETE');
     console.log('='.repeat(60));
-    
+
     return {
       status: 'success',
-      message: 'OffchainSigner demonstration complete'
+      message: 'OffchainSigner demonstration complete',
     };
   } catch (error) {
     console.error('Error in demo:', error);
     return {
       status: 'error',
-      message: error.message
+      message: error.message,
     };
   }
 }
@@ -106,7 +111,7 @@ main()
   .then(result => {
     console.log(`\nStatus: ${result.status}`);
     console.log(`Message: ${result.message}`);
-    
+
     console.log('\nThe OffchainSigner component is a key part of the Astral SDK');
     console.log('for creating verifiable location attestations with EIP-712 signatures.');
   })
