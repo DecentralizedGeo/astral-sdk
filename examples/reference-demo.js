@@ -11,7 +11,7 @@
 const { ethers } = require('ethers');
 
 // Import core components from the SDK
-const { AstralSDK, ValidationError, SignerError, ExtensionError } = require('../dist/index');
+// const { AstralSDK, ValidationError, SignerError, ExtensionError } = require('../dist/index');
 
 // Create a reference implementation
 async function main() {
@@ -29,11 +29,11 @@ async function main() {
 
     // Initialize the SDK with preferred configuration
     console.log('\nInitializing AstralSDK with debugging enabled...');
-    const sdk = new AstralSDK({
-      signer: wallet, // Ethereum signer for creating signatures
-      defaultChain: 'sepolia', // Default chain for attestations
-      debug: true, // Enable debugging output
-    });
+    // const sdk = new AstralSDK({
+    //   signer: wallet, // Ethereum signer for creating signatures
+    //   defaultChain: 'sepolia', // Default chain for attestations
+    //   debug: true, // Enable debugging output
+    // });
 
     // SECTION 1: Display key information about the SDK and its capabilities
     console.log('\n' + '#'.repeat(50));
