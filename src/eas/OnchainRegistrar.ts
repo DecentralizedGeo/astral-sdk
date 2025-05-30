@@ -5,7 +5,7 @@
  * for location proofs using EAS SDK.
  */
 
-import { Signer, Provider } from 'ethers';
+import { Signer, Provider, ethers } from 'ethers';
 import { EAS, SchemaEncoder } from '@ethereum-attestation-service/eas-sdk';
 import {
   OnchainRegistrarConfig,
@@ -23,13 +23,13 @@ import { getChainConfig, getSchemaUID, getSchemaString } from './chains';
  * for location proofs in the onchain workflow.
  */
 export class OnchainRegistrar {
-  private provider?: Provider;
+  public provider?: Provider;
   private signer?: Signer;
-  private eas?: EAS;
-  private chainId: number;
-  private chainName: string;
-  private contractAddress: string = '';
-  private schemaUID: string = '';
+  public eas?: EAS;
+  private chainId!: number;
+  private chainName!: string;
+  private contractAddress!: string;
+  public schemaUID!: string;
   private schemaEncoder?: SchemaEncoder;
 
   /**
@@ -106,67 +106,102 @@ export class OnchainRegistrar {
    */
   private async initializeEASModules(): Promise<void> {
     try {
-      // If chain ID is not set, try to get it from the provider or signer
       if (this.chainId === 0) {
+        let networkChainIdBigInt: bigint | undefined;
         if (this.provider) {
           const network = await this.provider.getNetwork();
-          this.chainId = Number(network.chainId);
-        } else if (this.signer && 'provider' in this.signer) {
-          const provider = (this.signer as { provider: Provider }).provider;
-          if (provider) {
-            const network = await provider.getNetwork();
-            this.chainId = Number(network.chainId);
-          }
+          networkChainIdBigInt = network.chainId;
+        } else if (this.signer && this.signer.provider) {
+          const network = await this.signer.provider.getNetwork();
+          networkChainIdBigInt = network.chainId;
         }
 
-        // Update chain name if it was unknown
+        if (networkChainIdBigInt === undefined) {
+          throw new ChainConnectionError(
+            'Cannot determine chainId from provider or signer when not explicitly configured.',
+            undefined,
+            { chainName: this.chainName }
+          );
+        }
+        this.chainId = Number(networkChainIdBigInt);
+
+        // Update chainName if it was 'unknown' and chainId is now known
         if (this.chainName === 'unknown') {
-          // Map chain ID to name without using getChainName function
-          if (this.chainId === 11155111) {
-            this.chainName = 'sepolia';
-          } else if (this.chainId === 42220) {
-            this.chainName = 'celo';
-          } else if (this.chainId === 42161) {
-            this.chainName = 'arbitrum';
-          } else if (this.chainId === 8453) {
-            this.chainName = 'base';
-          } else {
-            this.chainName = `chain-${this.chainId}`;
-          }
+          if (this.chainId === 11155111) this.chainName = 'sepolia';
+          else if (this.chainId === 42220) this.chainName = 'celo';
+          else if (this.chainId === 42161) this.chainName = 'arbitrum';
+          else if (this.chainId === 8453) this.chainName = 'base';
+          else this.chainName = `chain-${this.chainId}`; // Fallback chain name
         }
+      }
+      if (this.chainId === 0) {
+        throw new ChainConnectionError('Chain ID could not be determined.', undefined, {
+          chainName: this.chainName,
+        });
+      }
 
-        // Get chain configuration if contract address wasn't provided
-        if (!this.contractAddress) {
-          const chainConfig = getChainConfig(this.chainId);
+      if (!this.contractAddress) {
+        const chainConfig = getChainConfig(this.chainId);
+        if (chainConfig && chainConfig.easContractAddress) {
           this.contractAddress = chainConfig.easContractAddress;
-          this.schemaUID = this.schemaUID || getSchemaUID(this.chainId);
         }
+      }
+
+      if (!this.schemaUID) {
+        this.schemaUID = getSchemaUID(this.chainId);
+      }
+
+      if (!this.contractAddress) {
+        throw new ChainConnectionError(
+          `EAS contract address could not be determined for chain ${this.chainName} (ID: ${this.chainId}). Please check chain configuration.`,
+          undefined,
+          { chainId: this.chainId, chainName: this.chainName }
+        );
+      }
+      if (!this.schemaUID) {
+        throw new ChainConnectionError(
+          `EAS schema UID could not be determined for chain ${this.chainName} (ID: ${this.chainId}). Please check chain configuration or provide schemaUID.`,
+          undefined,
+          { chainId: this.chainId, chainName: this.chainName }
+        );
       }
 
       // Create EAS instance
       this.eas = new EAS(this.contractAddress);
 
-      // Connect signer if available
+      // Connect signer or provider
       if (this.signer) {
         this.eas.connect(this.signer);
       } else if (this.provider) {
         this.eas.connect(this.provider);
+      } else {
+        // This case should be caught by the constructor validation
+        throw new ChainConnectionError('Neither provider nor signer is available to connect EAS.');
       }
 
-      // Create SchemaEncoder with the schema string (not the UID)
-      // This is the critical fix - SchemaEncoder needs a schema string, not a UID
+      // Create SchemaEncoder
       const schemaString = getSchemaString();
+      if (!schemaString) {
+        throw new ChainConnectionError(
+          'Schema string is undefined or empty, cannot initialize SchemaEncoder.'
+        );
+      }
       this.schemaEncoder = new SchemaEncoder(schemaString);
     } catch (error) {
+      const context = {
+        chainId: this.chainId,
+        chainName: this.chainName,
+        contractAddress: this.contractAddress,
+        schemaUID: this.schemaUID,
+      };
+      if (error instanceof ChainConnectionError) {
+        error.context = { ...(error.context || {}), ...context };
+        throw error;
+      }
       throw new ChainConnectionError(
-        'Failed to initialize EAS modules',
+        `Failed to initialize EAS modules: ${error instanceof Error ? error.message : String(error)}`,
         error instanceof Error ? error : undefined,
-        {
-          chainId: this.chainId,
-          chainName: this.chainName,
-          contractAddress: this.contractAddress,
-          schemaUID: this.schemaUID,
-        }
+        context
       );
     }
   }
@@ -255,7 +290,8 @@ export class OnchainRegistrar {
    */
   public async registerOnchainLocationProof(
     unsignedProof: UnsignedLocationProof,
-    options?: OnchainProofOptions
+    options?: OnchainProofOptions,
+    value: bigint = 0n
   ): Promise<OnchainLocationProof> {
     try {
       // Ensure EAS modules are initialized
@@ -277,7 +313,8 @@ export class OnchainRegistrar {
             ? BigInt(unsignedProof.expirationTime)
             : BigInt(0),
           revocable: unsignedProof.revocable ?? true,
-          refUID: '0x0000000000000000000000000000000000000000000000000000000000000000',
+          refUID: ethers.ZeroHash,
+          value: value,
         },
       };
 
