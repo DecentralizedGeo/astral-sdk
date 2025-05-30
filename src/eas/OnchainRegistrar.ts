@@ -5,7 +5,7 @@
  * for location proofs using EAS SDK.
  */
 
-import { Signer, Provider } from 'ethers';
+import { Signer, Provider, ethers } from 'ethers';
 import { EAS, SchemaEncoder } from '@ethereum-attestation-service/eas-sdk';
 import {
   OnchainRegistrarConfig,
@@ -255,7 +255,8 @@ export class OnchainRegistrar {
    */
   public async registerOnchainLocationProof(
     unsignedProof: UnsignedLocationProof,
-    options?: OnchainProofOptions
+    options?: OnchainProofOptions,
+    value: bigint = 0n
   ): Promise<OnchainLocationProof> {
     try {
       // Ensure EAS modules are initialized
@@ -277,7 +278,8 @@ export class OnchainRegistrar {
             ? BigInt(unsignedProof.expirationTime)
             : BigInt(0),
           revocable: unsignedProof.revocable ?? true,
-          refUID: '0x0000000000000000000000000000000000000000000000000000000000000000',
+          refUID: ethers.ZeroHash,
+          value: value,
         },
       };
 
