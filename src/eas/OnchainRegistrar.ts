@@ -26,10 +26,10 @@ export class OnchainRegistrar {
   public provider?: Provider;
   private signer?: Signer;
   public eas?: EAS;
-  private chainId: number;
-  private chainName: string;
-  private contractAddress: string = '';
-  private schemaUID: string = '';
+  private chainId!: number;
+  private chainName!: string;
+  private contractAddress!: string;
+  public schemaUID!: string;
   private schemaEncoder?: SchemaEncoder;
 
   /**

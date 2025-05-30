@@ -5,7 +5,7 @@
  * for offchain location proofs using EAS SDK.
  */
 
-import { Signer } from 'ethers';
+import { ethers, Signer } from 'ethers';
 import {
   EAS,
   Offchain,
@@ -216,7 +216,7 @@ export class OffchainSigner {
           ? BigInt(unsignedProof.expirationTime)
           : BigInt(0),
         revocable: unsignedProof.revocable ?? true,
-        refUID: '0x0000000000000000000000000000000000000000000000000000000000000000',
+        refUID: ethers.ZeroHash,
         data: encodedData,
       };
 
