@@ -23,9 +23,9 @@ import { getChainConfig, getSchemaUID, getSchemaString } from './chains';
  * for location proofs in the onchain workflow.
  */
 export class OnchainRegistrar {
-  private provider?: Provider;
+  public provider?: Provider;
   private signer?: Signer;
-  private eas?: EAS;
+  public eas?: EAS;
   private chainId: number;
   private chainName: string;
   private contractAddress: string = '';
