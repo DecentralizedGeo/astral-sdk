@@ -63,7 +63,7 @@ export class OffchainSigner {
   /**
    * Initialize EAS SDK modules
    */
-  private async initializeEASModules(): Promise<void> {
+  private initializeEASModules(): void {
     try {
       // Get chain configuration
       const chainConfig = getChainConfig(this.chainId);
