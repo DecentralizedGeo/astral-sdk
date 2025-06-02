@@ -363,3 +363,36 @@ export class VerificationError extends AstralError {
     });
   }
 }
+
+/**
+ * Error for Ethereum Attestation Service (EAS) operations.
+ *
+ * Used when interacting with EAS components fails.
+ */
+export class EASError extends AstralError {
+  constructor(message: string, cause?: Error, context?: Record<string, unknown>) {
+    super(message, 'EAS_ERROR', cause, context);
+    this.name = 'EASError';
+  }
+
+  /**
+   * Creates an EASError for a specific operation or component.
+   *
+   * @param component - The EAS component (e.g., 'SchemaEncoder', 'OffchainModule')
+   * @param operation - The operation being performed (e.g., 'sign', 'verify')
+   * @param details - Additional details about the error
+   * @param cause - The original error that caused this error
+   * @returns A new EASError instance
+   */
+  public static forComponent(
+    component: string,
+    operation: string,
+    details: string,
+    cause?: Error
+  ): EASError {
+    return new EASError(`EAS ${component} error during ${operation}: ${details}`, cause, {
+      component,
+      operation,
+    });
+  }
+}
