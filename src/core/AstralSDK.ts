@@ -76,7 +76,7 @@ export class AstralSDK {
     }
 
     if (this.debug) {
-      console.log('AstralSDK initialized with config:', this.config);
+      // Debug: AstralSDK initialized with config
     }
   }
 
@@ -96,16 +96,10 @@ export class AstralSDK {
       });
 
       if (this.debug) {
-        console.log(
-          `OffchainSigner initialized for chain ${chainId} (${this.config.defaultChain})`
-        );
+        // Debug: OffchainSigner initialized for chain ${chainId} (${this.config.defaultChain})
       }
     } catch (error) {
-      console.warn(
-        `Failed to initialize OffchainSigner: ${
-          error instanceof Error ? error.message : String(error)
-        }`
-      );
+      // Warning: Failed to initialize OffchainSigner
     }
   }
 
@@ -123,14 +117,10 @@ export class AstralSDK {
       });
 
       if (this.debug) {
-        console.log(`OnchainRegistrar initialized for chain ${this.config.defaultChain}`);
+        // console.log(`OnchainRegistrar initialized for chain ${this.config.defaultChain}`);
       }
     } catch (error) {
-      console.warn(
-        `Failed to initialize OnchainRegistrar: ${
-          error instanceof Error ? error.message : String(error)
-        }`
-      );
+      // Warning: Failed to initialize OnchainRegistrar
     }
   }
 
@@ -182,7 +172,7 @@ export class AstralSDK {
         });
 
         if (this.debug) {
-          console.log('OnchainRegistrar initialized from options');
+          // console.log('OnchainRegistrar initialized from options');
         }
       } else {
         // If we still don't have a provider or signer, throw an error
@@ -215,7 +205,7 @@ export class AstralSDK {
     this.ensureOffchainSignerInitialized(options);
 
     if (this.debug) {
-      console.log('Signing location proof:', unsignedProof);
+      // console.log('Signing location proof:', unsignedProof);
     }
 
     // Sign the proof using OffchainSigner
@@ -241,11 +231,7 @@ export class AstralSDK {
       this.ensureOffchainSignerInitialized(options);
 
       if (this.debug) {
-        console.log('Verifying offchain location proof:', {
-          uid: proof.uid,
-          signer: proof.signer,
-          version: proof.version,
-        });
+        // Debug: Verifying offchain location proof
       }
 
       // Verify using OffchainSigner
@@ -288,7 +274,7 @@ export class AstralSDK {
       }
 
       if (this.debug) {
-        console.log(`Auto-detected location format: ${locationType}`);
+        // console.log(`Auto-detected location format: ${locationType}`);
       }
     }
 
@@ -325,7 +311,7 @@ export class AstralSDK {
           finalLocationType = input.targetLocationFormat;
 
           if (this.debug) {
-            console.log(`Converted location format from ${locationType} to ${finalLocationType}`);
+            // console.log(`Converted location format from ${locationType} to ${finalLocationType}`);
           }
         } catch (error) {
           throw new ExtensionError(
@@ -414,7 +400,7 @@ export class AstralSDK {
         }
 
         if (this.debug) {
-          console.log('Validated proof against schema:', schemaExtension.schemaType);
+          // console.log('Validated proof against schema:', schemaExtension.schemaType);
         }
       }
 
@@ -452,7 +438,7 @@ export class AstralSDK {
     const unsignedProof = await this.buildLocationProof(input);
 
     if (this.debug) {
-      console.log('Created unsigned location proof, proceeding to sign:', unsignedProof);
+      // console.log('Created unsigned location proof, proceeding to sign:', unsignedProof);
     }
 
     // Sign the proof using our signOffchainLocationProof method
@@ -481,7 +467,7 @@ export class AstralSDK {
       const unsignedProof = await this.buildLocationProof(input);
 
       if (this.debug) {
-        console.log('Created unsigned location proof, proceeding to register:', unsignedProof);
+        // console.log('Created unsigned location proof, proceeding to register:', unsignedProof);
       }
 
       // Ensure OnchainRegistrar is initialized
@@ -494,11 +480,7 @@ export class AstralSDK {
       );
 
       if (this.debug) {
-        console.log('Successfully registered onchain location proof:', {
-          uid: onchainProof.uid,
-          txHash: onchainProof.txHash,
-          chain: onchainProof.chain,
-        });
+        // Debug: Successfully registered onchain location proof
       }
 
       return onchainProof;
@@ -549,18 +531,14 @@ export class AstralSDK {
       this.ensureOnchainRegistrarInitialized(options);
 
       if (this.debug) {
-        console.log('Verifying onchain location proof:', {
-          uid: proof.uid,
-          chain: proof.chain,
-          txHash: proof.txHash,
-        });
+        // Debug: Verifying onchain location proof
       }
 
       // Call the OnchainRegistrar to verify the proof
       const verificationResult = await this.onchainRegistrar!.verifyOnchainLocationProof(proof);
 
       if (this.debug) {
-        console.log('Verification result:', verificationResult);
+        // console.log('Verification result:', verificationResult);
       }
 
       return verificationResult;
@@ -606,18 +584,14 @@ export class AstralSDK {
       }
 
       if (this.debug) {
-        console.log('Revoking onchain location proof:', {
-          uid: proof.uid,
-          chain: proof.chain,
-          txHash: proof.txHash,
-        });
+        // Debug: Revoking onchain location proof
       }
 
       // Call the OnchainRegistrar to revoke the proof
       const response = await this.onchainRegistrar!.revokeOnchainLocationProof(proof);
 
       if (this.debug) {
-        console.log('Revocation successful, transaction response:', response);
+        // console.log('Revocation successful, transaction response:', response);
       }
 
       return response;
@@ -744,7 +718,7 @@ export class AstralSDK {
         this.extensions.registerSchemaExtension(extension);
 
         if (this.debug) {
-          console.log(`Registered custom schema extension: ${options.schemaType}`);
+          // console.log(`Registered custom schema extension: ${options.schemaType}`);
         }
       })
       .catch(error => {
