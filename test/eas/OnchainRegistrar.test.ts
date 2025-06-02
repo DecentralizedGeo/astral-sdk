@@ -19,10 +19,14 @@ jest.mock('@ethereum-attestation-service/eas-sdk', () => {
       connect: jest.fn(),
       attest: jest.fn().mockImplementation(() => ({
         hash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
-        wait: jest.fn().mockResolvedValue({
+        wait: jest
+          .fn()
+          .mockResolvedValue('0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890'), // Returns UID
+        receipt: {
+          hash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
           blockNumber: 12345678,
           status: 1,
-        }),
+        },
       })),
       getAttestation: jest.fn().mockImplementation(uid => {
         if (uid === '0x0000000000000000000000000000000000000000000000000000000000000000') {
@@ -65,10 +69,14 @@ jest.mock('@ethereum-attestation-service/eas-sdk', () => {
       }),
       revoke: jest.fn().mockImplementation(() => ({
         hash: '0x7890abcdef1234567890abcdef1234567890abcdef1234567890abcdef123456',
-        wait: jest.fn().mockResolvedValue({
+        wait: jest
+          .fn()
+          .mockResolvedValue('0xrevoke7890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'), // Returns UID
+        receipt: {
+          hash: '0x7890abcdef1234567890abcdef1234567890abcdef1234567890abcdef123456',
           blockNumber: 12345679,
           status: 1,
-        }),
+        },
       })),
     })),
     SchemaEncoder: jest.fn().mockImplementation(() => ({
@@ -175,12 +183,14 @@ interface PrivateOnchainRegistrar {
     connect: (providerOrSigner: unknown) => void;
     attest: (params: unknown) => Promise<{
       hash: string;
-      wait: () => Promise<{ blockNumber: number; status: number }>;
+      wait: () => Promise<string>; // Returns UID
+      receipt: { hash: string; blockNumber: number; status: number };
     }>;
     getAttestation: (uid: string) => Promise<unknown | null>;
     revoke: (params: unknown) => Promise<{
       hash: string;
-      wait: () => Promise<{ blockNumber: number; status: number }>;
+      wait: () => Promise<string>; // Returns UID
+      receipt: { hash: string; blockNumber: number; status: number };
     }>;
   };
   schemaEncoder: {
@@ -209,10 +219,14 @@ describe('OnchainRegistrar', () => {
       connect: jest.fn(),
       attest: jest.fn().mockImplementation(() => ({
         hash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
-        wait: jest.fn().mockResolvedValue({
+        wait: jest
+          .fn()
+          .mockResolvedValue('0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890'), // Returns UID
+        receipt: {
+          hash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
           blockNumber: 12345678,
           status: 1,
-        }),
+        },
       })),
       getAttestation: jest.fn().mockImplementation(uid => {
         if (uid === '0x0000000000000000000000000000000000000000000000000000000000000000') {
@@ -255,10 +269,14 @@ describe('OnchainRegistrar', () => {
       }),
       revoke: jest.fn().mockImplementation(() => ({
         hash: '0x7890abcdef1234567890abcdef1234567890abcdef1234567890abcdef123456',
-        wait: jest.fn().mockResolvedValue({
+        wait: jest
+          .fn()
+          .mockResolvedValue('0xrevoke7890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'), // Returns UID
+        receipt: {
+          hash: '0x7890abcdef1234567890abcdef1234567890abcdef1234567890abcdef123456',
           blockNumber: 12345679,
           status: 1,
-        }),
+        },
       })),
     };
 
