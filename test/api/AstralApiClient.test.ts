@@ -5,7 +5,7 @@
  * with the Astral API for retrieving location proofs and other operations.
  */
 
-import { expect } from 'chai';
+// Using Jest's built-in expect
 import { AstralApiClient, AstralApiConfig } from '../../src/api/AstralApiClient';
 import { AstralAPIError, NotFoundError } from '../../src/core/errors';
 
@@ -33,11 +33,11 @@ describe('AstralApiClient', () => {
     it('should set default values when no config is provided', () => {
       const client = new AstralApiClient();
       // @ts-expect-error - accessing private property for testing
-      expect(client.baseURL).to.equal('https://api.astral.global');
+      expect(client.baseURL).toBe('https://api.astral.global');
       // @ts-expect-error - accessing private property for testing
-      expect(client.apiKey).to.be.undefined;
+      expect(client.apiKey).toBeUndefined();
       // @ts-expect-error - accessing private property for testing
-      expect(client.timeout).to.equal(30000);
+      expect(client.timeout).toBe(30000);
     });
 
     it('should set values from config object', () => {
@@ -48,27 +48,27 @@ describe('AstralApiClient', () => {
       });
 
       // @ts-expect-error - accessing private property for testing
-      expect(client.baseURL).to.equal('https://custom.api.astral.global');
+      expect(client.baseURL).toBe('https://custom.api.astral.global');
       // @ts-expect-error - accessing private property for testing
-      expect(client.apiKey).to.equal('test-api-key');
+      expect(client.apiKey).toBe('test-api-key');
       // @ts-expect-error - accessing private property for testing
-      expect(client.timeout).to.equal(10000);
+      expect(client.timeout).toBe(10000);
     });
 
     it('should set values from string URL and API key', () => {
       const client = new AstralApiClient('https://another.api.astral.global', 'another-key');
 
       // @ts-expect-error - accessing private property for testing
-      expect(client.baseURL).to.equal('https://another.api.astral.global');
+      expect(client.baseURL).toBe('https://another.api.astral.global');
       // @ts-expect-error - accessing private property for testing
-      expect(client.apiKey).to.equal('another-key');
+      expect(client.apiKey).toBe('another-key');
     });
 
     it('should remove trailing slash from baseURL', () => {
       const client = new AstralApiClient('https://api.astral.global/');
 
       // @ts-expect-error - accessing private property for testing
-      expect(client.baseURL).to.equal('https://api.astral.global');
+      expect(client.baseURL).toBe('https://api.astral.global');
     });
   });
 
@@ -106,7 +106,7 @@ describe('AstralApiClient', () => {
       const client = new AstralApiClient();
       const config = await client.getConfig();
 
-      expect(config).to.deep.equal(mockConfig);
+      expect(config).toEqual(mockConfig);
       expect(fetchMock).toHaveBeenCalledWith(
         'https://api.astral.global/config',
         expect.objectContaining({
@@ -153,12 +153,12 @@ describe('AstralApiClient', () => {
 
       // First call should make the fetch request
       const firstConfig = await client.getConfig();
-      expect(firstConfig).to.deep.equal(mockConfig);
+      expect(firstConfig).toEqual(mockConfig);
       expect(fetchMock).toHaveBeenCalledTimes(1);
 
       // Second call should use cached config
       const secondConfig = await client.getConfig();
-      expect(secondConfig).to.deep.equal(mockConfig);
+      expect(secondConfig).toEqual(mockConfig);
       expect(fetchMock).toHaveBeenCalledTimes(1); // Still only one call
     });
   });
@@ -193,7 +193,7 @@ describe('AstralApiClient', () => {
       const client = new AstralApiClient();
       const proof = await client.getLocationProof('0xabcdef1234567890');
 
-      expect(proof).to.deep.equal(mockProof);
+      expect(proof).toEqual(mockProof);
       expect(fetchMock).toHaveBeenCalledWith(
         'https://api.astral.global/proofs/0xabcdef1234567890',
         expect.objectContaining({
@@ -217,10 +217,10 @@ describe('AstralApiClient', () => {
 
       try {
         await client.getLocationProof('0xnonexistent');
-        expect.fail('Should have thrown NotFoundError');
+        fail('Should have thrown NotFoundError');
       } catch (error) {
-        expect(error).to.be.instanceOf(NotFoundError);
-        expect((error as NotFoundError).message).to.include('LocationProof not found');
+        expect(error).toBeInstanceOf(NotFoundError);
+        expect((error as NotFoundError).message).toContain('LocationProof not found');
       }
     });
   });
@@ -269,8 +269,8 @@ describe('AstralApiClient', () => {
 
       const results = await client.getLocationProofs(query);
 
-      expect(results.proofs).to.have.length(2);
-      expect(results.total).to.equal(2);
+      expect(results.proofs).toHaveLength(2);
+      expect(results.total).toBe(2);
       expect(fetchMock).toHaveBeenCalledWith(
         'https://api.astral.global/proofs?chain=sepolia&limit=10&offset=0',
         expect.objectContaining({
@@ -313,10 +313,10 @@ describe('AstralApiClient', () => {
       await client.getLocationProofs(query);
 
       const url = fetchMock.mock.calls[0][0] as string;
-      expect(url).to.include('bbox=10,20,11,21');
-      expect(url).to.include('attester=0x1234567890abcdef,0xfedcba0987654321');
-      expect(url).to.include(`startTime=${encodeURIComponent(startDate.toISOString())}`);
-      expect(url).to.include(`endTime=${encodeURIComponent(endDate.toISOString())}`);
+      expect(url).toContain('bbox=10,20,11,21');
+      expect(url).toContain('attester=0x1234567890abcdef,0xfedcba0987654321');
+      expect(url).toContain(`startTime=${encodeURIComponent(startDate.toISOString())}`);
+      expect(url).toContain(`endTime=${encodeURIComponent(endDate.toISOString())}`);
     });
   });
 
@@ -326,11 +326,11 @@ describe('AstralApiClient', () => {
 
       try {
         await client.publishOffchainProof({});
-        expect.fail('Should have thrown AstralAPIError');
+        fail('Should have thrown AstralAPIError');
       } catch (error) {
-        expect(error).to.be.instanceOf(AstralAPIError);
-        expect((error as AstralAPIError).message).to.include('not yet implemented');
-        expect((error as AstralAPIError).status).to.equal(501);
+        expect(error).toBeInstanceOf(AstralAPIError);
+        expect((error as AstralAPIError).message).toContain('not yet implemented');
+        expect((error as AstralAPIError).status).toBe(501);
       }
     });
   });
@@ -344,10 +344,10 @@ describe('AstralApiClient', () => {
 
       try {
         await client.getConfig();
-        expect.fail('Should have thrown AstralAPIError');
+        fail('Should have thrown AstralAPIError');
       } catch (error) {
-        expect(error).to.be.instanceOf(AstralAPIError);
-        expect((error as AstralAPIError).message).to.include('Network error');
+        expect(error).toBeInstanceOf(AstralAPIError);
+        expect((error as AstralAPIError).message).toContain('Network error');
       }
     });
 
@@ -366,7 +366,7 @@ describe('AstralApiClient', () => {
       const result = await client.getConfig();
 
       // Result should be the text content
-      expect(result).to.deep.equal('<html><body>Not JSON</body></html>');
+      expect(result).toEqual('<html><body>Not JSON</body></html>');
     });
 
     it('should handle rate limiting with exponential backoff', async () => {
@@ -414,7 +414,7 @@ describe('AstralApiClient', () => {
 
       const config = await configPromise;
 
-      expect(config).to.deep.equal({
+      expect(config).toEqual({
         schemas: { location: '0x123' },
         chains: {},
         version: { api: '0.1.0', protocol: '0.1.0' },
