@@ -55,10 +55,10 @@ describe('AstralSDK', () => {
       expect(proof.memo).toBe('Test GeoJSON point location proof');
 
       // Arrays should be empty for this simple case
-      expect(proof.mediaTypes).toEqual([]);
+      expect(proof.mediaType).toEqual([]);
       expect(proof.mediaData).toEqual([]);
-      expect(proof.recipeTypes).toEqual([]);
-      expect(proof.recipePayloads).toEqual([]);
+      expect(proof.recipeType).toEqual([]);
+      expect(proof.recipePayload).toEqual([]);
     });
 
     test('should auto-detect GeoJSON format if not specified', async () => {
@@ -92,7 +92,7 @@ describe('AstralSDK', () => {
       const proof = await sdk.buildLocationProof(input);
 
       // Verify media processing
-      expect(proof.mediaTypes).toEqual(['image/jpeg', 'image/png']);
+      expect(proof.mediaType).toEqual(['image/jpeg', 'image/png']);
       expect(proof.mediaData).toHaveLength(2);
 
       // Verify that media data was processed correctly
@@ -218,9 +218,9 @@ describe('AstralSDK', () => {
           srs: 'EPSG:4326',
           locationType: 'geojson',
           location: JSON.stringify(pointGeoJSON),
-          recipeTypes: [],
-          recipePayloads: [],
-          mediaTypes: [],
+          recipeType: [],
+          recipePayload: [],
+          mediaType: [],
           mediaData: [],
           uid: '0x1234567890abcdef',
           signature: 'invalid-signature',

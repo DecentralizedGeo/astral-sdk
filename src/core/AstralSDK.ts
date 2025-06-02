@@ -370,9 +370,9 @@ export class AstralSDK {
         srs: 'EPSG:4326', // WGS84 is the default SRS
         locationType: finalLocationType,
         location: locationString,
-        recipeTypes: [], // Empty in v0.1
-        recipePayloads: [], // Empty in v0.1
-        mediaTypes,
+        recipeType: [], // Empty in v0.1
+        recipePayload: [], // Empty in v0.1
+        mediaType: mediaTypes,
         mediaData,
         memo: input.memo,
         recipient: input.recipient,

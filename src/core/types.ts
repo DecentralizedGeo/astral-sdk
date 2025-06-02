@@ -49,9 +49,9 @@ export interface UnsignedLocationProof {
   readonly srs: string;
   readonly locationType: string;
   readonly location: string;
-  readonly recipeTypes: string[];
-  readonly recipePayloads: string[];
-  readonly mediaTypes: string[];
+  readonly recipeType: string[];
+  readonly recipePayload: string[];
+  readonly mediaType: string[];
   readonly mediaData: string[];
   readonly memo?: string;
   readonly expirationTime?: number;

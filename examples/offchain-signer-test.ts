@@ -37,9 +37,9 @@ async function main() {
         type: 'Point',
         coordinates: [-122.4194, 37.7749] // San Francisco coordinates
       }),
-      recipeTypes: [],
-      recipePayloads: [],
-      mediaTypes: [],
+      recipeType: [],
+      recipePayload: [],
+      mediaType: [],
       mediaData: [],
       memo: 'Test location proof from example script'
     };

@@ -12,7 +12,7 @@
  */
 
 import { ethers } from 'ethers';
-import { OnchainRegistrar } from '../src/eas/OnchainRegistrar';
+// import { OnchainRegistrar } from '../src/eas/OnchainRegistrar';
 import { UnsignedLocationProof } from '../src/core/types';
 
 async function main() {
@@ -27,13 +27,13 @@ async function main() {
     // Create an RPC provider for Sepolia
     // NOTE: You'll need to replace this with a valid RPC URL, e.g. from Infura or Alchemy
     const provider = new ethers.JsonRpcProvider('https://sepolia.infura.io/v3/YOUR_INFURA_KEY');
-    const connectedWallet = wallet.connect(provider);
+    // const connectedWallet = wallet.connect(provider);
     
-    // Create an OnchainRegistrar instance
-    const registrar = new OnchainRegistrar({
-      signer: connectedWallet,
-      chain: 'sepolia', // Sepolia testnet
-    });
+    // Create an OnchainRegistrar instance (for this example, we'll use the SDK instead)
+    // const registrar = new OnchainRegistrar({
+    //   signer: connectedWallet,
+    //   chain: 'sepolia', // Sepolia testnet
+    // });
     
     // Create an unsigned location proof with GeoJSON data
     const unsignedProof: UnsignedLocationProof = {
@@ -44,9 +44,9 @@ async function main() {
         type: 'Point',
         coordinates: [-122.4194, 37.7749] // San Francisco coordinates
       }),
-      recipeTypes: [],
-      recipePayloads: [],
-      mediaTypes: [],
+      recipeType: [],
+      recipePayload: [],
+      mediaType: [],
       mediaData: [],
       memo: 'Test location proof from example script'
     };

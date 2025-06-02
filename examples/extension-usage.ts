@@ -74,7 +74,7 @@ async function createLocationProofWithImage() {
     // Build an unsigned location proof
     const unsignedProof = await sdk.buildLocationProof(input);
     console.log('Created location proof with image:');
-    console.log('Media types:', unsignedProof.mediaTypes);
+    console.log('Media types:', unsignedProof.mediaType);
     console.log('Media data length:', unsignedProof.mediaData[0].substring(0, 50) + '...');
     
     return unsignedProof;

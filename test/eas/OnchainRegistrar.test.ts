@@ -135,9 +135,9 @@ const testUnsignedProof: UnsignedLocationProof = {
   srs: 'EPSG:4326',
   locationType: 'geojson',
   location: '{"type":"Point","coordinates":[12.34,56.78]}',
-  recipeTypes: [],
-  recipePayloads: [],
-  mediaTypes: [],
+  recipeType: [],
+  recipePayload: [],
+  mediaType: [],
   mediaData: [],
   memo: 'Test location proof',
 };

@@ -266,9 +266,9 @@ export class OnchainRegistrar {
         { name: 'srs', value: proof.srs, type: 'string' },
         { name: 'locationType', value: proof.locationType, type: 'string' },
         { name: 'location', value: proof.location, type: 'string' },
-        { name: 'recipeType', value: proof.recipeTypes, type: 'string[]' },
-        { name: 'recipePayload', value: proof.recipePayloads, type: 'bytes[]' },
-        { name: 'mediaType', value: proof.mediaTypes, type: 'string[]' },
+        { name: 'recipeType', value: proof.recipeType, type: 'string[]' },
+        { name: 'recipePayload', value: proof.recipePayload, type: 'bytes[]' },
+        { name: 'mediaType', value: proof.mediaType, type: 'string[]' },
         { name: 'mediaData', value: proof.mediaData, type: 'string[]' },
       ];
 
