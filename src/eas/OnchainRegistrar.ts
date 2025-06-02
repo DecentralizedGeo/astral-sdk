@@ -353,10 +353,15 @@ export class OnchainRegistrar {
       const tx = await this.eas!.attest(attestationParams);
       const receipt = await tx.wait();
 
-      // Get the attestation UID from transaction receipt
-      if (!receipt) {
+      // EAS SDK pattern: tx.wait() returns UID, tx.receipt has transaction details
+      const uid = receipt as string; // This is the real UID from EAS SDK
+      const transactionReceipt = tx.receipt; // This is the real transaction receipt
+
+      if (!uid || !transactionReceipt) {
         throw new RegistrationError('Transaction failed or was reverted', undefined, {
           transaction: tx,
+          uid,
+          transactionReceipt,
           chainId: this.chainId,
           chainName: this.chainName,
         });
@@ -365,28 +370,9 @@ export class OnchainRegistrar {
       // Get the signer's address
       const attester = await this.signer!.getAddress();
 
-      // Extract UID from transaction receipt
-      // In a real implementation, we would extract the UID from the transaction logs
-      // For now, we'll use a placeholder based on the transaction hash
-      // We use type assertion since the receipt structure might vary
-      let txHash = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
-      try {
-        // Try to extract hash from receipt or transaction
-        const receiptHash = (receipt as { hash?: string }).hash;
-        if (receiptHash) {
-          txHash = receiptHash;
-        } else {
-          const txHashVal = (tx as { hash?: string }).hash;
-          if (txHashVal) {
-            txHash = txHashVal;
-          }
-        }
-      } catch {
-        // Use default hash for testing if we can't get the real one
-        // Default already set above
-      }
-
-      const uid = '0x' + txHash.slice(2).padStart(64, '0');
+      // Extract real transaction metadata from the actual receipt
+      const txHash = transactionReceipt.hash;
+      const blockNumber = Number(transactionReceipt.blockNumber);
 
       // Construct the onchain location proof
       const onchainProof: OnchainLocationProof = {
@@ -396,7 +382,7 @@ export class OnchainRegistrar {
         chain: this.chainName,
         chainId: this.chainId,
         txHash,
-        blockNumber: Number((receipt as { blockNumber?: number | bigint }).blockNumber || 0),
+        blockNumber,
         revocable: unsignedProof.revocable ?? true,
         revoked: false,
       };

@@ -238,17 +238,16 @@ describe('AstralSDK', () => {
   });
 
   describe('createOnchainLocationProof', () => {
-    test('should build an unsigned proof (placeholder for future implementation)', async () => {
+    test('should throw ValidationError when no provider or signer is available', async () => {
       const input: LocationProofInput = {
         location: pointGeoJSON,
         memo: 'Test onchain proof',
       };
 
-      const result = await sdk.createOnchainLocationProof(input);
-
-      // For now, this just returns the unsigned proof
-      expect(result).toBeDefined();
-      expect(result.locationType).toBe('geojson');
+      await expect(sdk.createOnchainLocationProof(input)).rejects.toThrow(ValidationError);
+      await expect(sdk.createOnchainLocationProof(input)).rejects.toThrow(
+        'No provider or signer available for onchain operations'
+      );
     });
   });
 });
