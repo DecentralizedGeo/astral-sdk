@@ -55,9 +55,15 @@ export class OnchainRegistrar {
       if (config.chain === 'sepolia') {
         this.chainId = 11155111;
         this.chainName = 'sepolia';
+        const chainConfig = getChainConfig(this.chainId);
+        this.contractAddress = chainConfig.easContractAddress;
+        this.schemaUID = config.schemaUID || getSchemaUID(this.chainId);
       } else if (config.chain === 'celo') {
         this.chainId = 42220;
         this.chainName = 'celo';
+        const chainConfig = getChainConfig(this.chainId);
+        this.contractAddress = chainConfig.easContractAddress;
+        this.schemaUID = config.schemaUID || getSchemaUID(this.chainId);
       } else {
         // For real implementation we'd look up the chain in the config
         try {
