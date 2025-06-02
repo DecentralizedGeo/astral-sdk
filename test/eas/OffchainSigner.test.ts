@@ -9,7 +9,7 @@ import {
   OffchainLocationProof,
   VerificationError,
 } from '../../src/core/types';
-import { ValidationError, SigningError } from '../../src/core/errors';
+import { ValidationError, EASError } from '../../src/core/errors';
 
 // Mock the EAS SDK
 jest.mock('@ethereum-attestation-service/eas-sdk', () => {
@@ -224,9 +224,7 @@ describe('OffchainSigner', () => {
           throw new Error('Signature creation failed');
         });
 
-      await expect(signer.signOffchainLocationProof(testUnsignedProof)).rejects.toThrow(
-        SigningError
-      );
+      await expect(signer.signOffchainLocationProof(testUnsignedProof)).rejects.toThrow(EASError);
     });
   });
 

@@ -27,6 +27,7 @@ export class ExtensionRegistry implements IExtensionRegistry {
   private mediaTypeMapping: Map<string, MediaAttachmentExtension>;
   private recipeExtensions: Map<string, ProofRecipeExtension>;
   private schemaExtensions: Map<string, SchemaExtension>;
+  private initializationPromise?: Promise<void>;
 
   /**
    * Creates a new ExtensionRegistry.
@@ -45,14 +46,34 @@ export class ExtensionRegistry implements IExtensionRegistry {
 
     // Register built-in extensions if requested
     if (registerBuiltIns) {
-      // We need to handle this asynchronously
-      this.registerBuiltInExtensions().catch(error => {
+      // Track the initialization promise so we can wait for it
+      this.initializationPromise = this.registerBuiltInExtensions().catch(error => {
         console.warn(
           `Failed to initialize extensions: ${
             error instanceof Error ? error.message : String(error)
           }`
         );
+        // Re-throw the error so the promise can properly fail
+        throw error;
       });
+    }
+  }
+
+  /**
+   * Ensures that all built-in extensions are initialized.
+   *
+   * This method waits for the async extension registration to complete
+   * if it's still in progress. If extensions are already loaded or if
+   * built-in extensions were disabled, this method returns immediately.
+   *
+   * @returns Promise that resolves when extensions are initialized
+   * @throws Error if extension initialization failed
+   */
+  async ensureInitialized(): Promise<void> {
+    if (this.initializationPromise) {
+      await this.initializationPromise;
+      // Clear the promise once resolved to avoid waiting again
+      this.initializationPromise = undefined;
     }
   }
 

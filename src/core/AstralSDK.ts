@@ -263,6 +263,9 @@ export class AstralSDK {
       throw new ValidationError('Location data is required');
     }
 
+    // Ensure extensions are initialized before using them
+    await this.extensions.ensureInitialized();
+
     // Determine the location format if not specified
     let locationType = input.locationType;
     if (!locationType) {

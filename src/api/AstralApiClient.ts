@@ -112,7 +112,12 @@ export class AstralApiClient {
         }
       });
 
-      const queryString = params.toString();
+      let queryString = params.toString();
+
+      // Fix over-encoding of comma-separated values (bbox, attester)
+      // URLSearchParams encodes commas, but our API expects them unencoded
+      queryString = queryString.replace(/%2C/g, ',');
+
       if (queryString) {
         url += `?${queryString}`;
       }
@@ -289,7 +294,7 @@ export class AstralApiClient {
       if (query.uid) queryParams.uid = query.uid;
       if (query.chain) queryParams.chain = query.chain;
       if (query.limit) queryParams.limit = query.limit;
-      if (query.offset) queryParams.offset = query.offset;
+      if (query.offset !== undefined) queryParams.offset = query.offset; // Include offset=0
 
       // Handle arrays and complex types
       if (query.attester && query.attester.length > 0) {
