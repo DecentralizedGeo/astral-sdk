@@ -97,14 +97,51 @@ export class OnchainRegistrar {
       this.schemaUID = config.schemaUID || getSchemaUID(this.chainId);
     }
 
-    // Initialize EAS modules
-    this.initializeEASModules();
+    // Initialize EAS modules synchronously where possible
+    this.initializeEASModulesSync();
   }
 
   /**
-   * Initialize EAS SDK modules
+   * Initialize EAS SDK modules synchronously
    */
-  private async initializeEASModules(): Promise<void> {
+  private initializeEASModulesSync(): void {
+    try {
+      // Skip async operations if chain ID is not set - defer to first use
+      if (this.chainId === 0) {
+        return; // Will be initialized on first use
+      }
+
+      // Create EAS instance
+      this.eas = new EAS(this.contractAddress);
+
+      // Connect signer if available
+      if (this.signer) {
+        this.eas.connect(this.signer);
+      } else if (this.provider) {
+        this.eas.connect(this.provider);
+      }
+
+      // Create SchemaEncoder with the schema string (not the UID)
+      const schemaString = getSchemaString();
+      this.schemaEncoder = new SchemaEncoder(schemaString);
+    } catch (error) {
+      throw new ChainConnectionError(
+        'Failed to initialize EAS modules',
+        error instanceof Error ? error : undefined,
+        {
+          chainId: this.chainId,
+          chainName: this.chainName,
+          contractAddress: this.contractAddress,
+          schemaUID: this.schemaUID,
+        }
+      );
+    }
+  }
+
+  /**
+   * Complete async initialization if needed
+   */
+  private async completeAsyncInitialization(): Promise<void> {
     try {
       // If chain ID is not set, try to get it from the provider or signer
       if (this.chainId === 0) {
@@ -176,7 +213,12 @@ export class OnchainRegistrar {
    *
    * @throws {ValidationError} If the EAS module or signer is not initialized
    */
-  private ensureEASModulesInitialized(): void {
+  private async ensureEASModulesInitialized(): Promise<void> {
+    // Complete async initialization if needed
+    if (!this.eas || !this.schemaEncoder) {
+      await this.completeAsyncInitialization();
+    }
+
     if (!this.eas) {
       throw new ValidationError(
         'OnchainRegistrar not properly initialized. The EAS module is missing.',
@@ -259,7 +301,7 @@ export class OnchainRegistrar {
   ): Promise<OnchainLocationProof> {
     try {
       // Ensure EAS modules are initialized
-      this.ensureEASModulesInitialized();
+      await this.ensureEASModulesInitialized();
 
       // Get the recipient address (if not specified, use the signer's address)
       const recipient = unsignedProof.recipient || (await this.signer!.getAddress());
@@ -366,7 +408,7 @@ export class OnchainRegistrar {
   ): Promise<VerificationResult> {
     try {
       // Ensure EAS modules are initialized
-      this.ensureEASModulesInitialized();
+      await this.ensureEASModulesInitialized();
 
       // Verify that we're on the correct chain for this proof
       if (proof.chainId !== this.chainId) {
@@ -448,7 +490,7 @@ export class OnchainRegistrar {
   public async revokeOnchainLocationProof(proof: OnchainLocationProof): Promise<unknown> {
     try {
       // Ensure EAS modules are initialized
-      this.ensureEASModulesInitialized();
+      await this.ensureEASModulesInitialized();
 
       // Verify that we're on the correct chain for this proof
       if (proof.chainId !== this.chainId) {
