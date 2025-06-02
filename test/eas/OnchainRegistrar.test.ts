@@ -79,6 +79,11 @@ jest.mock('@ethereum-attestation-service/eas-sdk', () => {
 
 // Mock the chains module
 jest.mock('../../src/eas/chains', () => ({
+  getSchemaString: jest
+    .fn()
+    .mockReturnValue(
+      'uint256 eventTimestamp,string srs,string locationType,string location,string[] recipeType,bytes[] recipePayload,string[] mediaType,string[] mediaData,string memo'
+    ),
   getChainConfig: jest.fn().mockImplementation((chainId, version, chainName) => {
     if (chainName === 'sepolia' || chainId === 11155111) {
       return {

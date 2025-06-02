@@ -78,6 +78,11 @@ jest.mock('../../src/eas/chains', () => ({
   getSchemaUID: jest
     .fn()
     .mockImplementation(() => '0xba4171c92572b1e4f241d044c32cdf083be9fd946b8766977558ca6378c824e2'),
+  getSchemaString: jest
+    .fn()
+    .mockReturnValue(
+      'uint256 eventTimestamp,string srs,string locationType,string location,string[] recipeType,bytes[] recipePayload,string[] mediaType,string[] mediaData,string memo'
+    ),
 }));
 
 // Sample data for testing
