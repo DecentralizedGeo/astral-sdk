@@ -19,17 +19,36 @@ jest.mock('../../src/eas/OnchainRegistrar');
 
 describe('AstralSDK - Onchain Workflow', () => {
   let sdk: AstralSDK;
-  let mockProvider: { getNetwork: jest.Mock };
-  let mockSigner: { getAddress: jest.Mock; provider: unknown };
+  let mockProvider: {
+    getNetwork: jest.Mock;
+    getBlockNumber?: jest.Mock;
+    getTransactionCount?: jest.Mock;
+    estimateGas?: jest.Mock;
+    getGasPrice?: jest.Mock;
+    getBalance?: jest.Mock;
+  };
+  let mockSigner: { getAddress: jest.Mock; signTypedData?: jest.Mock; provider: unknown };
 
   beforeEach(() => {
     // Reset all mocks
     jest.clearAllMocks();
 
     // Create mock provider and signer
-    mockProvider = { getNetwork: jest.fn().mockResolvedValue({ chainId: 11155111 }) };
+    mockProvider = {
+      getNetwork: jest.fn().mockResolvedValue({ chainId: 11155111 }),
+      getBlockNumber: jest.fn().mockResolvedValue(12345678),
+      getTransactionCount: jest.fn().mockResolvedValue(0),
+      estimateGas: jest.fn().mockResolvedValue(BigInt(21000)),
+      getGasPrice: jest.fn().mockResolvedValue(BigInt(1000000000)),
+      getBalance: jest.fn().mockResolvedValue(BigInt('1000000000000000000')),
+    };
     mockSigner = {
       getAddress: jest.fn().mockResolvedValue('0x1234567890123456789012345678901234567890'),
+      signTypedData: jest
+        .fn()
+        .mockResolvedValue(
+          '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1c'
+        ),
       provider: mockProvider,
     };
 
