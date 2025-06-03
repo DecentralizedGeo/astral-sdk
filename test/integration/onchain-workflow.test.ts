@@ -7,15 +7,26 @@
 
 import { AstralSDK } from '../../src/core/AstralSDK';
 import { LocationProofInput, OnchainLocationProof } from '../../src/core/types';
-import { Wallet } from 'ethers';
 import { isOnchainLocationProof } from '../../src/utils/typeGuards';
 
 // Mock the OnchainRegistrar since we're not using a real blockchain
 jest.mock('../../src/eas/OnchainRegistrar');
 
 describe('AstralSDK - Onchain Workflow Integration', () => {
-  let mockProvider: Record<string, unknown>;
-  let mockSigner: Wallet;
+  let mockProvider: {
+    getNetwork: jest.Mock;
+    getBlockNumber: jest.Mock;
+    getTransactionCount: jest.Mock;
+    estimateGas: jest.Mock;
+    getGasPrice: jest.Mock;
+    getBalance: jest.Mock;
+  };
+  let mockSigner: {
+    getAddress: jest.Mock;
+    signTypedData: jest.Mock;
+    provider: unknown;
+    address: string;
+  };
 
   beforeEach(() => {
     // Reset all mocks
@@ -32,10 +43,16 @@ describe('AstralSDK - Onchain Workflow Integration', () => {
     };
 
     // Create mock signer with provider
-    mockSigner = new Wallet(
-      '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
-      mockProvider
-    );
+    mockSigner = {
+      getAddress: jest.fn().mockResolvedValue('0x1234567890123456789012345678901234567890'),
+      signTypedData: jest
+        .fn()
+        .mockResolvedValue(
+          '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1c'
+        ),
+      provider: mockProvider,
+      address: '0x1234567890123456789012345678901234567890',
+    };
 
     // Mock OnchainRegistrar methods
     // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -215,10 +232,16 @@ describe('AstralSDK - Onchain Workflow Integration', () => {
         getNetwork: jest.fn().mockResolvedValue({ chainId: 8453, name: 'base' }),
       };
 
-      const baseMockSigner = new Wallet(
-        '0xabcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789',
-        baseMockProvider
-      );
+      const baseMockSigner = {
+        getAddress: jest.fn().mockResolvedValue('0xabcdef0123456789abcdef0123456789abcdef01'),
+        signTypedData: jest
+          .fn()
+          .mockResolvedValue(
+            '0xabcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef012345671c'
+          ),
+        provider: baseMockProvider,
+        address: '0xabcdef0123456789abcdef0123456789abcdef01',
+      };
 
       // Mock OnchainRegistrar for base chain - need to clear and reset the mock
       // eslint-disable-next-line @typescript-eslint/no-var-requires
