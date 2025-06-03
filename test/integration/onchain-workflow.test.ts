@@ -37,9 +37,9 @@ describe('AstralSDK - Onchain Workflow Integration', () => {
       getNetwork: jest.fn().mockResolvedValue({ chainId: 11155111, name: 'sepolia' }),
       getBlockNumber: jest.fn().mockResolvedValue(12345678),
       getTransactionCount: jest.fn().mockResolvedValue(0),
-      estimateGas: jest.fn().mockResolvedValue(21000n),
-      getGasPrice: jest.fn().mockResolvedValue(1000000000n),
-      getBalance: jest.fn().mockResolvedValue(1000000000000000000n),
+      estimateGas: jest.fn().mockResolvedValue(BigInt(21000)),
+      getGasPrice: jest.fn().mockResolvedValue(BigInt(1000000000)),
+      getBalance: jest.fn().mockResolvedValue(BigInt('1000000000000000000')),
     };
 
     // Create mock signer with provider

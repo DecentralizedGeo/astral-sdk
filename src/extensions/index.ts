@@ -295,7 +295,7 @@ export class ExtensionRegistry implements IExtensionRegistry {
    * @returns The detected locationType, or undefined if no match is found
    */
   detectLocationFormat(location: unknown): string | undefined {
-    for (const extension of this.locationExtensions.values()) {
+    for (const extension of Array.from(this.locationExtensions.values())) {
       if (extension.validateLocation(location)) {
         // CLAUDE: This is good, but I can imagine a case where a location might be valid for multiple extensions. So we should register location extensions in our preferred order — and return the first match. (I'm not sure if this is a problem, but it's something to be aware of.)
         return extension.locationType;
