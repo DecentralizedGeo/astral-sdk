@@ -7,8 +7,12 @@
 
 import { AstralSDK } from '../../src/core/AstralSDK';
 import { OnchainRegistrar } from '../../src/eas/OnchainRegistrar';
-import { LocationProofInput, OnchainLocationProof } from '../../src/core/types';
-import { ValidationError } from '../../src/core/errors';
+import {
+  LocationProofInput,
+  OnchainLocationProof,
+  OnchainProofOptions,
+} from '../../src/core/types';
+import { ValidationError, NetworkError } from '../../src/core/errors';
 
 // Mock dependencies
 jest.mock('../../src/eas/OnchainRegistrar');
@@ -114,6 +118,263 @@ describe('AstralSDK - Onchain Workflow', () => {
         ValidationError
       );
     });
+
+    test('should register proof with various location formats', async () => {
+      // Mock buildLocationProof to avoid extension validation issues in unit tests
+      const buildSpy = jest.spyOn(sdk, 'buildLocationProof').mockImplementation(async input => ({
+        eventTimestamp: Math.floor(Date.now() / 1000),
+        srs: 'EPSG:4326',
+        locationType: input.locationType || 'geojson',
+        location: JSON.stringify(input.location),
+        recipeType: [],
+        recipePayload: [],
+        mediaType: [],
+        mediaData: [],
+        memo: input.memo,
+        revocable: true,
+      }));
+
+      const mockProof: OnchainLocationProof = {
+        eventTimestamp: Math.floor(Date.now() / 1000),
+        srs: 'EPSG:4326',
+        locationType: 'coordinates-decimal+lon-lat',
+        location: '[-122.4194,37.7749]',
+        recipeType: [],
+        recipePayload: [],
+        mediaType: [],
+        mediaData: [],
+        uid: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+        attester: '0x1234567890123456789012345678901234567890',
+        chain: 'sepolia',
+        chainId: 11155111,
+        txHash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
+        blockNumber: 12345678,
+        revocable: true,
+        revoked: false,
+      };
+
+      (OnchainRegistrar.prototype.registerOnchainLocationProof as jest.Mock).mockResolvedValue(
+        mockProof
+      );
+
+      // Test with coordinates
+      const coordInput: LocationProofInput = {
+        location: [-122.4194, 37.7749],
+        locationType: 'coordinates-decimal+lon-lat',
+      };
+      const coordResult = await sdk.createOnchainLocationProof(coordInput);
+      expect(coordResult.locationType).toBe('coordinates-decimal+lon-lat');
+
+      // Test with WKT
+      const wktInput: LocationProofInput = {
+        location: 'POINT(-122.4194 37.7749)',
+        locationType: 'wkt-point',
+      };
+      const wktMockProof = {
+        ...mockProof,
+        locationType: 'wkt-point',
+        location: 'POINT(-122.4194 37.7749)',
+      };
+      (OnchainRegistrar.prototype.registerOnchainLocationProof as jest.Mock).mockResolvedValue(
+        wktMockProof
+      );
+      const wktResult = await sdk.createOnchainLocationProof(wktInput);
+      expect(wktResult.locationType).toBe('wkt-point');
+
+      // Test with H3
+      const h3Input: LocationProofInput = {
+        location: '8f283082a365d25',
+        locationType: 'h3',
+      };
+      const h3MockProof = { ...mockProof, locationType: 'h3', location: '8f283082a365d25' };
+      (OnchainRegistrar.prototype.registerOnchainLocationProof as jest.Mock).mockResolvedValue(
+        h3MockProof
+      );
+      const h3Result = await sdk.createOnchainLocationProof(h3Input);
+      expect(h3Result.locationType).toBe('h3');
+
+      // Restore the original implementation
+      buildSpy.mockRestore();
+    });
+
+    test('should register proof with media attachments', async () => {
+      // Mock buildLocationProof to avoid extension validation issues in unit tests
+      const buildSpy = jest.spyOn(sdk, 'buildLocationProof').mockImplementation(async input => ({
+        eventTimestamp: Math.floor(Date.now() / 1000),
+        srs: 'EPSG:4326',
+        locationType: input.locationType || 'geojson',
+        location: JSON.stringify(input.location),
+        recipeType: [],
+        recipePayload: [],
+        mediaType: input.media ? input.media.map(m => m.mediaType) : [],
+        mediaData: input.media ? input.media.map(m => m.data) : [],
+        memo: input.memo,
+        revocable: true,
+      }));
+      const mockProof: OnchainLocationProof = {
+        eventTimestamp: Math.floor(Date.now() / 1000),
+        srs: 'EPSG:4326',
+        locationType: 'geojson',
+        location: '{"type":"Point","coordinates":[-122.4194,37.7749]}',
+        recipeType: [],
+        recipePayload: [],
+        mediaType: ['image/jpeg', 'video/mp4'],
+        mediaData: ['ipfs://QmXyz123', 'data:video/mp4;base64,AAAA...'],
+        uid: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+        attester: '0x1234567890123456789012345678901234567890',
+        chain: 'sepolia',
+        chainId: 11155111,
+        txHash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
+        blockNumber: 12345678,
+        revocable: true,
+        revoked: false,
+      };
+
+      (OnchainRegistrar.prototype.registerOnchainLocationProof as jest.Mock).mockResolvedValue(
+        mockProof
+      );
+
+      const input: LocationProofInput = {
+        location: {
+          type: 'Point',
+          coordinates: [-122.4194, 37.7749],
+        },
+        locationType: 'geojson',
+        media: [
+          { mediaType: 'image/jpeg', data: 'ipfs://QmXyz123' },
+          { mediaType: 'video/mp4', data: 'data:video/mp4;base64,AAAA...' },
+        ],
+      };
+
+      const result = await sdk.createOnchainLocationProof(input);
+      expect(result.mediaType).toEqual(['image/jpeg', 'video/mp4']);
+      expect(result.mediaData).toEqual(['ipfs://QmXyz123', 'data:video/mp4;base64,AAAA...']);
+
+      // Restore the original implementation
+      buildSpy.mockRestore();
+    });
+
+    test('should register proof with OnchainProofOptions', async () => {
+      // Mock buildLocationProof to avoid extension validation issues in unit tests
+      const buildSpy = jest.spyOn(sdk, 'buildLocationProof').mockImplementation(async input => ({
+        eventTimestamp: Math.floor(Date.now() / 1000),
+        srs: 'EPSG:4326',
+        locationType: input.locationType || 'geojson',
+        location: JSON.stringify(input.location),
+        recipeType: [],
+        recipePayload: [],
+        mediaType: [],
+        mediaData: [],
+        memo: input.memo,
+        revocable: true,
+      }));
+      const mockProof: OnchainLocationProof = {
+        eventTimestamp: Math.floor(Date.now() / 1000),
+        srs: 'EPSG:4326',
+        locationType: 'geojson',
+        location: '{"type":"Point","coordinates":[-122.4194,37.7749]}',
+        recipeType: [],
+        recipePayload: [],
+        mediaType: [],
+        mediaData: [],
+        uid: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+        attester: '0x1234567890123456789012345678901234567890',
+        chain: 'sepolia',
+        chainId: 11155111,
+        txHash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
+        blockNumber: 12345678,
+        revocable: false,
+        revoked: false,
+        recipient: '0x9876543210987654321098765432109876543210',
+      };
+
+      (OnchainRegistrar.prototype.registerOnchainLocationProof as jest.Mock).mockResolvedValue(
+        mockProof
+      );
+
+      const input: LocationProofInput = {
+        location: {
+          type: 'Point',
+          coordinates: [-122.4194, 37.7749],
+        },
+        locationType: 'geojson',
+      };
+
+      const options: OnchainProofOptions = {
+        txOverrides: {
+          gasLimit: 500000,
+          maxFeePerGas: 100000000000,
+          maxPriorityFeePerGas: 2000000000,
+        },
+        subject: '0x9876543210987654321098765432109876543210',
+        revocable: false,
+      };
+
+      const result = await sdk.createOnchainLocationProof(input, options);
+      expect(result.revocable).toBe(false);
+      expect(result.recipient).toBe('0x9876543210987654321098765432109876543210');
+
+      // Verify options were passed to registrar
+      const registrarCall = (OnchainRegistrar.prototype.registerOnchainLocationProof as jest.Mock)
+        .mock.calls[0];
+      expect(registrarCall[1]).toEqual(options);
+
+      // Restore the original implementation
+      buildSpy.mockRestore();
+    });
+
+    test('should handle network errors', async () => {
+      // Mock buildLocationProof to avoid extension validation issues in unit tests
+      const buildSpy = jest.spyOn(sdk, 'buildLocationProof').mockImplementation(async input => ({
+        eventTimestamp: Math.floor(Date.now() / 1000),
+        srs: 'EPSG:4326',
+        locationType: input.locationType || 'geojson',
+        location: JSON.stringify(input.location),
+        recipeType: [],
+        recipePayload: [],
+        mediaType: [],
+        mediaData: [],
+        memo: input.memo,
+        revocable: true,
+      }));
+      const networkError = new NetworkError('Failed to connect to blockchain');
+      (OnchainRegistrar.prototype.registerOnchainLocationProof as jest.Mock).mockRejectedValue(
+        networkError
+      );
+
+      const input: LocationProofInput = {
+        location: {
+          type: 'Point',
+          coordinates: [-122.4194, 37.7749],
+        },
+        locationType: 'geojson',
+      };
+
+      await expect(sdk.createOnchainLocationProof(input)).rejects.toThrow(NetworkError);
+
+      // Restore the original implementation
+      buildSpy.mockRestore();
+    });
+
+    test('should handle invalid input errors', async () => {
+      // Test with empty location
+      const emptyLocationInput: LocationProofInput = {
+        location: '',
+        locationType: 'geojson',
+      };
+
+      await expect(sdk.createOnchainLocationProof(emptyLocationInput)).rejects.toThrow(
+        ValidationError
+      );
+
+      // Test with invalid location type
+      const invalidTypeInput: LocationProofInput = {
+        location: 'some location',
+        locationType: 'invalid-type',
+      };
+
+      await expect(sdk.createOnchainLocationProof(invalidTypeInput)).rejects.toThrow();
+    });
   });
 
   describe('verifyOnchainLocationProof', () => {
@@ -159,6 +420,199 @@ describe('AstralSDK - Onchain Workflow', () => {
       // Verify the result matches our mock
       expect(result).toBe(mockResult);
       expect(result.isValid).toBe(true);
+    });
+
+    test('should verify a revoked proof', async () => {
+      const revokedProof: OnchainLocationProof = {
+        eventTimestamp: Math.floor(Date.now() / 1000),
+        srs: 'EPSG:4326',
+        locationType: 'geojson',
+        location: '{"type":"Point","coordinates":[-122.4194,37.7749]}',
+        recipeType: [],
+        recipePayload: [],
+        mediaType: [],
+        mediaData: [],
+        uid: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+        attester: '0x1234567890123456789012345678901234567890',
+        chain: 'sepolia',
+        chainId: 11155111,
+        txHash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
+        blockNumber: 12345678,
+        revocable: true,
+        revoked: true,
+      };
+
+      const mockResult = {
+        isValid: false,
+        signerAddress: '0x1234567890123456789012345678901234567890',
+        proof: revokedProof,
+        reason: 'Proof has been revoked',
+      };
+
+      (OnchainRegistrar.prototype.verifyOnchainLocationProof as jest.Mock).mockResolvedValue(
+        mockResult
+      );
+
+      const result = await sdk.verifyOnchainLocationProof(revokedProof);
+      expect(result.isValid).toBe(false);
+      expect(result.reason).toBe('Proof has been revoked');
+    });
+
+    test('should verify an expired proof', async () => {
+      const expiredProof: OnchainLocationProof = {
+        eventTimestamp: Math.floor(Date.now() / 1000) - 86400,
+        srs: 'EPSG:4326',
+        locationType: 'geojson',
+        location: '{"type":"Point","coordinates":[-122.4194,37.7749]}',
+        recipeType: [],
+        recipePayload: [],
+        mediaType: [],
+        mediaData: [],
+        uid: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+        attester: '0x1234567890123456789012345678901234567890',
+        chain: 'sepolia',
+        chainId: 11155111,
+        txHash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
+        blockNumber: 12345678,
+        revocable: true,
+        revoked: false,
+        expirationTime: Math.floor(Date.now() / 1000) - 3600, // Expired 1 hour ago
+      };
+
+      const mockResult = {
+        isValid: false,
+        signerAddress: '0x1234567890123456789012345678901234567890',
+        proof: expiredProof,
+        reason: 'Proof has expired',
+      };
+
+      (OnchainRegistrar.prototype.verifyOnchainLocationProof as jest.Mock).mockResolvedValue(
+        mockResult
+      );
+
+      const result = await sdk.verifyOnchainLocationProof(expiredProof);
+      expect(result.isValid).toBe(false);
+      expect(result.reason).toBe('Proof has expired');
+    });
+
+    test('should handle non-existent proof', async () => {
+      const nonExistentProof: OnchainLocationProof = {
+        eventTimestamp: Math.floor(Date.now() / 1000),
+        srs: 'EPSG:4326',
+        locationType: 'geojson',
+        location: '{"type":"Point","coordinates":[-122.4194,37.7749]}',
+        recipeType: [],
+        recipePayload: [],
+        mediaType: [],
+        mediaData: [],
+        uid: '0x0000000000000000000000000000000000000000000000000000000000000000',
+        attester: '0x0000000000000000000000000000000000000000',
+        chain: 'sepolia',
+        chainId: 11155111,
+        txHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+        blockNumber: 0,
+        revocable: true,
+        revoked: false,
+      };
+
+      const mockResult = {
+        isValid: false,
+        signerAddress: undefined,
+        proof: nonExistentProof,
+        reason: 'Proof does not exist on chain',
+      };
+
+      (OnchainRegistrar.prototype.verifyOnchainLocationProof as jest.Mock).mockResolvedValue(
+        mockResult
+      );
+
+      const result = await sdk.verifyOnchainLocationProof(nonExistentProof);
+      expect(result.isValid).toBe(false);
+      expect(result.reason).toBe('Proof does not exist on chain');
+    });
+
+    test('should verify proof with different chain configurations', async () => {
+      // Create a new SDK instance for different chain
+      const baseSdk = new AstralSDK({
+        provider: mockProvider,
+        signer: mockSigner,
+        defaultChain: 'base',
+        debug: true,
+      });
+
+      const baseProof: OnchainLocationProof = {
+        eventTimestamp: Math.floor(Date.now() / 1000),
+        srs: 'EPSG:4326',
+        locationType: 'geojson',
+        location: '{"type":"Point","coordinates":[-122.4194,37.7749]}',
+        recipeType: [],
+        recipePayload: [],
+        mediaType: [],
+        mediaData: [],
+        uid: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+        attester: '0x1234567890123456789012345678901234567890',
+        chain: 'base',
+        chainId: 8453,
+        txHash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
+        blockNumber: 12345678,
+        revocable: true,
+        revoked: false,
+      };
+
+      const mockResult = {
+        isValid: true,
+        signerAddress: '0x1234567890123456789012345678901234567890',
+        proof: baseProof,
+      };
+
+      (OnchainRegistrar.prototype.verifyOnchainLocationProof as jest.Mock).mockResolvedValue(
+        mockResult
+      );
+
+      const result = await baseSdk.verifyOnchainLocationProof(baseProof);
+      expect(result.isValid).toBe(true);
+      expect(result.proof).toBeDefined();
+      // Type guard to ensure it's an OnchainLocationProof
+      if (result.proof && 'chain' in result.proof) {
+        expect(result.proof.chain).toBe('base');
+        expect(result.proof.chainId).toBe(8453);
+      }
+    });
+
+    test('should handle verification errors gracefully', async () => {
+      const mockProof: OnchainLocationProof = {
+        eventTimestamp: Math.floor(Date.now() / 1000),
+        srs: 'EPSG:4326',
+        locationType: 'geojson',
+        location: '{"type":"Point","coordinates":[-122.4194,37.7749]}',
+        recipeType: [],
+        recipePayload: [],
+        mediaType: [],
+        mediaData: [],
+        uid: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+        attester: '0x1234567890123456789012345678901234567890',
+        chain: 'sepolia',
+        chainId: 11155111,
+        txHash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
+        blockNumber: 12345678,
+        revocable: true,
+        revoked: false,
+      };
+
+      // The SDK doesn't throw, it returns a result with isValid: false and reason
+      const mockResult = {
+        isValid: false,
+        proof: mockProof,
+        reason: 'RPC connection failed',
+      };
+
+      (OnchainRegistrar.prototype.verifyOnchainLocationProof as jest.Mock).mockResolvedValue(
+        mockResult
+      );
+
+      const result = await sdk.verifyOnchainLocationProof(mockProof);
+      expect(result.isValid).toBe(false);
+      expect(result.reason).toBe('RPC connection failed');
     });
   });
 
@@ -260,6 +714,99 @@ describe('AstralSDK - Onchain Workflow', () => {
 
       // Verify the mock wasn't called
       expect(OnchainRegistrar.prototype.revokeOnchainLocationProof).not.toHaveBeenCalled();
+    });
+
+    test('should revoke proof successfully', async () => {
+      const mockProof: OnchainLocationProof = {
+        eventTimestamp: Math.floor(Date.now() / 1000),
+        srs: 'EPSG:4326',
+        locationType: 'geojson',
+        location: '{"type":"Point","coordinates":[-122.4194,37.7749]}',
+        recipeType: [],
+        recipePayload: [],
+        mediaType: [],
+        mediaData: [],
+        uid: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+        attester: '0x1234567890123456789012345678901234567890',
+        chain: 'sepolia',
+        chainId: 11155111,
+        txHash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
+        blockNumber: 12345678,
+        revocable: true,
+        revoked: false,
+      };
+
+      const mockTxResponse = {
+        hash: '0x9876543210abcdef9876543210abcdef9876543210abcdef9876543210abcdef',
+        wait: jest.fn().mockResolvedValue({
+          blockNumber: 12345679,
+          transactionHash: '0x9876543210abcdef9876543210abcdef9876543210abcdef9876543210abcdef',
+        }),
+      };
+
+      (OnchainRegistrar.prototype.revokeOnchainLocationProof as jest.Mock).mockResolvedValue(
+        mockTxResponse
+      );
+
+      const result = await sdk.revokeOnchainLocationProof(mockProof);
+
+      // Verify the method was called with the proof
+      expect(OnchainRegistrar.prototype.revokeOnchainLocationProof).toHaveBeenCalledWith(mockProof);
+      expect(result).toBe(mockTxResponse);
+    });
+
+    test('should fail to revoke from wrong signer', async () => {
+      const mockProof: OnchainLocationProof = {
+        eventTimestamp: Math.floor(Date.now() / 1000),
+        srs: 'EPSG:4326',
+        locationType: 'geojson',
+        location: '{"type":"Point","coordinates":[-122.4194,37.7749]}',
+        recipeType: [],
+        recipePayload: [],
+        mediaType: [],
+        mediaData: [],
+        uid: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+        attester: '0x9999999999999999999999999999999999999999', // Different attester
+        chain: 'sepolia',
+        chainId: 11155111,
+        txHash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
+        blockNumber: 12345678,
+        revocable: true,
+        revoked: false,
+      };
+
+      const error = new ValidationError('Only the original attester can revoke this proof');
+      (OnchainRegistrar.prototype.revokeOnchainLocationProof as jest.Mock).mockRejectedValue(error);
+
+      await expect(sdk.revokeOnchainLocationProof(mockProof)).rejects.toThrow(ValidationError);
+    });
+
+    test('should handle network errors during revocation', async () => {
+      const mockProof: OnchainLocationProof = {
+        eventTimestamp: Math.floor(Date.now() / 1000),
+        srs: 'EPSG:4326',
+        locationType: 'geojson',
+        location: '{"type":"Point","coordinates":[-122.4194,37.7749]}',
+        recipeType: [],
+        recipePayload: [],
+        mediaType: [],
+        mediaData: [],
+        uid: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+        attester: '0x1234567890123456789012345678901234567890',
+        chain: 'sepolia',
+        chainId: 11155111,
+        txHash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
+        blockNumber: 12345678,
+        revocable: true,
+        revoked: false,
+      };
+
+      const networkError = new NetworkError('Transaction failed: insufficient gas');
+      (OnchainRegistrar.prototype.revokeOnchainLocationProof as jest.Mock).mockRejectedValue(
+        networkError
+      );
+
+      await expect(sdk.revokeOnchainLocationProof(mockProof)).rejects.toThrow(NetworkError);
     });
   });
 });
