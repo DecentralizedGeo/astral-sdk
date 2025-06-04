@@ -182,6 +182,22 @@ For complete documentation, see:
 
 ## Development
 
+### Environment Setup
+
+1. Copy the environment template:
+```bash
+cp .env.example .env
+```
+
+2. Configure your environment variables:
+   - **Required for testing**: `SEPOLIA_RPC_URL` (get from [Infura](https://infura.io/) or [Alchemy](https://alchemy.com/))
+   - **Optional**: `TEST_PRIVATE_KEY` for a dedicated test wallet with minimal Sepolia ETH
+   - **For production**: Configure additional RPC URLs and API keys as needed
+
+3. See [.env.example](.env.example) for a complete list of available configuration options.
+
+### Development Commands
+
 ```bash
 # Install dependencies
 pnpm install
@@ -194,6 +210,12 @@ pnpm test
 
 # Lint code
 pnpm lint
+
+# Type checking
+pnpm typecheck
+
+# Development mode (watch for changes)
+pnpm dev
 ```
 
 ## License
