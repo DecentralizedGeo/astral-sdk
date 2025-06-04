@@ -1,6 +1,6 @@
 # Astral SDK Demo Guide
 
-This guide provides instructions for running and understanding the Astral SDK demos. These demos showcase how the SDK creates cryptographically verifiable location attestations using the Ethereum Attestation Service (EAS).
+This guide provides instructions for running and understanding the Astral SDK demos. These demos showcase how the SDK creates cryptographically verifiable location attestations using the Ethereum Attestation Service (EAS). 
 
 ## Quick Start
 
