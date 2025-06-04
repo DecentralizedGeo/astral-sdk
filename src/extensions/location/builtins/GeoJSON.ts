@@ -21,7 +21,8 @@ import { BaseExtension, LocationTypeExtension } from '../../types';
 import { LocationValidationError } from '../../../core/errors';
 
 // Import only the specific Turf.js functions we need instead of the entire library
-import * as turf from '@turf/turf'; // Temporarily revert back to the full import until we can fix the dependency issues
+import { booleanValid } from '@turf/boolean-valid';
+import { coordAll } from '@turf/meta';
 import { Feature, FeatureCollection, Geometry, GeometryCollection, Position } from 'geojson';
 
 /**
@@ -176,13 +177,13 @@ export class GeoJSONExtension extends BaseExtension implements LocationTypeExten
             // Check each feature in the collection
             const fc = location as FeatureCollection;
             for (const feature of fc.features) {
-              if (!turf.booleanValid(feature)) {
+              if (!booleanValid(feature)) {
                 return false;
               }
             }
           } else {
             // For Geometry and Feature objects
-            if (!turf.booleanValid(location as Geometry | Feature)) {
+            if (!booleanValid(location as Geometry | Feature)) {
               return false;
             }
           }
@@ -308,19 +309,19 @@ export class GeoJSONExtension extends BaseExtension implements LocationTypeExten
   getAllCoordinates(geoJSON: Feature | FeatureCollection | Geometry): Position[] {
     // For flat GeoJSON structures, use turf's coordAll
     if ('coordinates' in geoJSON || geoJSON.type === 'Feature') {
-      return turf.coordAll(geoJSON as Feature | Geometry);
+      return coordAll(geoJSON as Feature | Geometry);
     }
 
     // For FeatureCollection, process each feature
     if (geoJSON.type === 'FeatureCollection') {
-      return geoJSON.features.flatMap(feature => turf.coordAll(feature));
+      return geoJSON.features.flatMap(feature => coordAll(feature));
     }
 
     // For GeometryCollection, process each geometry
     if (geoJSON.type === 'GeometryCollection') {
       return geoJSON.geometries.flatMap(geom => {
         if ('coordinates' in geom) {
-          return turf.coordAll(geom as Geometry);
+          return coordAll(geom as Geometry);
         }
         return [];
       });
