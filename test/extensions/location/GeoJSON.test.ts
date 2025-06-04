@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright © 2025 Sophia Systems Corporation
+
 /**
  * Tests for the GeoJSON extension.
  *
@@ -10,7 +13,7 @@ import {
   isGeoJSON,
   isPosition,
   isValidLatitude,
-  isValidLongitude
+  isValidLongitude,
 } from '../../../src/extensions/location/builtins/GeoJSON';
 import { LocationValidationError } from '../../../src/core/errors';
 import { Feature, FeatureCollection, GeometryCollection, LineString, Point } from 'geojson';
@@ -23,7 +26,7 @@ describe('GeoJSON Type Guards', () => {
     expect(isValidLongitude(-180)).toBe(true);
     expect(isValidLongitude(179.999999)).toBe(true);
     expect(isValidLongitude(-179.999999)).toBe(true);
-    
+
     // Invalid longitudes
     expect(isValidLongitude(180.00001)).toBe(false);
     expect(isValidLongitude(-180.00001)).toBe(false);
@@ -31,7 +34,7 @@ describe('GeoJSON Type Guards', () => {
     expect(isValidLongitude(Infinity)).toBe(false);
     expect(isValidLongitude(-Infinity)).toBe(false);
   });
-  
+
   test('isValidLatitude should validate latitude values', () => {
     // Valid latitudes (within [-90, 90])
     expect(isValidLatitude(0)).toBe(true);
@@ -39,7 +42,7 @@ describe('GeoJSON Type Guards', () => {
     expect(isValidLatitude(-90)).toBe(true);
     expect(isValidLatitude(89.999999)).toBe(true);
     expect(isValidLatitude(-89.999999)).toBe(true);
-    
+
     // Invalid latitudes
     expect(isValidLatitude(90.00001)).toBe(false);
     expect(isValidLatitude(-90.00001)).toBe(false);
@@ -64,7 +67,7 @@ describe('GeoJSON Type Guards', () => {
     expect(isPosition(undefined)).toBe(false);
     expect(isPosition('not a position')).toBe(false);
     expect(isPosition({ lat: 0, lng: 0 })).toBe(false);
-    
+
     // Invalid positions due to coordinate range
     expect(isPosition([181, 0])).toBe(false); // longitude out of range
     expect(isPosition([0, 91])).toBe(false); // latitude out of range
@@ -221,8 +224,12 @@ describe('GeoJSONExtension', () => {
     expect(parsedFeature).toEqual(feature);
 
     // Should throw LocationValidationError for invalid JSON strings
-    expect(() => extension.parseLocationString('not a JSON string')).toThrow(LocationValidationError);
-    expect(() => extension.parseLocationString('{"invalid": "json"}')).toThrow(LocationValidationError);
+    expect(() => extension.parseLocationString('not a JSON string')).toThrow(
+      LocationValidationError
+    );
+    expect(() => extension.parseLocationString('{"invalid": "json"}')).toThrow(
+      LocationValidationError
+    );
   });
 
   test('getAllCoordinates should extract all positions from a GeoJSON object', () => {

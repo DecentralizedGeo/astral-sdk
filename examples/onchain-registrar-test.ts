@@ -1,13 +1,16 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright © 2025 Sophia Systems Corporation
+
 /**
  * Example script to test the OnchainRegistrar
- * 
- * This script demonstrates how to use the OnchainRegistrar directly to create 
+ *
+ * This script demonstrates how to use the OnchainRegistrar directly to create
  * an on-chain location attestation.
- * 
- * Usage: 
+ *
+ * Usage:
  * 1. Build the SDK: pnpm run build
  * 2. Run this example: npx ts-node examples/onchain-registrar-test.ts
- * 
+ *
  * Note: This requires a funded wallet on Sepolia testnet to pay for gas.
  */
 
@@ -18,23 +21,25 @@ import { UnsignedLocationProof } from '../src/core/types';
 async function main() {
   try {
     console.log('Testing OnchainRegistrar for location proofs...');
-    
+
     // Create a wallet for testing (use your own private key or generate one)
     // WARNING: Never use this private key for anything other than testing
-    const wallet = new ethers.Wallet('0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80');
+    const wallet = new ethers.Wallet(
+      '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'
+    );
     console.log(`Using wallet address: ${await wallet.getAddress()}`);
-    
+
     // Create an RPC provider for Sepolia
     // NOTE: You'll need to replace this with a valid RPC URL, e.g. from Infura or Alchemy
-    const provider = new ethers.JsonRpcProvider('https://sepolia.infura.io/v3/YOUR_INFURA_KEY');
+    // const provider = new ethers.JsonRpcProvider('https://sepolia.infura.io/v3/YOUR_INFURA_KEY');
     // const connectedWallet = wallet.connect(provider);
-    
+
     // Create an OnchainRegistrar instance (for this example, we'll use the SDK instead)
     // const registrar = new OnchainRegistrar({
     //   signer: connectedWallet,
     //   chain: 'sepolia', // Sepolia testnet
     // });
-    
+
     // Create an unsigned location proof with GeoJSON data
     const unsignedProof: UnsignedLocationProof = {
       eventTimestamp: Math.floor(Date.now() / 1000),
@@ -42,21 +47,21 @@ async function main() {
       locationType: 'geojson',
       location: JSON.stringify({
         type: 'Point',
-        coordinates: [-122.4194, 37.7749] // San Francisco coordinates
+        coordinates: [-122.4194, 37.7749], // San Francisco coordinates
       }),
       recipeType: [],
       recipePayload: [],
       mediaType: [],
       mediaData: [],
-      memo: 'Test location proof from example script'
+      memo: 'Test location proof from example script',
     };
-    
+
     console.log('\nUnsigned proof created:', unsignedProof);
-    
+
     // Register the proof on-chain
     console.log('\nRegistering the location proof on-chain...');
     console.log('This will submit a transaction to the Sepolia testnet...');
-    
+
     // Uncomment this to actually submit a transaction (requires a funded wallet)
     /*
     const onchainProof = await registrar.registerOnchainLocationProof(unsignedProof);
@@ -80,7 +85,7 @@ async function main() {
     
     return onchainProof;
     */
-    
+
     // For now, just return the unsigned proof to avoid submitting transactions
     return unsignedProof;
   } catch (error) {

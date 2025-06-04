@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright © 2025 Sophia Systems Corporation
+
 /**
  * Image Media Extension
  *

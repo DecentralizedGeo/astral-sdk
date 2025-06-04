@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright © 2025 Sophia Systems Corporation
+
 /**
  * Integration tests for mixed workflows in AstralSDK.
  *

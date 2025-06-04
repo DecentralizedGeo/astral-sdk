@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright © 2025 Sophia Systems Corporation
+
 /**
  * Tests for the ExtensionRegistry system.
  *
@@ -229,33 +232,36 @@ describe('ExtensionRegistry', () => {
     expect(retrieved).toBe(customExt);
     expect(retrieved?.id).toBe('new-mock-location');
   });
-  
+
   test('should register built-in extensions', async () => {
     // Create a registry that registers built-ins
     const builtInRegistry = new ExtensionRegistry(true);
-    
+
     // Wait a bit for async extension registration to complete
     await new Promise(resolve => setTimeout(resolve, 100));
-    
+
     // Verify that built-in extensions are registered
     const allLocations = builtInRegistry.getAllLocationExtensions();
     const allMedia = builtInRegistry.getAllMediaExtensions();
-    
+
     // We should have at least the GeoJSON extension
     expect(allLocations.length).toBeGreaterThan(0);
     expect(allLocations.some(ext => ext.locationType === 'geojson')).toBe(true);
-    
+
     // We should have at least the Image extension
     expect(allMedia.length).toBeGreaterThan(0);
-    expect(allMedia.some(ext => 
-      ext.supportedMediaTypes.includes('image/jpeg') && 
-      ext.supportedMediaTypes.includes('image/png')
-    )).toBe(true);
-    
+    expect(
+      allMedia.some(
+        ext =>
+          ext.supportedMediaTypes.includes('image/jpeg') &&
+          ext.supportedMediaTypes.includes('image/png')
+      )
+    ).toBe(true);
+
     // Check that we can get the image extension by MIME type
     const jpegExt = builtInRegistry.getMediaExtension('image/jpeg');
     const pngExt = builtInRegistry.getMediaExtension('image/png');
-    
+
     expect(jpegExt).toBeDefined();
     expect(pngExt).toBeDefined();
     expect(jpegExt).toBe(pngExt); // Should be the same extension instance

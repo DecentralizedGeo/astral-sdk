@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright © 2025 Sophia Systems Corporation
+
 /**
  * Tests for the location format conversion functions.
  *
@@ -40,7 +43,7 @@ class MockLocationExtension extends BaseExtension implements LocationTypeExtensi
     // Convert mock location to GeoJSON
     return {
       type: 'Point',
-      coordinates: [10, 20] // Fixed coordinates for testing
+      coordinates: [10, 20], // Fixed coordinates for testing
     };
   }
 
@@ -51,7 +54,7 @@ class MockLocationExtension extends BaseExtension implements LocationTypeExtensi
         // Convert from GeoJSON to mock
         return {
           mockLocation: true,
-          coords: parsed.coordinates
+          coords: parsed.coordinates,
         };
       }
       throw new LocationValidationError('Invalid GeoJSON for mock format');
@@ -93,7 +96,7 @@ class CoordinateModifyingExtension extends BaseExtension implements LocationType
     // Convert to GeoJSON with slightly modified coordinates (simulate precision loss)
     return {
       type: 'Point',
-      coordinates: [10.000001, 20.000001] // Modified coordinates
+      coordinates: [10.000001, 20.000001], // Modified coordinates
     };
   }
 
@@ -104,7 +107,7 @@ class CoordinateModifyingExtension extends BaseExtension implements LocationType
         // Convert from GeoJSON with slightly modified coordinates
         return {
           modifyingFormat: true,
-          coords: [parsed.coordinates[0] + 0.000001, parsed.coordinates[1] + 0.000001]
+          coords: [parsed.coordinates[0] + 0.000001, parsed.coordinates[1] + 0.000001],
         };
       }
       throw new LocationValidationError('Invalid GeoJSON for modifying format');
@@ -121,56 +124,42 @@ describe('Location Format Conversion', () => {
   // Create test extensions
   const mockExtension = new MockLocationExtension();
   const modifyingExtension = new CoordinateModifyingExtension();
-  
+
   // Test data
   const mockLocation = { mockLocation: true, coords: [10, 20] };
   const modifyingLocation = { modifyingFormat: true, coords: [10, 20] };
 
   test('should convert between GeoJSON and mock format', () => {
     // Mock format -> GeoJSON
-    const geoJSON = convertLocationFormat(
-      mockLocation,
-      'mock',
-      'geojson',
-      [geoJSONExtension, mockExtension]
-    );
-    
+    const geoJSON = convertLocationFormat(mockLocation, 'mock', 'geojson', [
+      geoJSONExtension,
+      mockExtension,
+    ]);
+
     expect(geoJSON).toEqual({
       type: 'Point',
-      coordinates: [10, 20]
+      coordinates: [10, 20],
     });
 
     // GeoJSON -> Mock format
-    const backToMock = convertLocationFormat(
-      geoJSON,
-      'geojson',
-      'mock',
-      [geoJSONExtension, mockExtension]
-    );
-    
+    const backToMock = convertLocationFormat(geoJSON, 'geojson', 'mock', [
+      geoJSONExtension,
+      mockExtension,
+    ]);
+
     expect(backToMock).toEqual({
       mockLocation: true,
-      coords: [10, 20]
+      coords: [10, 20],
     });
   });
 
   test('should throw ExtensionError for unknown format', () => {
     expect(() => {
-      convertLocationFormat(
-        mockLocation,
-        'mock',
-        'unknown',
-        [geoJSONExtension, mockExtension]
-      );
+      convertLocationFormat(mockLocation, 'mock', 'unknown', [geoJSONExtension, mockExtension]);
     }).toThrow(ExtensionError);
 
     expect(() => {
-      convertLocationFormat(
-        mockLocation,
-        'unknown',
-        'geojson',
-        [geoJSONExtension, mockExtension]
-      );
+      convertLocationFormat(mockLocation, 'unknown', 'geojson', [geoJSONExtension, mockExtension]);
     }).toThrow(ExtensionError);
   });
 
@@ -182,13 +171,12 @@ describe('Location Format Conversion', () => {
 
     try {
       // Convert from modifying format to mock format
-      convertLocationFormat(
-        modifyingLocation,
-        'modifying',
-        'mock',
-        [geoJSONExtension, mockExtension, modifyingExtension]
-      );
-      
+      convertLocationFormat(modifyingLocation, 'modifying', 'mock', [
+        geoJSONExtension,
+        mockExtension,
+        modifyingExtension,
+      ]);
+
       // Verify warning was issued
       expect(mockWarn).toHaveBeenCalled();
       expect(mockWarn.mock.calls[0][0]).toContain('Coordinate values changed');
@@ -199,27 +187,20 @@ describe('Location Format Conversion', () => {
   });
 
   test('should pass through when source and target are the same', () => {
-    const result = convertLocationFormat(
-      mockLocation,
-      'mock',
-      'mock',
-      [geoJSONExtension, mockExtension]
-    );
-    
+    const result = convertLocationFormat(mockLocation, 'mock', 'mock', [
+      geoJSONExtension,
+      mockExtension,
+    ]);
+
     expect(result).toBe(mockLocation); // Should be the same object reference
   });
 
   test('should handle conversion errors gracefully', () => {
     // Create an invalid location that will fail validation
     const invalidLocation = { invalid: true };
-    
+
     expect(() => {
-      convertLocationFormat(
-        invalidLocation,
-        'mock',
-        'geojson',
-        [geoJSONExtension, mockExtension]
-      );
+      convertLocationFormat(invalidLocation, 'mock', 'geojson', [geoJSONExtension, mockExtension]);
     }).toThrow(LocationValidationError);
   });
 });
