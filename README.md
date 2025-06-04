@@ -198,4 +198,6 @@ pnpm lint
 
 ## License
 
-MIT
+Licensed under the Apache 2.0 License. See [LICENSE](LICENSE) for details.
+
+Copyright © 2025 Sophia Systems Corporation

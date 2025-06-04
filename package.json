@@ -49,7 +49,7 @@
     "eas"
   ],
   "author": "Astral Protocol",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "dependencies": {
     "@ethereum-attestation-service/eas-sdk": "^2.7.0",
     "@turf/boolean-valid": "7.2.0",
