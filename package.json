@@ -7,19 +7,19 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.js"
     },
     "./offchain": {
+      "types": "./dist/offchain/index.d.ts",
       "import": "./dist/offchain/index.mjs",
-      "require": "./dist/offchain/index.js",
-      "types": "./dist/offchain/index.d.ts"
+      "require": "./dist/offchain/index.js"
     },
     "./onchain": {
+      "types": "./dist/onchain/index.d.ts",
       "import": "./dist/onchain/index.mjs",
-      "require": "./dist/onchain/index.js",
-      "types": "./dist/onchain/index.d.ts"
+      "require": "./dist/onchain/index.js"
     }
   },
   "files": [
