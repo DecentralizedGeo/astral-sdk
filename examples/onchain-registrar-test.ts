@@ -17,21 +17,30 @@
 import { ethers } from 'ethers';
 // import { OnchainRegistrar } from '../src/eas/OnchainRegistrar';
 import { UnsignedLocationProof } from '../src/core/types';
+import * as dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config({ path: '.env.local' });
 
 async function main() {
   try {
     console.log('Testing OnchainRegistrar for location proofs...');
 
-    // Create a wallet for testing (use your own private key or generate one)
-    // WARNING: Never use this private key for anything other than testing
-    const wallet = new ethers.Wallet(
-      '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'
-    );
+    // Create a wallet for testing from environment variables
+    // WARNING: Only use test private keys for development
+    const privateKey = process.env.TEST_PRIVATE_KEY;
+    if (!privateKey) {
+      throw new Error('TEST_PRIVATE_KEY not found in environment');
+    }
+    const wallet = new ethers.Wallet(privateKey);
     console.log(`Using wallet address: ${await wallet.getAddress()}`);
 
     // Create an RPC provider for Sepolia
-    // NOTE: You'll need to replace this with a valid RPC URL, e.g. from Infura or Alchemy
-    // const provider = new ethers.JsonRpcProvider('https://sepolia.infura.io/v3/YOUR_INFURA_KEY');
+    const infuraKey = process.env.INFURA_API_KEY;
+    if (!infuraKey) {
+      console.log('INFURA_API_KEY not found in environment - uncomment to enable onchain testing');
+    }
+    // const provider = new ethers.JsonRpcProvider(`https://sepolia.infura.io/v3/${infuraKey}`);
     // const connectedWallet = wallet.connect(provider);
 
     // Create an OnchainRegistrar instance (for this example, we'll use the SDK instead)

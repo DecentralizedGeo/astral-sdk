@@ -13,19 +13,29 @@
 
 import { ethers } from 'ethers';
 import { AstralSDK } from '../src/core/AstralSDK';
+import * as dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config({ path: '.env.local' });
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function main() {
   try {
     console.log('Demonstrating AstralSDK workflows (coming soon)...');
 
-    // Create a wallet for testing (use your own private key or generate one)
-    const wallet = new ethers.Wallet(
-      '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'
-    );
+    // Create a wallet for testing from environment variables
+    const privateKey = process.env.TEST_PRIVATE_KEY;
+    if (!privateKey) {
+      throw new Error('TEST_PRIVATE_KEY not found in environment');
+    }
+    const wallet = new ethers.Wallet(privateKey);
 
     // Create an RPC provider for Sepolia
-    const provider = new ethers.JsonRpcProvider('https://sepolia.infura.io/v3/YOUR_INFURA_KEY');
+    const infuraKey = process.env.INFURA_API_KEY;
+    if (!infuraKey) {
+      throw new Error('INFURA_API_KEY not found in environment');
+    }
+    const provider = new ethers.JsonRpcProvider(`https://sepolia.infura.io/v3/${infuraKey}`);
     const connectedWallet = wallet.connect(provider);
 
     // Initialize the SDK with a signer and chain ID

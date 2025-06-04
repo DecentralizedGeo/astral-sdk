@@ -18,14 +18,14 @@ async function testOnchainWorkflow() {
 
   try {
     // Get private key from environment
-    const privateKey = process.env.ACCT_1_PRIV;
+    const privateKey = process.env.TEST_PRIVATE_KEY;
     if (!privateKey) {
-      throw new Error('ACCT_1_PRIV not found in .env.local');
+      throw new Error('TEST_PRIVATE_KEY not found in .env.local');
     }
 
-    const infuraKey = process.env.INFURA_KEY;
+    const infuraKey = process.env.INFURA_API_KEY;
     if (!infuraKey) {
-      throw new Error('INFURA_KEY not found in .env.local');
+      throw new Error('INFURA_API_KEY not found in .env.local');
     }
 
     // Create provider and signer

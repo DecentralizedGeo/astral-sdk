@@ -14,7 +14,7 @@
  *
  * Prerequisites:
  * - Build the SDK: `pnpm run build`
- * - Set up .env.local with ACCT_1_PRIV and INFURA_KEY for onchain testing
+ * - Set up .env.local with TEST_PRIVATE_KEY and INFURA_API_KEY for onchain testing
  *
  * Usage:
  * npx tsx examples/complete-sdk-demo.ts
@@ -137,12 +137,12 @@ async function demoSDK() {
   console.log('-----------------------------');
 
   // For offchain signing, we need a signer
-  if (process.env.ACCT_1_PRIV) {
+  if (process.env.TEST_PRIVATE_KEY) {
     try {
       console.log('🔐 Setting up offchain signer...');
 
       // Create signer from private key
-      const privateKey = process.env.ACCT_1_PRIV;
+      const privateKey = process.env.TEST_PRIVATE_KEY;
       const signer = new ethers.Wallet(privateKey);
 
       // Create SDK with signer for offchain operations
@@ -219,12 +219,12 @@ async function demoSDK() {
   console.log('----------------------------');
 
   // For onchain registration, we need both signer and provider
-  if (process.env.ACCT_1_PRIV && process.env.INFURA_KEY) {
+  if (process.env.TEST_PRIVATE_KEY && process.env.INFURA_API_KEY) {
     try {
       console.log('⛓️  Setting up onchain connection...');
 
-      const privateKey = process.env.ACCT_1_PRIV;
-      const infuraKey = process.env.INFURA_KEY;
+      const privateKey = process.env.TEST_PRIVATE_KEY;
+      const infuraKey = process.env.INFURA_API_KEY;
 
       // Create provider and signer
       const provider = new ethers.JsonRpcProvider(`https://sepolia.infura.io/v3/${infuraKey}`);
