@@ -5,7 +5,7 @@
  * OffchainSigner for Astral SDK
  *
  * This module provides functionality for creating and verifying EIP-712 signatures
- * for offchain location proofs using EAS SDK.
+ * for offchain location attestations using EAS SDK.
  */
 
 import { Signer } from 'ethers';
@@ -17,8 +17,8 @@ import {
 } from '@ethereum-attestation-service/eas-sdk';
 import {
   OffchainSignerConfig,
-  UnsignedLocationProof,
-  OffchainLocationProof,
+  UnsignedLocationAttestation,
+  OffchainLocationAttestation,
   VerificationResult,
   VerificationError,
 } from '../core/types';
@@ -32,7 +32,7 @@ const SDK_VERSION = 'astral-sdk-v0.1.0';
 
 /**
  * OffchainSigner handles the creation and verification of EIP-712 signatures
- * for location proofs in the offchain workflow.
+ * for location attestations in the offchain workflow.
  */
 export class OffchainSigner {
   private signer?: Signer;
@@ -137,13 +137,13 @@ export class OffchainSigner {
   }
 
   /**
-   * Convert an UnsignedLocationProof to EAS-compatible format
+   * Convert an UnsignedLocationAttestation to EAS-compatible format
    *
-   * @param proof - The unsigned location proof
+   * @param proof - The unsigned location attestation
    * @returns Encoded data string for EAS attestation
    * @throws {EASError} If formatting or encoding fails
    */
-  private formatProofForEAS(proof: UnsignedLocationProof): string {
+  private formatProofForEAS(proof: UnsignedLocationAttestation): string {
     try {
       // Create schema items array for encoding
       const schemaItems = [
@@ -184,22 +184,22 @@ export class OffchainSigner {
       throw EASError.forComponent(
         'OffchainSigner',
         'formatting',
-        'Failed to format location proof for EAS encoding',
+        'Failed to format location attestation for EAS encoding',
         error instanceof Error ? error : undefined
       );
     }
   }
 
   /**
-   * Signs an unsigned location proof using EIP-712 signatures
+   * Signs an unsigned location attestation using EIP-712 signatures
    *
-   * @param unsignedProof - The unsigned location proof to sign
-   * @returns A complete OffchainLocationProof with signature
+   * @param unsignedProof - The unsigned location attestation to sign
+   * @returns A complete OffchainLocationAttestation with signature
    * @throws {EASError} If the signing process fails
    */
-  public async signOffchainLocationProof(
-    unsignedProof: UnsignedLocationProof
-  ): Promise<OffchainLocationProof> {
+  public async signOffchainLocationAttestation(
+    unsignedProof: UnsignedLocationAttestation
+  ): Promise<OffchainLocationAttestation> {
     try {
       // Ensure offchain module is initialized
       this.ensureOffchainModuleInitialized();
@@ -233,8 +233,8 @@ export class OffchainSigner {
         // Get the signer's address
         const signerAddress = await this.signer!.getAddress();
 
-        // Construct the offchain location proof
-        const offchainProof: OffchainLocationProof = {
+        // Construct the offchain location attestation
+        const offchainProof: OffchainLocationAttestation = {
           ...unsignedProof,
           uid: signedAttestation.uid,
           signature: JSON.stringify(signedAttestation.signature),
@@ -260,7 +260,7 @@ export class OffchainSigner {
 
       // Wrap any other errors in a SigningError
       throw new SigningError(
-        'Failed to sign offchain location proof',
+        'Failed to sign offchain location attestation',
         error instanceof Error ? error : undefined,
         { unsignedProof }
       );
@@ -268,13 +268,13 @@ export class OffchainSigner {
   }
 
   /**
-   * Verifies an offchain location proof signature
+   * Verifies an offchain location attestation signature
    *
-   * @param proof - The offchain location proof to verify
+   * @param proof - The offchain location attestation to verify
    * @returns Verification result with status and details
    */
-  public async verifyOffchainLocationProof(
-    proof: OffchainLocationProof
+  public async verifyOffchainLocationAttestation(
+    proof: OffchainLocationAttestation
   ): Promise<VerificationResult> {
     try {
       // Ensure offchain module is initialized
@@ -322,21 +322,21 @@ export class OffchainSigner {
           return {
             isValid: false,
             signerAddress: proof.signer,
-            proof,
+            attestation: proof,
             reason: VerificationError.INVALID_SIGNATURE,
           };
         } else if (isExpired) {
           return {
             isValid: false,
             signerAddress: proof.signer,
-            proof,
-            reason: VerificationError.PROOF_EXPIRED,
+            attestation: proof,
+            reason: VerificationError.ATTESTATION_EXPIRED,
           };
         } else {
           return {
             isValid: true,
             signerAddress: proof.signer,
-            proof,
+            attestation: proof,
           };
         }
       } catch (error) {
@@ -353,7 +353,7 @@ export class OffchainSigner {
       if (error instanceof EASError) {
         return {
           isValid: false,
-          proof,
+          attestation: proof,
           reason: `EAS error: ${error.message}`,
         };
       }
@@ -361,7 +361,7 @@ export class OffchainSigner {
       // Return verification error for other errors
       return {
         isValid: false,
-        proof,
+        attestation: proof,
         reason: error instanceof Error ? error.message : VerificationError.INVALID_SIGNATURE,
       };
     }

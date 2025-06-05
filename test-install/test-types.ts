@@ -1,5 +1,5 @@
 // Test file for verifying TypeScript types and package installation
-import { AstralSDK, UnsignedLocationProof } from '@astral-protocol/sdk';
+import { AstralSDK, UnsignedLocationAttestation } from '@astral-protocol/sdk';
 
 // Test that types are available and properly typed
 const sdk = new AstralSDK({
@@ -8,7 +8,7 @@ const sdk = new AstralSDK({
 });
 
 // Test type definitions exist
-const unsignedProof: UnsignedLocationProof = {
+const unsignedProof: UnsignedLocationAttestation = {
   eventTimestamp: Math.floor(Date.now() / 1000),
   srs: 'EPSG:4326',
   locationType: 'geojson',

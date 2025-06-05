@@ -4,7 +4,7 @@
 /**
  * Astral SDK
  *
- * A TypeScript SDK for creating, verifying, and querying location proofs
+ * A TypeScript SDK for creating, verifying, and querying location attestations
  * using Ethereum Attestation Service (EAS).
  *
  * @module @astral-protocol/sdk

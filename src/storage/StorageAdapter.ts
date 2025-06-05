@@ -11,7 +11,7 @@
 import { StorageConfig } from '../core/types';
 
 /**
- * StorageAdapter interface for storing and retrieving location proofs.
+ * StorageAdapter interface for storing and retrieving location attestations.
  *
  * @remarks
  * This is a placeholder implementation that will be fully implemented in phase 7.

@@ -6,20 +6,20 @@
  *
  * This file implements the AstralSDK class, which serves as the primary interface
  * for developers using the Astral SDK. It provides methods for creating and managing
- * location proofs with both onchain and offchain workflows.
+ * location attestations with both onchain and offchain workflows.
  */
 
 import { ExtensionRegistry } from '../extensions';
 import { AstralError, ExtensionError, ValidationError, VerificationError } from './errors';
 import {
   AstralSDKConfig,
-  LocationProofInput,
-  UnsignedLocationProof,
-  OffchainLocationProof,
-  OnchainLocationProof,
+  LocationAttestationInput,
+  UnsignedLocationAttestation,
+  OffchainLocationAttestation,
+  OnchainLocationAttestation,
   VerificationResult,
-  OffchainProofOptions,
-  OnchainProofOptions,
+  OffchainAttestationOptions,
+  OnchainAttestationOptions,
 } from './types';
 import { SchemaValue } from '../eas/SchemaEncoder';
 import { CustomSchemaExtensionOptions } from '../extensions/schema/helpers';
@@ -30,7 +30,7 @@ import { getChainId } from '../eas/chains';
 /**
  * AstralSDK is the main entry point for the Astral SDK.
  *
- * This class provides methods for creating and managing location proofs
+ * This class provides methods for creating and managing location attestations
  * using both onchain and offchain workflows.
  */
 export class AstralSDK {
@@ -134,7 +134,7 @@ export class AstralSDK {
    * @throws {ValidationError} If the OffchainSigner is not initialized
    * @private
    */
-  private ensureOffchainSignerInitialized(options?: OffchainProofOptions): void {
+  private ensureOffchainSignerInitialized(options?: OffchainAttestationOptions): void {
     // Check if we have an OffchainSigner
     if (!this.offchainSigner) {
       // If we don't have an OffchainSigner, try to initialize one with options
@@ -163,7 +163,7 @@ export class AstralSDK {
    * @throws {ValidationError} If the OnchainRegistrar is not initialized and can't be initialized with the provided options
    * @private
    */
-  private ensureOnchainRegistrarInitialized(options?: OnchainProofOptions): void {
+  private ensureOnchainRegistrarInitialized(options?: OnchainAttestationOptions): void {
     // Check if we have an OnchainRegistrar
     if (!this.onchainRegistrar) {
       // If we don't have an OnchainRegistrar, try to initialize one with options
@@ -189,79 +189,81 @@ export class AstralSDK {
   }
 
   /**
-   * Signs an unsigned location proof to create an offchain location proof
+   * Signs an unsigned location attestation to create an offchain location attestation
    *
    * This method uses the OffchainSigner component to create an EIP-712 signature
-   * for the location proof, resulting in a complete OffchainLocationProof.
+   * for the location attestation, resulting in a complete OffchainLocationAttestation.
    *
-   * @param unsignedProof - The unsigned location proof to sign
+   * @param unsignedProof - The unsigned location attestation to sign
    * @param options - Optional configuration for the signing process
-   * @returns A complete OffchainLocationProof with signature
+   * @returns A complete OffchainLocationAttestation with signature
    * @throws {ValidationError} If no signer is available
    * @throws {SigningError} If the signing process fails
    */
-  public async signOffchainLocationProof(
-    unsignedProof: UnsignedLocationProof,
-    options?: OffchainProofOptions
-  ): Promise<OffchainLocationProof> {
+  public async signOffchainLocationAttestation(
+    unsignedProof: UnsignedLocationAttestation,
+    options?: OffchainAttestationOptions
+  ): Promise<OffchainLocationAttestation> {
     // Ensure we have an OffchainSigner
     this.ensureOffchainSignerInitialized(options);
 
     if (this.debug) {
-      // console.log('Signing location proof:', unsignedProof);
+      // console.log('Signing location attestation:', unsignedProof);
     }
 
     // Sign the proof using OffchainSigner
-    return await this.offchainSigner!.signOffchainLocationProof(unsignedProof);
+    return await this.offchainSigner!.signOffchainLocationAttestation(unsignedProof);
   }
 
   /**
-   * Verifies an offchain location proof's signature
+   * Verifies an offchain location attestation's signature
    *
    * This method checks that the EIP-712 signature in the proof is valid
    * and was created by the expected signer.
    *
-   * @param proof - The offchain location proof to verify
+   * @param proof - The offchain location attestation to verify
    * @param options - Optional configuration for the verification process
    * @returns The verification result including validity status
    */
-  public async verifyOffchainLocationProof(
-    proof: OffchainLocationProof,
-    options?: OffchainProofOptions
+  public async verifyOffchainLocationAttestation(
+    proof: OffchainLocationAttestation,
+    options?: OffchainAttestationOptions
   ): Promise<VerificationResult> {
     try {
       // Initialize OffchainSigner if we don't have one yet
       this.ensureOffchainSignerInitialized(options);
 
       if (this.debug) {
-        // Debug: Verifying offchain location proof
+        // Debug: Verifying offchain location attestation
       }
 
       // Verify using OffchainSigner
-      return await this.offchainSigner!.verifyOffchainLocationProof(proof);
+      return await this.offchainSigner!.verifyOffchainLocationAttestation(proof);
     } catch (error) {
       // Return a verification result with failure details
       return {
         isValid: false,
-        proof,
+        attestation: proof,
         reason: error instanceof Error ? error.message : 'Unknown verification error',
       };
     }
   }
 
   /**
-   * Builds an unsigned location proof from input data.
+   * Builds an unsigned location attestation from input data.
    *
    * This method converts the input location data to the standardized format
-   * required by the location proof schema, using the appropriate extensions
+   * required by the location attestation schema, using the appropriate extensions
    * for the specified location and media types.
    *
    * @param input - Location proof input data
-   * @returns An unsigned location proof ready for signing or registration
+   * @returns An unsigned location attestation ready for signing or registration
    * @throws ValidationError if the input data is invalid
    * @throws ExtensionError if no suitable extension is found for the location format
    */
-  async buildLocationProof(input: LocationProofInput): Promise<UnsignedLocationProof> {
+  async buildLocationAttestation(
+    input: LocationAttestationInput
+  ): Promise<UnsignedLocationAttestation> {
     if (!input.location) {
       throw new ValidationError('Location data is required');
     }
@@ -368,8 +370,8 @@ export class AstralSDK {
         }
       }
 
-      // Build the unsigned location proof
-      const unsignedProof: UnsignedLocationProof = {
+      // Build the unsigned location attestation
+      const unsignedProof: UnsignedLocationAttestation = {
         eventTimestamp: input.timestamp
           ? Math.floor(input.timestamp.getTime() / 1000)
           : Math.floor(Date.now() / 1000),
@@ -401,7 +403,7 @@ export class AstralSDK {
         );
         if (!isValid) {
           throw new ValidationError('Generated proof does not match the schema', undefined, {
-            proof: unsignedProof,
+            attestation: unsignedProof,
           });
         }
 
@@ -417,76 +419,76 @@ export class AstralSDK {
       }
 
       throw new ValidationError(
-        `Failed to build location proof: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to build location attestation: ${error instanceof Error ? error.message : String(error)}`,
         error instanceof Error ? error : undefined
       );
     }
   }
 
   /**
-   * Create an offchain location proof by signing the input data.
+   * Create an offchain location attestation by signing the input data.
    *
    * This method:
-   * 1. Builds an unsigned location proof from the input data
-   * 2. Signs it using EIP-712 signatures to create an offchain location proof
+   * 1. Builds an unsigned location attestation from the input data
+   * 2. Signs it using EIP-712 signatures to create an offchain location attestation
    *
    * @param input - Location proof input data
    * @param options - Optional configuration for the signing process
-   * @returns Promise resolving to a signed offchain location proof
+   * @returns Promise resolving to a signed offchain location attestation
    * @throws {ValidationError} If no signer is available
    * @throws {SigningError} If the signing process fails
    */
-  async createOffchainLocationProof(
-    input: LocationProofInput,
-    options?: OffchainProofOptions
-  ): Promise<OffchainLocationProof> {
+  async createOffchainLocationAttestation(
+    input: LocationAttestationInput,
+    options?: OffchainAttestationOptions
+  ): Promise<OffchainLocationAttestation> {
     // First build the unsigned proof
-    const unsignedProof = await this.buildLocationProof(input);
+    const unsignedProof = await this.buildLocationAttestation(input);
 
     if (this.debug) {
-      // console.log('Created unsigned location proof, proceeding to sign:', unsignedProof);
+      // console.log('Created unsigned location attestation, proceeding to sign:', unsignedProof);
     }
 
-    // Sign the proof using our signOffchainLocationProof method
-    return await this.signOffchainLocationProof(unsignedProof, options);
+    // Sign the proof using our signOffchainLocationAttestation method
+    return await this.signOffchainLocationAttestation(unsignedProof, options);
   }
 
   /**
-   * Create an onchain location proof by registering the input data.
+   * Create an onchain location attestation by registering the input data.
    *
    * This method:
-   * 1. Builds an unsigned location proof from the input data
+   * 1. Builds an unsigned location attestation from the input data
    * 2. Registers it on the blockchain using the OnchainRegistrar
    *
    * @param input - Location proof input data
    * @param options - Optional configuration for the registration process
-   * @returns Promise resolving to an onchain location proof with transaction details
+   * @returns Promise resolving to an onchain location attestation with transaction details
    * @throws {ValidationError} If no provider or signer is available
    * @throws {RegistrationError} If the onchain registration fails
    */
-  async createOnchainLocationProof(
-    input: LocationProofInput,
-    options?: OnchainProofOptions
-  ): Promise<OnchainLocationProof> {
+  async createOnchainLocationAttestation(
+    input: LocationAttestationInput,
+    options?: OnchainAttestationOptions
+  ): Promise<OnchainLocationAttestation> {
     try {
       // First build the unsigned proof
-      const unsignedProof = await this.buildLocationProof(input);
+      const unsignedProof = await this.buildLocationAttestation(input);
 
       if (this.debug) {
-        // console.log('Created unsigned location proof, proceeding to register:', unsignedProof);
+        // console.log('Created unsigned location attestation, proceeding to register:', unsignedProof);
       }
 
       // Ensure OnchainRegistrar is initialized
       this.ensureOnchainRegistrarInitialized(options);
 
       // Register the proof using OnchainRegistrar
-      const onchainProof = await this.onchainRegistrar!.registerOnchainLocationProof(
+      const onchainProof = await this.onchainRegistrar!.registerOnchainLocationAttestation(
         unsignedProof,
         options
       );
 
       if (this.debug) {
-        // Debug: Successfully registered onchain location proof
+        // Debug: Successfully registered onchain location attestation
       }
 
       return onchainProof;
@@ -498,7 +500,7 @@ export class AstralSDK {
 
       // Otherwise wrap in a validation error
       throw new ValidationError(
-        `Failed to create onchain location proof: ${
+        `Failed to create onchain location attestation: ${
           error instanceof Error ? error.message : String(error)
         }`,
         error instanceof Error ? error : undefined,
@@ -508,40 +510,73 @@ export class AstralSDK {
   }
 
   /**
-   * Encodes location proof data according to the schema
+   * Registers an onchain location attestation
    *
-   * This method uses the appropriate schema extension to encode the proof data.
+   * This method takes an unsigned attestation and registers it on the blockchain,
+   * returning the registered attestation with transaction details.
    *
-   * @param proof - The location proof to encode
-   * @param schemaType - Optional schema type to use (defaults to 'location')
-   * @returns Encoded data as a hex string
-   * @throws ExtensionError if no schema extension is found
-   * @throws ValidationError if the data is invalid for the schema
+   * @param unsignedAttestation - The unsigned location attestation to register
+   * @param options - Optional configuration for the registration process
+   * @returns The registered onchain location attestation
+   * @throws ValidationError if parameters are invalid
+   * @throws Error if the registration fails
    */
+  async registerOnchainLocationAttestation(
+    unsignedAttestation: UnsignedLocationAttestation,
+    options?: OnchainAttestationOptions
+  ): Promise<OnchainLocationAttestation> {
+    try {
+      // Ensure OnchainRegistrar is initialized
+      this.ensureOnchainRegistrarInitialized(options);
+
+      if (this.debug) {
+        console.log('Registering location attestation onchain');
+      }
+
+      // Register using OnchainRegistrar
+      return await this.onchainRegistrar!.registerOnchainLocationAttestation(
+        unsignedAttestation,
+        options
+      );
+    } catch (error) {
+      if (error instanceof AstralError) {
+        throw error;
+      }
+
+      throw new ValidationError(
+        `Failed to register onchain location attestation: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+        error instanceof Error ? error : undefined
+      );
+    }
+  }
+
   /**
-   * Verifies an onchain location proof to ensure its validity
+   * Verifies an onchain location attestation to ensure its validity
    *
    * This method checks that the proof exists on the blockchain and has not been revoked.
    *
-   * @param proof - The onchain location proof to verify
+   * @param proof - The onchain location attestation to verify
    * @param options - Optional configuration for the verification process
    * @returns A verification result including validity status and details
    * @throws {ValidationError} If no provider is available for blockchain interaction
    */
-  async verifyOnchainLocationProof(
-    proof: OnchainLocationProof,
-    options?: OnchainProofOptions
+  async verifyOnchainLocationAttestation(
+    proof: OnchainLocationAttestation,
+    options?: OnchainAttestationOptions
   ): Promise<VerificationResult> {
     try {
       // Ensure OnchainRegistrar is initialized
       this.ensureOnchainRegistrarInitialized(options);
 
       if (this.debug) {
-        // Debug: Verifying onchain location proof
+        // Debug: Verifying onchain location attestation
       }
 
       // Call the OnchainRegistrar to verify the proof
-      const verificationResult = await this.onchainRegistrar!.verifyOnchainLocationProof(proof);
+      const verificationResult =
+        await this.onchainRegistrar!.verifyOnchainLocationAttestation(proof);
 
       if (this.debug) {
         // console.log('Verification result:', verificationResult);
@@ -552,28 +587,28 @@ export class AstralSDK {
       // Return a failed verification result with the error details
       return {
         isValid: false,
-        proof,
+        attestation: proof,
         reason: error instanceof Error ? error.message : 'Unknown verification error',
       };
     }
   }
 
   /**
-   * Revokes an onchain location proof
+   * Revokes an onchain location attestation
    *
    * This method sends a transaction to revoke an existing attestation on the blockchain.
    * Only the original attester can revoke their attestations, and only if they were created
    * with the revocable flag set to true.
    *
-   * @param proof - The onchain location proof to revoke
+   * @param proof - The onchain location attestation to revoke
    * @param options - Optional configuration for the revocation process
    * @returns The transaction response from the revocation
    * @throws {ValidationError} If no signer is available or the proof is not revocable
    * @throws {RegistrationError} If the revocation transaction fails
    */
-  async revokeOnchainLocationProof(
-    proof: OnchainLocationProof,
-    options?: OnchainProofOptions
+  async revokeOnchainLocationAttestation(
+    proof: OnchainLocationAttestation,
+    options?: OnchainAttestationOptions
   ): Promise<unknown> {
     try {
       // Ensure OnchainRegistrar is initialized
@@ -581,20 +616,24 @@ export class AstralSDK {
 
       // Verify the proof is revocable
       if (!proof.revocable) {
-        throw new ValidationError('This location proof is not revocable', undefined, { proof });
+        throw new ValidationError('This location attestation is not revocable', undefined, {
+          proof,
+        });
       }
 
       // Verify the proof is not already revoked
       if (proof.revoked) {
-        throw new ValidationError('This location proof is already revoked', undefined, { proof });
+        throw new ValidationError('This location attestation is already revoked', undefined, {
+          proof,
+        });
       }
 
       if (this.debug) {
-        // Debug: Revoking onchain location proof
+        // Debug: Revoking onchain location attestation
       }
 
       // Call the OnchainRegistrar to revoke the proof
-      const response = await this.onchainRegistrar!.revokeOnchainLocationProof(proof);
+      const response = await this.onchainRegistrar!.revokeOnchainLocationAttestation(proof);
 
       if (this.debug) {
         // console.log('Revocation successful, transaction response:', response);
@@ -609,7 +648,7 @@ export class AstralSDK {
 
       // Otherwise wrap in a verification error
       throw new VerificationError(
-        `Failed to revoke onchain location proof: ${
+        `Failed to revoke onchain location attestation: ${
           error instanceof Error ? error.message : String(error)
         }`,
         error instanceof Error ? error : undefined,
@@ -619,17 +658,20 @@ export class AstralSDK {
   }
 
   /**
-   * Encodes location proof data according to the schema
+   * Encodes location attestation data according to the schema
    *
    * This method uses the appropriate schema extension to encode the proof data.
    *
-   * @param proof - The location proof to encode
+   * @param proof - The location attestation to encode
    * @param schemaType - Optional schema type to use (defaults to 'location')
    * @returns Encoded data as a hex string
    * @throws ExtensionError if no schema extension is found
    * @throws ValidationError if the data is invalid for the schema
    */
-  encodeLocationProof(proof: UnsignedLocationProof, schemaType: string = 'location'): string {
+  encodeLocationAttestation(
+    proof: UnsignedLocationAttestation,
+    schemaType: string = 'location'
+  ): string {
     const schemaExtension = this.extensions.getSchemaExtension(schemaType);
 
     if (!schemaExtension) {
@@ -643,17 +685,17 @@ export class AstralSDK {
   }
 
   /**
-   * Decodes encoded location proof data according to the schema
+   * Decodes encoded location attestation data according to the schema
    *
    * This method uses the appropriate schema extension to decode the proof data.
    *
    * @param encodedData - The encoded proof data as a hex string
    * @param schemaType - Optional schema type to use (defaults to 'location')
-   * @returns Decoded location proof data
+   * @returns Decoded location attestation data
    * @throws ExtensionError if no schema extension is found
    * @throws ValidationError if the encoded data is invalid
    */
-  decodeLocationProof(
+  decodeLocationAttestation(
     encodedData: string,
     schemaType: string = 'location'
   ): Record<string, SchemaValue> {
@@ -708,6 +750,27 @@ export class AstralSDK {
     }
 
     return schemaExtension.getSchemaString();
+  }
+
+  /**
+   * Publishes an offchain location attestation to storage
+   *
+   * This method publishes a signed offchain attestation to a storage backend
+   * (like IPFS or Astral's API) for later retrieval.
+   *
+   * @param attestation - The signed offchain attestation to publish
+   * @returns The attestation with publication metadata added
+   */
+  async publishOffchainLocationAttestation(
+    attestation: OffchainLocationAttestation
+  ): Promise<OffchainLocationAttestation> {
+    if (this.debug) {
+      console.log('Publishing offchain location attestation');
+    }
+
+    // For now, just return the attestation as-is
+    // In the future, this will integrate with storage adapters
+    return attestation;
   }
 
   /**

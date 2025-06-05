@@ -5,11 +5,15 @@
  * AstralApiClient for Astral SDK
  *
  * This module provides communication with the Astral API for retrieving
- * location proofs and other operations like fetching configuration.
+ * location attestations and other operations like fetching configuration.
  */
 
 import { AstralAPIError, NotFoundError } from '../core/errors';
-import { LocationProof, LocationProofCollection, ProofQuery } from '../core/types';
+import {
+  LocationAttestation,
+  LocationAttestationCollection,
+  AttestationQuery,
+} from '../core/types';
 
 /**
  * Configuration options for the AstralApiClient
@@ -235,17 +239,17 @@ export class AstralApiClient {
   }
 
   /**
-   * Maps API responses to the appropriate LocationProof type.
+   * Maps API responses to the appropriate LocationAttestation type.
    *
    * @param response - The raw API response
-   * @returns A properly typed LocationProof object
+   * @returns A properly typed LocationAttestation object
    * @private
    */
-  private mapResponseToProof(response: unknown): LocationProof {
+  private mapResponseToProof(response: unknown): LocationAttestation {
     // This is a placeholder implementation that will be enhanced in a future update
-    // to properly distinguish between OffchainLocationProof and OnchainLocationProof
-    // For now, we just cast to LocationProof and let consumers use type guards
-    return response as LocationProof;
+    // to properly distinguish between OffchainLocationAttestation and OnchainLocationAttestation
+    // For now, we just cast to LocationAttestation and let consumers use type guards
+    return response as LocationAttestation;
   }
 
   /**
@@ -265,32 +269,32 @@ export class AstralApiClient {
   }
 
   /**
-   * Gets a single location proof by its UID.
+   * Gets a single location attestation by its UID.
    *
    * @param uid - The unique identifier of the proof
-   * @returns The location proof if found
+   * @returns The location attestation if found
    * @throws NotFoundError if the proof doesn't exist
    */
-  async getLocationProof(uid: string): Promise<LocationProof> {
+  async getLocationAttestation(uid: string): Promise<LocationAttestation> {
     try {
       const response = await this.request<unknown>('GET', `/proofs/${uid}`);
       return this.mapResponseToProof(response);
     } catch (error) {
       if (error instanceof NotFoundError) {
-        throw NotFoundError.forResource('LocationProof', uid);
+        throw NotFoundError.forResource('LocationAttestation', uid);
       }
       throw error;
     }
   }
 
   /**
-   * Gets a collection of location proofs matching the query criteria.
+   * Gets a collection of location attestations matching the query criteria.
    *
    * @param query - Query parameters to filter proofs
-   * @returns A collection of location proofs
+   * @returns A collection of location attestations
    */
-  async getLocationProofs(query?: ProofQuery): Promise<LocationProofCollection> {
-    // Build query parameters from the ProofQuery object
+  async getLocationAttestations(query?: AttestationQuery): Promise<LocationAttestationCollection> {
+    // Build query parameters from the AttestationQuery object
     const queryParams: Record<string, string | number | boolean | undefined> = {};
 
     if (query) {
@@ -329,30 +333,30 @@ export class AstralApiClient {
       ? apiResponse.proofs.map((proof: unknown) => this.mapResponseToProof(proof))
       : [];
 
-    // Create a new LocationProofCollection with mapped proofs
-    const response: LocationProofCollection = {
-      proofs,
+    // Create a new LocationAttestationCollection with mapped attestations
+    const response: LocationAttestationCollection = {
+      attestations: proofs,
       total: typeof apiResponse.total === 'number' ? apiResponse.total : proofs.length,
       pageSize: typeof apiResponse.pageSize === 'number' ? apiResponse.pageSize : proofs.length,
       currentPage: typeof apiResponse.currentPage === 'number' ? apiResponse.currentPage : 1,
       totalPages: typeof apiResponse.totalPages === 'number' ? apiResponse.totalPages : 1,
       hasNextPage: !!apiResponse.hasNextPage,
       hasPrevPage: !!apiResponse.hasPrevPage,
-      query: query || ({} as ProofQuery),
+      query: query || ({} as AttestationQuery),
     };
 
     return response;
   }
 
   /**
-   * Publishes an offchain location proof to the Astral API.
+   * Publishes an offchain location attestation to the Astral API.
    *
    * This is a placeholder method that will be implemented in a future update.
    *
-   * @param proof - The signed offchain location proof to publish
+   * @param proof - The signed offchain location attestation to publish
    * @returns The published proof with updated publication records
    */
-  async publishOffchainProof(proof: unknown): Promise<LocationProof> {
+  async publishOffchainProof(proof: unknown): Promise<LocationAttestation> {
     // This is a placeholder implementation that will be completed in a future update
     throw new AstralAPIError(
       'The publishOffchainProof method is not yet implemented',

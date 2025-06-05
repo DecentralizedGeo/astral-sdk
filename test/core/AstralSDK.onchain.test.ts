@@ -11,9 +11,9 @@
 import { AstralSDK } from '../../src/core/AstralSDK';
 import { OnchainRegistrar } from '../../src/eas/OnchainRegistrar';
 import {
-  LocationProofInput,
-  OnchainLocationProof,
-  OnchainProofOptions,
+  LocationAttestationInput,
+  OnchainLocationAttestation,
+  OnchainAttestationOptions,
 } from '../../src/core/types';
 import { ValidationError, NetworkError } from '../../src/core/errors';
 
@@ -64,13 +64,13 @@ describe('AstralSDK - Onchain Workflow', () => {
     });
   });
 
-  describe('createOnchainLocationProof', () => {
+  describe('createOnchainLocationAttestation', () => {
     test('should build and register a location proof onchain', async () => {
-      // Create a spy on buildLocationProof
-      const buildSpy = jest.spyOn(sdk, 'buildLocationProof');
+      // Create a spy on buildLocationAttestation
+      const buildSpy = jest.spyOn(sdk, 'buildLocationAttestation');
 
-      // Mock OnchainRegistrar.registerOnchainLocationProof
-      const mockProof: OnchainLocationProof = {
+      // Mock OnchainRegistrar.registerOnchainLocationAttestation
+      const mockProof: OnchainLocationAttestation = {
         eventTimestamp: Math.floor(Date.now() / 1000),
         srs: 'EPSG:4326',
         locationType: 'geojson',
@@ -90,12 +90,12 @@ describe('AstralSDK - Onchain Workflow', () => {
       };
 
       // Setup the mock to return our mock proof
-      (OnchainRegistrar.prototype.registerOnchainLocationProof as jest.Mock).mockResolvedValue(
-        mockProof
-      );
+      (
+        OnchainRegistrar.prototype.registerOnchainLocationAttestation as jest.Mock
+      ).mockResolvedValue(mockProof);
 
       // Create input for the test
-      const input: LocationProofInput = {
+      const input: LocationAttestationInput = {
         location: {
           type: 'Point',
           coordinates: [-122.4194, 37.7749],
@@ -105,13 +105,13 @@ describe('AstralSDK - Onchain Workflow', () => {
       };
 
       // Call the method
-      const result = await sdk.createOnchainLocationProof(input);
+      const result = await sdk.createOnchainLocationAttestation(input);
 
-      // Verify buildLocationProof was called with the input
+      // Verify buildLocationAttestation was called with the input
       expect(buildSpy).toHaveBeenCalledWith(input);
 
-      // Verify registerOnchainLocationProof was called
-      expect(OnchainRegistrar.prototype.registerOnchainLocationProof).toHaveBeenCalled();
+      // Verify registerOnchainLocationAttestation was called
+      expect(OnchainRegistrar.prototype.registerOnchainLocationAttestation).toHaveBeenCalled();
 
       // Verify the result is the mock proof
       expect(result).toBe(mockProof);
@@ -127,7 +127,7 @@ describe('AstralSDK - Onchain Workflow', () => {
       });
 
       // Create input for the test
-      const input: LocationProofInput = {
+      const input: LocationAttestationInput = {
         location: {
           type: 'Point',
           coordinates: [-122.4194, 37.7749],
@@ -136,27 +136,29 @@ describe('AstralSDK - Onchain Workflow', () => {
       };
 
       // Expect the method to throw
-      await expect(sdkWithoutProvider.createOnchainLocationProof(input)).rejects.toThrow(
+      await expect(sdkWithoutProvider.createOnchainLocationAttestation(input)).rejects.toThrow(
         ValidationError
       );
     });
 
     test('should register proof with various location formats', async () => {
-      // Mock buildLocationProof to avoid extension validation issues in unit tests
-      const buildSpy = jest.spyOn(sdk, 'buildLocationProof').mockImplementation(async input => ({
-        eventTimestamp: Math.floor(Date.now() / 1000),
-        srs: 'EPSG:4326',
-        locationType: input.locationType || 'geojson',
-        location: JSON.stringify(input.location),
-        recipeType: [],
-        recipePayload: [],
-        mediaType: [],
-        mediaData: [],
-        memo: input.memo,
-        revocable: true,
-      }));
+      // Mock buildLocationAttestation to avoid extension validation issues in unit tests
+      const buildSpy = jest
+        .spyOn(sdk, 'buildLocationAttestation')
+        .mockImplementation(async input => ({
+          eventTimestamp: Math.floor(Date.now() / 1000),
+          srs: 'EPSG:4326',
+          locationType: input.locationType || 'geojson',
+          location: JSON.stringify(input.location),
+          recipeType: [],
+          recipePayload: [],
+          mediaType: [],
+          mediaData: [],
+          memo: input.memo,
+          revocable: true,
+        }));
 
-      const mockProof: OnchainLocationProof = {
+      const mockProof: OnchainLocationAttestation = {
         eventTimestamp: Math.floor(Date.now() / 1000),
         srs: 'EPSG:4326',
         locationType: 'coordinates-decimal+lon-lat',
@@ -175,20 +177,20 @@ describe('AstralSDK - Onchain Workflow', () => {
         revoked: false,
       };
 
-      (OnchainRegistrar.prototype.registerOnchainLocationProof as jest.Mock).mockResolvedValue(
-        mockProof
-      );
+      (
+        OnchainRegistrar.prototype.registerOnchainLocationAttestation as jest.Mock
+      ).mockResolvedValue(mockProof);
 
       // Test with coordinates
-      const coordInput: LocationProofInput = {
+      const coordInput: LocationAttestationInput = {
         location: [-122.4194, 37.7749],
         locationType: 'coordinates-decimal+lon-lat',
       };
-      const coordResult = await sdk.createOnchainLocationProof(coordInput);
+      const coordResult = await sdk.createOnchainLocationAttestation(coordInput);
       expect(coordResult.locationType).toBe('coordinates-decimal+lon-lat');
 
       // Test with WKT
-      const wktInput: LocationProofInput = {
+      const wktInput: LocationAttestationInput = {
         location: 'POINT(-122.4194 37.7749)',
         locationType: 'wkt-point',
       };
@@ -197,22 +199,22 @@ describe('AstralSDK - Onchain Workflow', () => {
         locationType: 'wkt-point',
         location: 'POINT(-122.4194 37.7749)',
       };
-      (OnchainRegistrar.prototype.registerOnchainLocationProof as jest.Mock).mockResolvedValue(
-        wktMockProof
-      );
-      const wktResult = await sdk.createOnchainLocationProof(wktInput);
+      (
+        OnchainRegistrar.prototype.registerOnchainLocationAttestation as jest.Mock
+      ).mockResolvedValue(wktMockProof);
+      const wktResult = await sdk.createOnchainLocationAttestation(wktInput);
       expect(wktResult.locationType).toBe('wkt-point');
 
       // Test with H3
-      const h3Input: LocationProofInput = {
+      const h3Input: LocationAttestationInput = {
         location: '8f283082a365d25',
         locationType: 'h3',
       };
       const h3MockProof = { ...mockProof, locationType: 'h3', location: '8f283082a365d25' };
-      (OnchainRegistrar.prototype.registerOnchainLocationProof as jest.Mock).mockResolvedValue(
-        h3MockProof
-      );
-      const h3Result = await sdk.createOnchainLocationProof(h3Input);
+      (
+        OnchainRegistrar.prototype.registerOnchainLocationAttestation as jest.Mock
+      ).mockResolvedValue(h3MockProof);
+      const h3Result = await sdk.createOnchainLocationAttestation(h3Input);
       expect(h3Result.locationType).toBe('h3');
 
       // Restore the original implementation
@@ -220,20 +222,22 @@ describe('AstralSDK - Onchain Workflow', () => {
     });
 
     test('should register proof with media attachments', async () => {
-      // Mock buildLocationProof to avoid extension validation issues in unit tests
-      const buildSpy = jest.spyOn(sdk, 'buildLocationProof').mockImplementation(async input => ({
-        eventTimestamp: Math.floor(Date.now() / 1000),
-        srs: 'EPSG:4326',
-        locationType: input.locationType || 'geojson',
-        location: JSON.stringify(input.location),
-        recipeType: [],
-        recipePayload: [],
-        mediaType: input.media ? input.media.map(m => m.mediaType) : [],
-        mediaData: input.media ? input.media.map(m => m.data) : [],
-        memo: input.memo,
-        revocable: true,
-      }));
-      const mockProof: OnchainLocationProof = {
+      // Mock buildLocationAttestation to avoid extension validation issues in unit tests
+      const buildSpy = jest
+        .spyOn(sdk, 'buildLocationAttestation')
+        .mockImplementation(async input => ({
+          eventTimestamp: Math.floor(Date.now() / 1000),
+          srs: 'EPSG:4326',
+          locationType: input.locationType || 'geojson',
+          location: JSON.stringify(input.location),
+          recipeType: [],
+          recipePayload: [],
+          mediaType: input.media ? input.media.map(m => m.mediaType) : [],
+          mediaData: input.media ? input.media.map(m => m.data) : [],
+          memo: input.memo,
+          revocable: true,
+        }));
+      const mockProof: OnchainLocationAttestation = {
         eventTimestamp: Math.floor(Date.now() / 1000),
         srs: 'EPSG:4326',
         locationType: 'geojson',
@@ -252,11 +256,11 @@ describe('AstralSDK - Onchain Workflow', () => {
         revoked: false,
       };
 
-      (OnchainRegistrar.prototype.registerOnchainLocationProof as jest.Mock).mockResolvedValue(
-        mockProof
-      );
+      (
+        OnchainRegistrar.prototype.registerOnchainLocationAttestation as jest.Mock
+      ).mockResolvedValue(mockProof);
 
-      const input: LocationProofInput = {
+      const input: LocationAttestationInput = {
         location: {
           type: 'Point',
           coordinates: [-122.4194, 37.7749],
@@ -268,7 +272,7 @@ describe('AstralSDK - Onchain Workflow', () => {
         ],
       };
 
-      const result = await sdk.createOnchainLocationProof(input);
+      const result = await sdk.createOnchainLocationAttestation(input);
       expect(result.mediaType).toEqual(['image/jpeg', 'video/mp4']);
       expect(result.mediaData).toEqual(['ipfs://QmXyz123', 'data:video/mp4;base64,AAAA...']);
 
@@ -276,21 +280,23 @@ describe('AstralSDK - Onchain Workflow', () => {
       buildSpy.mockRestore();
     });
 
-    test('should register proof with OnchainProofOptions', async () => {
-      // Mock buildLocationProof to avoid extension validation issues in unit tests
-      const buildSpy = jest.spyOn(sdk, 'buildLocationProof').mockImplementation(async input => ({
-        eventTimestamp: Math.floor(Date.now() / 1000),
-        srs: 'EPSG:4326',
-        locationType: input.locationType || 'geojson',
-        location: JSON.stringify(input.location),
-        recipeType: [],
-        recipePayload: [],
-        mediaType: [],
-        mediaData: [],
-        memo: input.memo,
-        revocable: true,
-      }));
-      const mockProof: OnchainLocationProof = {
+    test('should register proof with OnchainAttestationOptions', async () => {
+      // Mock buildLocationAttestation to avoid extension validation issues in unit tests
+      const buildSpy = jest
+        .spyOn(sdk, 'buildLocationAttestation')
+        .mockImplementation(async input => ({
+          eventTimestamp: Math.floor(Date.now() / 1000),
+          srs: 'EPSG:4326',
+          locationType: input.locationType || 'geojson',
+          location: JSON.stringify(input.location),
+          recipeType: [],
+          recipePayload: [],
+          mediaType: [],
+          mediaData: [],
+          memo: input.memo,
+          revocable: true,
+        }));
+      const mockProof: OnchainLocationAttestation = {
         eventTimestamp: Math.floor(Date.now() / 1000),
         srs: 'EPSG:4326',
         locationType: 'geojson',
@@ -310,11 +316,11 @@ describe('AstralSDK - Onchain Workflow', () => {
         recipient: '0x9876543210987654321098765432109876543210',
       };
 
-      (OnchainRegistrar.prototype.registerOnchainLocationProof as jest.Mock).mockResolvedValue(
-        mockProof
-      );
+      (
+        OnchainRegistrar.prototype.registerOnchainLocationAttestation as jest.Mock
+      ).mockResolvedValue(mockProof);
 
-      const input: LocationProofInput = {
+      const input: LocationAttestationInput = {
         location: {
           type: 'Point',
           coordinates: [-122.4194, 37.7749],
@@ -322,7 +328,7 @@ describe('AstralSDK - Onchain Workflow', () => {
         locationType: 'geojson',
       };
 
-      const options: OnchainProofOptions = {
+      const options: OnchainAttestationOptions = {
         txOverrides: {
           gasLimit: 500000,
           maxFeePerGas: 100000000000,
@@ -332,13 +338,14 @@ describe('AstralSDK - Onchain Workflow', () => {
         revocable: false,
       };
 
-      const result = await sdk.createOnchainLocationProof(input, options);
+      const result = await sdk.createOnchainLocationAttestation(input, options);
       expect(result.revocable).toBe(false);
       expect(result.recipient).toBe('0x9876543210987654321098765432109876543210');
 
       // Verify options were passed to registrar
-      const registrarCall = (OnchainRegistrar.prototype.registerOnchainLocationProof as jest.Mock)
-        .mock.calls[0];
+      const registrarCall = (
+        OnchainRegistrar.prototype.registerOnchainLocationAttestation as jest.Mock
+      ).mock.calls[0];
       expect(registrarCall[1]).toEqual(options);
 
       // Restore the original implementation
@@ -346,25 +353,27 @@ describe('AstralSDK - Onchain Workflow', () => {
     });
 
     test('should handle network errors', async () => {
-      // Mock buildLocationProof to avoid extension validation issues in unit tests
-      const buildSpy = jest.spyOn(sdk, 'buildLocationProof').mockImplementation(async input => ({
-        eventTimestamp: Math.floor(Date.now() / 1000),
-        srs: 'EPSG:4326',
-        locationType: input.locationType || 'geojson',
-        location: JSON.stringify(input.location),
-        recipeType: [],
-        recipePayload: [],
-        mediaType: [],
-        mediaData: [],
-        memo: input.memo,
-        revocable: true,
-      }));
+      // Mock buildLocationAttestation to avoid extension validation issues in unit tests
+      const buildSpy = jest
+        .spyOn(sdk, 'buildLocationAttestation')
+        .mockImplementation(async input => ({
+          eventTimestamp: Math.floor(Date.now() / 1000),
+          srs: 'EPSG:4326',
+          locationType: input.locationType || 'geojson',
+          location: JSON.stringify(input.location),
+          recipeType: [],
+          recipePayload: [],
+          mediaType: [],
+          mediaData: [],
+          memo: input.memo,
+          revocable: true,
+        }));
       const networkError = new NetworkError('Failed to connect to blockchain');
-      (OnchainRegistrar.prototype.registerOnchainLocationProof as jest.Mock).mockRejectedValue(
-        networkError
-      );
+      (
+        OnchainRegistrar.prototype.registerOnchainLocationAttestation as jest.Mock
+      ).mockRejectedValue(networkError);
 
-      const input: LocationProofInput = {
+      const input: LocationAttestationInput = {
         location: {
           type: 'Point',
           coordinates: [-122.4194, 37.7749],
@@ -372,7 +381,7 @@ describe('AstralSDK - Onchain Workflow', () => {
         locationType: 'geojson',
       };
 
-      await expect(sdk.createOnchainLocationProof(input)).rejects.toThrow(NetworkError);
+      await expect(sdk.createOnchainLocationAttestation(input)).rejects.toThrow(NetworkError);
 
       // Restore the original implementation
       buildSpy.mockRestore();
@@ -380,29 +389,29 @@ describe('AstralSDK - Onchain Workflow', () => {
 
     test('should handle invalid input errors', async () => {
       // Test with empty location
-      const emptyLocationInput: LocationProofInput = {
+      const emptyLocationInput: LocationAttestationInput = {
         location: '',
         locationType: 'geojson',
       };
 
-      await expect(sdk.createOnchainLocationProof(emptyLocationInput)).rejects.toThrow(
+      await expect(sdk.createOnchainLocationAttestation(emptyLocationInput)).rejects.toThrow(
         ValidationError
       );
 
       // Test with invalid location type
-      const invalidTypeInput: LocationProofInput = {
+      const invalidTypeInput: LocationAttestationInput = {
         location: 'some location',
         locationType: 'invalid-type',
       };
 
-      await expect(sdk.createOnchainLocationProof(invalidTypeInput)).rejects.toThrow();
+      await expect(sdk.createOnchainLocationAttestation(invalidTypeInput)).rejects.toThrow();
     });
   });
 
-  describe('verifyOnchainLocationProof', () => {
+  describe('verifyOnchainLocationAttestation', () => {
     test('should verify an onchain location proof', async () => {
       // Mock proof to verify
-      const mockProof: OnchainLocationProof = {
+      const mockProof: OnchainLocationAttestation = {
         eventTimestamp: Math.floor(Date.now() / 1000),
         srs: 'EPSG:4326',
         locationType: 'geojson',
@@ -429,15 +438,17 @@ describe('AstralSDK - Onchain Workflow', () => {
       };
 
       // Setup the mock to return our result
-      (OnchainRegistrar.prototype.verifyOnchainLocationProof as jest.Mock).mockResolvedValue(
+      (OnchainRegistrar.prototype.verifyOnchainLocationAttestation as jest.Mock).mockResolvedValue(
         mockResult
       );
 
       // Call the method
-      const result = await sdk.verifyOnchainLocationProof(mockProof);
+      const result = await sdk.verifyOnchainLocationAttestation(mockProof);
 
-      // Verify verifyOnchainLocationProof was called with the proof
-      expect(OnchainRegistrar.prototype.verifyOnchainLocationProof).toHaveBeenCalledWith(mockProof);
+      // Verify verifyOnchainLocationAttestation was called with the proof
+      expect(OnchainRegistrar.prototype.verifyOnchainLocationAttestation).toHaveBeenCalledWith(
+        mockProof
+      );
 
       // Verify the result matches our mock
       expect(result).toBe(mockResult);
@@ -445,7 +456,7 @@ describe('AstralSDK - Onchain Workflow', () => {
     });
 
     test('should verify a revoked proof', async () => {
-      const revokedProof: OnchainLocationProof = {
+      const revokedProof: OnchainLocationAttestation = {
         eventTimestamp: Math.floor(Date.now() / 1000),
         srs: 'EPSG:4326',
         locationType: 'geojson',
@@ -471,17 +482,17 @@ describe('AstralSDK - Onchain Workflow', () => {
         reason: 'Proof has been revoked',
       };
 
-      (OnchainRegistrar.prototype.verifyOnchainLocationProof as jest.Mock).mockResolvedValue(
+      (OnchainRegistrar.prototype.verifyOnchainLocationAttestation as jest.Mock).mockResolvedValue(
         mockResult
       );
 
-      const result = await sdk.verifyOnchainLocationProof(revokedProof);
+      const result = await sdk.verifyOnchainLocationAttestation(revokedProof);
       expect(result.isValid).toBe(false);
       expect(result.reason).toBe('Proof has been revoked');
     });
 
     test('should verify an expired proof', async () => {
-      const expiredProof: OnchainLocationProof = {
+      const expiredProof: OnchainLocationAttestation = {
         eventTimestamp: Math.floor(Date.now() / 1000) - 86400,
         srs: 'EPSG:4326',
         locationType: 'geojson',
@@ -508,17 +519,17 @@ describe('AstralSDK - Onchain Workflow', () => {
         reason: 'Proof has expired',
       };
 
-      (OnchainRegistrar.prototype.verifyOnchainLocationProof as jest.Mock).mockResolvedValue(
+      (OnchainRegistrar.prototype.verifyOnchainLocationAttestation as jest.Mock).mockResolvedValue(
         mockResult
       );
 
-      const result = await sdk.verifyOnchainLocationProof(expiredProof);
+      const result = await sdk.verifyOnchainLocationAttestation(expiredProof);
       expect(result.isValid).toBe(false);
       expect(result.reason).toBe('Proof has expired');
     });
 
     test('should handle non-existent proof', async () => {
-      const nonExistentProof: OnchainLocationProof = {
+      const nonExistentProof: OnchainLocationAttestation = {
         eventTimestamp: Math.floor(Date.now() / 1000),
         srs: 'EPSG:4326',
         locationType: 'geojson',
@@ -544,11 +555,11 @@ describe('AstralSDK - Onchain Workflow', () => {
         reason: 'Proof does not exist on chain',
       };
 
-      (OnchainRegistrar.prototype.verifyOnchainLocationProof as jest.Mock).mockResolvedValue(
+      (OnchainRegistrar.prototype.verifyOnchainLocationAttestation as jest.Mock).mockResolvedValue(
         mockResult
       );
 
-      const result = await sdk.verifyOnchainLocationProof(nonExistentProof);
+      const result = await sdk.verifyOnchainLocationAttestation(nonExistentProof);
       expect(result.isValid).toBe(false);
       expect(result.reason).toBe('Proof does not exist on chain');
     });
@@ -562,7 +573,7 @@ describe('AstralSDK - Onchain Workflow', () => {
         debug: true,
       });
 
-      const baseProof: OnchainLocationProof = {
+      const baseProof: OnchainLocationAttestation = {
         eventTimestamp: Math.floor(Date.now() / 1000),
         srs: 'EPSG:4326',
         locationType: 'geojson',
@@ -587,22 +598,22 @@ describe('AstralSDK - Onchain Workflow', () => {
         proof: baseProof,
       };
 
-      (OnchainRegistrar.prototype.verifyOnchainLocationProof as jest.Mock).mockResolvedValue(
+      (OnchainRegistrar.prototype.verifyOnchainLocationAttestation as jest.Mock).mockResolvedValue(
         mockResult
       );
 
-      const result = await baseSdk.verifyOnchainLocationProof(baseProof);
+      const result = await baseSdk.verifyOnchainLocationAttestation(baseProof);
       expect(result.isValid).toBe(true);
-      expect(result.proof).toBeDefined();
-      // Type guard to ensure it's an OnchainLocationProof
-      if (result.proof && 'chain' in result.proof) {
-        expect(result.proof.chain).toBe('base');
-        expect(result.proof.chainId).toBe(8453);
+      expect(result.attestation).toBeDefined();
+      // Type guard to ensure it's an OnchainLocationAttestation
+      if (result.attestation && 'chain' in result.attestation) {
+        expect(result.attestation.chain).toBe('base');
+        expect(result.attestation.chainId).toBe(8453);
       }
     });
 
     test('should handle verification errors gracefully', async () => {
-      const mockProof: OnchainLocationProof = {
+      const mockProof: OnchainLocationAttestation = {
         eventTimestamp: Math.floor(Date.now() / 1000),
         srs: 'EPSG:4326',
         locationType: 'geojson',
@@ -628,20 +639,20 @@ describe('AstralSDK - Onchain Workflow', () => {
         reason: 'RPC connection failed',
       };
 
-      (OnchainRegistrar.prototype.verifyOnchainLocationProof as jest.Mock).mockResolvedValue(
+      (OnchainRegistrar.prototype.verifyOnchainLocationAttestation as jest.Mock).mockResolvedValue(
         mockResult
       );
 
-      const result = await sdk.verifyOnchainLocationProof(mockProof);
+      const result = await sdk.verifyOnchainLocationAttestation(mockProof);
       expect(result.isValid).toBe(false);
       expect(result.reason).toBe('RPC connection failed');
     });
   });
 
-  describe('revokeOnchainLocationProof', () => {
+  describe('revokeOnchainLocationAttestation', () => {
     test('should revoke an onchain location proof', async () => {
       // Mock proof to revoke
-      const mockProof: OnchainLocationProof = {
+      const mockProof: OnchainLocationAttestation = {
         eventTimestamp: Math.floor(Date.now() / 1000),
         srs: 'EPSG:4326',
         locationType: 'geojson',
@@ -666,15 +677,17 @@ describe('AstralSDK - Onchain Workflow', () => {
       };
 
       // Setup the mock to return our response
-      (OnchainRegistrar.prototype.revokeOnchainLocationProof as jest.Mock).mockResolvedValue(
+      (OnchainRegistrar.prototype.revokeOnchainLocationAttestation as jest.Mock).mockResolvedValue(
         mockTxResponse
       );
 
       // Call the method
-      const result = await sdk.revokeOnchainLocationProof(mockProof);
+      const result = await sdk.revokeOnchainLocationAttestation(mockProof);
 
-      // Verify revokeOnchainLocationProof was called with the proof
-      expect(OnchainRegistrar.prototype.revokeOnchainLocationProof).toHaveBeenCalledWith(mockProof);
+      // Verify revokeOnchainLocationAttestation was called with the proof
+      expect(OnchainRegistrar.prototype.revokeOnchainLocationAttestation).toHaveBeenCalledWith(
+        mockProof
+      );
 
       // Verify the result is the mock response
       expect(result).toBe(mockTxResponse);
@@ -682,7 +695,7 @@ describe('AstralSDK - Onchain Workflow', () => {
 
     test('should throw error if proof is not revocable', async () => {
       // Mock proof that is not revocable
-      const nonRevocableProof: OnchainLocationProof = {
+      const nonRevocableProof: OnchainLocationAttestation = {
         eventTimestamp: Math.floor(Date.now() / 1000),
         srs: 'EPSG:4326',
         locationType: 'geojson',
@@ -702,17 +715,17 @@ describe('AstralSDK - Onchain Workflow', () => {
       };
 
       // Expect the method to throw
-      await expect(sdk.revokeOnchainLocationProof(nonRevocableProof)).rejects.toThrow(
+      await expect(sdk.revokeOnchainLocationAttestation(nonRevocableProof)).rejects.toThrow(
         ValidationError
       );
 
       // Verify the mock wasn't called
-      expect(OnchainRegistrar.prototype.revokeOnchainLocationProof).not.toHaveBeenCalled();
+      expect(OnchainRegistrar.prototype.revokeOnchainLocationAttestation).not.toHaveBeenCalled();
     });
 
     test('should throw error if proof is already revoked', async () => {
       // Mock proof that is already revoked
-      const revokedProof: OnchainLocationProof = {
+      const revokedProof: OnchainLocationAttestation = {
         eventTimestamp: Math.floor(Date.now() / 1000),
         srs: 'EPSG:4326',
         locationType: 'geojson',
@@ -732,14 +745,16 @@ describe('AstralSDK - Onchain Workflow', () => {
       };
 
       // Expect the method to throw
-      await expect(sdk.revokeOnchainLocationProof(revokedProof)).rejects.toThrow(ValidationError);
+      await expect(sdk.revokeOnchainLocationAttestation(revokedProof)).rejects.toThrow(
+        ValidationError
+      );
 
       // Verify the mock wasn't called
-      expect(OnchainRegistrar.prototype.revokeOnchainLocationProof).not.toHaveBeenCalled();
+      expect(OnchainRegistrar.prototype.revokeOnchainLocationAttestation).not.toHaveBeenCalled();
     });
 
     test('should revoke proof successfully', async () => {
-      const mockProof: OnchainLocationProof = {
+      const mockProof: OnchainLocationAttestation = {
         eventTimestamp: Math.floor(Date.now() / 1000),
         srs: 'EPSG:4326',
         locationType: 'geojson',
@@ -766,19 +781,21 @@ describe('AstralSDK - Onchain Workflow', () => {
         }),
       };
 
-      (OnchainRegistrar.prototype.revokeOnchainLocationProof as jest.Mock).mockResolvedValue(
+      (OnchainRegistrar.prototype.revokeOnchainLocationAttestation as jest.Mock).mockResolvedValue(
         mockTxResponse
       );
 
-      const result = await sdk.revokeOnchainLocationProof(mockProof);
+      const result = await sdk.revokeOnchainLocationAttestation(mockProof);
 
       // Verify the method was called with the proof
-      expect(OnchainRegistrar.prototype.revokeOnchainLocationProof).toHaveBeenCalledWith(mockProof);
+      expect(OnchainRegistrar.prototype.revokeOnchainLocationAttestation).toHaveBeenCalledWith(
+        mockProof
+      );
       expect(result).toBe(mockTxResponse);
     });
 
     test('should fail to revoke from wrong signer', async () => {
-      const mockProof: OnchainLocationProof = {
+      const mockProof: OnchainLocationAttestation = {
         eventTimestamp: Math.floor(Date.now() / 1000),
         srs: 'EPSG:4326',
         locationType: 'geojson',
@@ -798,13 +815,17 @@ describe('AstralSDK - Onchain Workflow', () => {
       };
 
       const error = new ValidationError('Only the original attester can revoke this proof');
-      (OnchainRegistrar.prototype.revokeOnchainLocationProof as jest.Mock).mockRejectedValue(error);
+      (OnchainRegistrar.prototype.revokeOnchainLocationAttestation as jest.Mock).mockRejectedValue(
+        error
+      );
 
-      await expect(sdk.revokeOnchainLocationProof(mockProof)).rejects.toThrow(ValidationError);
+      await expect(sdk.revokeOnchainLocationAttestation(mockProof)).rejects.toThrow(
+        ValidationError
+      );
     });
 
     test('should handle network errors during revocation', async () => {
-      const mockProof: OnchainLocationProof = {
+      const mockProof: OnchainLocationAttestation = {
         eventTimestamp: Math.floor(Date.now() / 1000),
         srs: 'EPSG:4326',
         locationType: 'geojson',
@@ -824,11 +845,11 @@ describe('AstralSDK - Onchain Workflow', () => {
       };
 
       const networkError = new NetworkError('Transaction failed: insufficient gas');
-      (OnchainRegistrar.prototype.revokeOnchainLocationProof as jest.Mock).mockRejectedValue(
+      (OnchainRegistrar.prototype.revokeOnchainLocationAttestation as jest.Mock).mockRejectedValue(
         networkError
       );
 
-      await expect(sdk.revokeOnchainLocationProof(mockProof)).rejects.toThrow(NetworkError);
+      await expect(sdk.revokeOnchainLocationAttestation(mockProof)).rejects.toThrow(NetworkError);
     });
   });
 });

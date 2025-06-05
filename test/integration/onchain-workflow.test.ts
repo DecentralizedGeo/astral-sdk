@@ -5,12 +5,12 @@
  * Integration tests for the complete onchain workflow in AstralSDK.
  *
  * These tests verify the full end-to-end flow:
- * SDK initialization → buildLocationProof → createOnchainLocationProof → verifyOnchainLocationProof
+ * SDK initialization → buildLocationAttestation → createOnchainLocationAttestation → verifyOnchainLocationAttestation
  */
 
 import { AstralSDK } from '../../src/core/AstralSDK';
-import { LocationProofInput, OnchainLocationProof } from '../../src/core/types';
-import { isOnchainLocationProof } from '../../src/utils/typeGuards';
+import { LocationAttestationInput, OnchainLocationAttestation } from '../../src/core/types';
+import { isOnchainLocationAttestation } from '../../src/utils/typeGuards';
 
 // Mock the OnchainRegistrar since we're not using a real blockchain
 jest.mock('../../src/eas/OnchainRegistrar');
@@ -60,10 +60,10 @@ describe('AstralSDK - Onchain Workflow Integration', () => {
     // Mock OnchainRegistrar methods
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { OnchainRegistrar } = require('../../src/eas/OnchainRegistrar');
-    OnchainRegistrar.prototype.registerOnchainLocationProof = jest
+    OnchainRegistrar.prototype.registerOnchainLocationAttestation = jest
       .fn()
       .mockImplementation(async (unsignedProof, options) => {
-        const mockOnchainProof: OnchainLocationProof = {
+        const mockOnchainProof: OnchainLocationAttestation = {
           ...unsignedProof,
           uid: '0x' + '0'.repeat(64),
           attester: await mockSigner.getAddress(),
@@ -80,7 +80,7 @@ describe('AstralSDK - Onchain Workflow Integration', () => {
         return mockOnchainProof;
       });
 
-    OnchainRegistrar.prototype.verifyOnchainLocationProof = jest
+    OnchainRegistrar.prototype.verifyOnchainLocationAttestation = jest
       .fn()
       .mockImplementation(async proof => {
         return {
@@ -90,7 +90,7 @@ describe('AstralSDK - Onchain Workflow Integration', () => {
         };
       });
 
-    OnchainRegistrar.prototype.revokeOnchainLocationProof = jest
+    OnchainRegistrar.prototype.revokeOnchainLocationAttestation = jest
       .fn()
       .mockImplementation(async proof => {
         if (!proof.revocable) {
@@ -123,7 +123,7 @@ describe('AstralSDK - Onchain Workflow Integration', () => {
       await sdk.extensions.ensureInitialized();
 
       // Step 1: Create location proof input
-      const input: LocationProofInput = {
+      const input: LocationAttestationInput = {
         location: {
           type: 'Feature',
           properties: {},
@@ -138,16 +138,16 @@ describe('AstralSDK - Onchain Workflow Integration', () => {
       };
 
       // Step 2: Build unsigned location proof
-      const unsignedProof = await sdk.buildLocationProof(input);
+      const unsignedProof = await sdk.buildLocationAttestation(input);
       expect(unsignedProof).toBeDefined();
       expect(unsignedProof.locationType).toBe('geojson-feature');
       expect(unsignedProof.location).toContain('Point');
       expect(unsignedProof.memo).toBe('Integration test - New York location');
 
       // Step 3: Create onchain location proof
-      const onchainProof = await sdk.createOnchainLocationProof(input);
+      const onchainProof = await sdk.createOnchainLocationAttestation(input);
       expect(onchainProof).toBeDefined();
-      expect(isOnchainLocationProof(onchainProof)).toBe(true);
+      expect(isOnchainLocationAttestation(onchainProof)).toBe(true);
       expect(onchainProof.uid).toBeDefined();
       expect(onchainProof.txHash).toBeDefined();
       expect(onchainProof.chain).toBe('sepolia');
@@ -156,15 +156,15 @@ describe('AstralSDK - Onchain Workflow Integration', () => {
       );
 
       // Step 4: Verify the onchain proof
-      const verificationResult = await sdk.verifyOnchainLocationProof(onchainProof);
+      const verificationResult = await sdk.verifyOnchainLocationAttestation(onchainProof);
       expect(verificationResult.isValid).toBe(true);
       expect(verificationResult.signerAddress?.toLowerCase()).toBe(
         onchainProof.attester.toLowerCase()
       );
-      expect(verificationResult.proof).toEqual(onchainProof);
+      expect(verificationResult.attestation).toEqual(onchainProof);
 
       // Step 5: Test revocation workflow
-      const revokeTx = await sdk.revokeOnchainLocationProof(onchainProof);
+      const revokeTx = await sdk.revokeOnchainLocationAttestation(onchainProof);
       expect(revokeTx).toBeDefined();
       expect((revokeTx as Record<string, unknown>).hash).toBeDefined();
     });
@@ -178,7 +178,7 @@ describe('AstralSDK - Onchain Workflow Integration', () => {
 
       await sdk.extensions.ensureInitialized();
 
-      const input: LocationProofInput = {
+      const input: LocationAttestationInput = {
         location: {
           type: 'Point',
           coordinates: [139.6917, 35.6895], // Tokyo
@@ -193,11 +193,11 @@ describe('AstralSDK - Onchain Workflow Integration', () => {
         memo: 'Location with image attachment',
       };
 
-      const onchainProof = await sdk.createOnchainLocationProof(input);
+      const onchainProof = await sdk.createOnchainLocationAttestation(input);
       expect(onchainProof.mediaType).toEqual(['image/png']);
       expect(onchainProof.mediaData).toHaveLength(1);
 
-      const verificationResult = await sdk.verifyOnchainLocationProof(onchainProof);
+      const verificationResult = await sdk.verifyOnchainLocationAttestation(onchainProof);
       expect(verificationResult.isValid).toBe(true);
     });
 
@@ -216,7 +216,7 @@ describe('AstralSDK - Onchain Workflow Integration', () => {
 
       await sdk1.extensions.ensureInitialized();
 
-      const input: LocationProofInput = {
+      const input: LocationAttestationInput = {
         location: {
           type: 'Point',
           coordinates: [0, 0],
@@ -225,7 +225,7 @@ describe('AstralSDK - Onchain Workflow Integration', () => {
         memo: 'Testing provider configuration',
       };
 
-      const onchainProof1 = await sdk1.createOnchainLocationProof(input);
+      const onchainProof1 = await sdk1.createOnchainLocationAttestation(input);
       expect(onchainProof1).toBeDefined();
       expect(onchainProof1.chain).toBe('sepolia');
 
@@ -249,10 +249,10 @@ describe('AstralSDK - Onchain Workflow Integration', () => {
       // Mock OnchainRegistrar for base chain - need to clear and reset the mock
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { OnchainRegistrar: OnchainRegistrar2 } = require('../../src/eas/OnchainRegistrar');
-      OnchainRegistrar2.prototype.registerOnchainLocationProof = jest
+      OnchainRegistrar2.prototype.registerOnchainLocationAttestation = jest
         .fn()
         .mockImplementation(async unsignedProof => {
-          const mockOnchainProof: OnchainLocationProof = {
+          const mockOnchainProof: OnchainLocationAttestation = {
             ...unsignedProof,
             uid: '0x' + '0'.repeat(64),
             attester: await baseMockSigner.getAddress(),
@@ -274,7 +274,7 @@ describe('AstralSDK - Onchain Workflow Integration', () => {
 
       await sdk2.extensions.ensureInitialized();
 
-      const onchainProof2 = await sdk2.createOnchainLocationProof(input);
+      const onchainProof2 = await sdk2.createOnchainLocationAttestation(input);
       expect(onchainProof2).toBeDefined();
       expect(onchainProof2.chain).toBe('base');
       expect(onchainProof2.chainId).toBe(8453);
@@ -289,7 +289,7 @@ describe('AstralSDK - Onchain Workflow Integration', () => {
 
       await sdk.extensions.ensureInitialized();
 
-      const input: LocationProofInput = {
+      const input: LocationAttestationInput = {
         location: {
           type: 'Point',
           coordinates: [13.405, 52.52], // Berlin
@@ -312,9 +312,12 @@ describe('AstralSDK - Onchain Workflow Integration', () => {
       // Mock the registrar to verify options are passed
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { OnchainRegistrar } = require('../../src/eas/OnchainRegistrar');
-      const registerSpy = jest.spyOn(OnchainRegistrar.prototype, 'registerOnchainLocationProof');
+      const registerSpy = jest.spyOn(
+        OnchainRegistrar.prototype,
+        'registerOnchainLocationAttestation'
+      );
 
-      const onchainProof = await sdk.createOnchainLocationProof(input, options);
+      const onchainProof = await sdk.createOnchainLocationAttestation(input, options);
 
       // Verify the options were passed to the registrar
       expect(registerSpy).toHaveBeenCalledWith(expect.any(Object), options);
@@ -329,13 +332,13 @@ describe('AstralSDK - Onchain Workflow Integration', () => {
 
       await sdk1.extensions.ensureInitialized();
 
-      const input: LocationProofInput = {
+      const input: LocationAttestationInput = {
         location: { type: 'Point', coordinates: [0, 0] },
         locationType: 'geojson-point',
         memo: 'Testing error scenarios',
       };
 
-      await expect(sdk1.createOnchainLocationProof(input)).rejects.toThrow();
+      await expect(sdk1.createOnchainLocationAttestation(input)).rejects.toThrow();
 
       // Test 2: Revoke non-revocable proof (using options to make it non-revocable)
       const sdk2 = new AstralSDK({
@@ -346,10 +349,12 @@ describe('AstralSDK - Onchain Workflow Integration', () => {
 
       await sdk2.extensions.ensureInitialized();
 
-      const nonRevocableProof = await sdk2.createOnchainLocationProof(input, { revocable: false });
+      const nonRevocableProof = await sdk2.createOnchainLocationAttestation(input, {
+        revocable: false,
+      });
       expect(nonRevocableProof.revocable).toBe(false);
 
-      await expect(sdk2.revokeOnchainLocationProof(nonRevocableProof)).rejects.toThrow(
+      await expect(sdk2.revokeOnchainLocationAttestation(nonRevocableProof)).rejects.toThrow(
         'not revocable'
       );
     });
@@ -364,7 +369,7 @@ describe('AstralSDK - Onchain Workflow Integration', () => {
       await sdk.extensions.ensureInitialized();
 
       // Step 1: Register a proof
-      const input: LocationProofInput = {
+      const input: LocationAttestationInput = {
         location: {
           type: 'Point',
           coordinates: [-0.1276, 51.5074], // London
@@ -373,16 +378,16 @@ describe('AstralSDK - Onchain Workflow Integration', () => {
         memo: 'Full workflow test',
       };
 
-      const onchainProof = await sdk.createOnchainLocationProof(input);
+      const onchainProof = await sdk.createOnchainLocationAttestation(input);
       expect(onchainProof).toBeDefined();
       expect(onchainProof.revoked).toBe(false);
 
       // Step 2: Verify the proof
-      const verificationResult1 = await sdk.verifyOnchainLocationProof(onchainProof);
+      const verificationResult1 = await sdk.verifyOnchainLocationAttestation(onchainProof);
       expect(verificationResult1.isValid).toBe(true);
 
       // Step 3: Revoke the proof
-      const revokeTx = await sdk.revokeOnchainLocationProof(onchainProof);
+      const revokeTx = await sdk.revokeOnchainLocationAttestation(onchainProof);
       expect(revokeTx).toBeDefined();
 
       // Step 4: Verification of revoked proof is tested in unit tests

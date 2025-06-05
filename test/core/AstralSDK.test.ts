@@ -9,7 +9,7 @@
  */
 
 import { AstralSDK } from '../../src/core/AstralSDK';
-import { LocationProofInput } from '../../src/core/types';
+import { LocationAttestationInput } from '../../src/core/types';
 import { ExtensionError, ValidationError } from '../../src/core/errors';
 
 // Sample location data in different formats
@@ -38,15 +38,15 @@ describe('AstralSDK', () => {
     sdk = new AstralSDK({ debug: true });
   });
 
-  describe('buildLocationProof', () => {
+  describe('buildLocationAttestation', () => {
     test('should build a proof with GeoJSON location data', async () => {
-      const input: LocationProofInput = {
+      const input: LocationAttestationInput = {
         location: pointGeoJSON,
         memo: 'Test GeoJSON point location proof',
         timestamp: new Date('2023-01-01T12:00:00Z'),
       };
 
-      const proof = await sdk.buildLocationProof(input);
+      const proof = await sdk.buildLocationAttestation(input);
 
       // Verify the proof properties
       expect(proof).toBeDefined();
@@ -65,19 +65,19 @@ describe('AstralSDK', () => {
     });
 
     test('should auto-detect GeoJSON format if not specified', async () => {
-      const input: LocationProofInput = {
+      const input: LocationAttestationInput = {
         location: featureGeoJSON,
         memo: 'Test GeoJSON feature auto-detection',
       };
 
-      const proof = await sdk.buildLocationProof(input);
+      const proof = await sdk.buildLocationAttestation(input);
 
       expect(proof.locationType).toBe('geojson');
       expect(JSON.parse(proof.location)).toEqual(featureGeoJSON);
     });
 
     test('should process media attachments', async () => {
-      const input: LocationProofInput = {
+      const input: LocationAttestationInput = {
         location: pointGeoJSON,
         memo: 'Test location proof with media',
         media: [
@@ -92,7 +92,7 @@ describe('AstralSDK', () => {
         ],
       };
 
-      const proof = await sdk.buildLocationProof(input);
+      const proof = await sdk.buildLocationAttestation(input);
 
       // Verify media processing
       expect(proof.mediaType).toEqual(['image/jpeg', 'image/png']);
@@ -106,39 +106,39 @@ describe('AstralSDK', () => {
     test('should convert location format if targetLocationFormat is specified', async () => {
       // Currently this is just a passthrough since we only have GeoJSON
       // In a fully implemented SDK, this would convert between formats
-      const input: LocationProofInput = {
+      const input: LocationAttestationInput = {
         location: pointGeoJSON,
         locationType: 'geojson',
         targetLocationFormat: 'geojson', // Same format, no actual conversion
         memo: 'Test location format conversion',
       };
 
-      const proof = await sdk.buildLocationProof(input);
+      const proof = await sdk.buildLocationAttestation(input);
 
       expect(proof.locationType).toBe('geojson');
       expect(JSON.parse(proof.location)).toEqual(pointGeoJSON);
     });
 
     test('should throw ValidationError for missing location', async () => {
-      const input: LocationProofInput = {
+      const input: LocationAttestationInput = {
         location: undefined as unknown,
         memo: 'Missing location',
       };
 
-      await expect(sdk.buildLocationProof(input)).rejects.toThrow(ValidationError);
+      await expect(sdk.buildLocationAttestation(input)).rejects.toThrow(ValidationError);
     });
 
     test('should throw ExtensionError for unknown location format', async () => {
-      const input: LocationProofInput = {
+      const input: LocationAttestationInput = {
         location: 'not a valid location',
         memo: 'Invalid location format',
       };
 
-      await expect(sdk.buildLocationProof(input)).rejects.toThrow(ExtensionError);
+      await expect(sdk.buildLocationAttestation(input)).rejects.toThrow(ExtensionError);
     });
 
     test('should throw ExtensionError for unknown media type', async () => {
-      const input: LocationProofInput = {
+      const input: LocationAttestationInput = {
         location: pointGeoJSON,
         media: [
           {
@@ -148,11 +148,11 @@ describe('AstralSDK', () => {
         ],
       };
 
-      await expect(sdk.buildLocationProof(input)).rejects.toThrow(ExtensionError);
+      await expect(sdk.buildLocationAttestation(input)).rejects.toThrow(ExtensionError);
     });
 
     test('should throw ValidationError for invalid media data', async () => {
-      const input: LocationProofInput = {
+      const input: LocationAttestationInput = {
         location: pointGeoJSON,
         media: [
           {
@@ -162,7 +162,7 @@ describe('AstralSDK', () => {
         ],
       };
 
-      await expect(sdk.buildLocationProof(input)).rejects.toThrow(ValidationError);
+      await expect(sdk.buildLocationAttestation(input)).rejects.toThrow(ValidationError);
     });
   });
 
@@ -178,42 +178,42 @@ describe('AstralSDK', () => {
       sdk = new AstralSDK({ debug: true });
     });
 
-    describe('signOffchainLocationProof', () => {
+    describe('signOffchainLocationAttestation', () => {
       test('should throw an error if no signer is available', async () => {
         // Create an unsigned proof
-        const unsignedProof = await sdk.buildLocationProof({
+        const unsignedProof = await sdk.buildLocationAttestation({
           location: pointGeoJSON,
           memo: 'Test unsigned proof for signing',
         });
 
         // Since we didn't provide a signer, this should throw
-        await expect(sdk.signOffchainLocationProof(unsignedProof)).rejects.toThrow();
+        await expect(sdk.signOffchainLocationAttestation(unsignedProof)).rejects.toThrow();
       });
     });
 
-    describe('createOffchainLocationProof', () => {
+    describe('createOffchainLocationAttestation', () => {
       test('should build a proof and attempt to sign it', async () => {
-        const input: LocationProofInput = {
+        const input: LocationAttestationInput = {
           location: pointGeoJSON,
           memo: 'Test offchain proof',
         };
 
-        // We'll spy on the buildLocationProof method
-        const buildSpy = jest.spyOn(sdk, 'buildLocationProof');
+        // We'll spy on the buildLocationAttestation method
+        const buildSpy = jest.spyOn(sdk, 'buildLocationAttestation');
 
         // This will fail without a signer but we can verify it called the right methods
         try {
-          await sdk.createOffchainLocationProof(input);
+          await sdk.createOffchainLocationAttestation(input);
         } catch (error) {
           // Expected to fail without a signer
         }
 
-        // Verify buildLocationProof was called with our input
+        // Verify buildLocationAttestation was called with our input
         expect(buildSpy).toHaveBeenCalledWith(input);
       });
     });
 
-    describe('verifyOffchainLocationProof', () => {
+    describe('verifyOffchainLocationAttestation', () => {
       test('should return invalid result if verification fails', async () => {
         // Create a mock proof with minimal required fields
         const mockProof = {
@@ -232,7 +232,7 @@ describe('AstralSDK', () => {
         };
 
         // Verify the proof (should fail because we don't have a valid signer or signature)
-        const result = await sdk.verifyOffchainLocationProof(mockProof);
+        const result = await sdk.verifyOffchainLocationAttestation(mockProof);
 
         // Result should indicate invalid verification
         expect(result.isValid).toBe(false);
@@ -240,15 +240,15 @@ describe('AstralSDK', () => {
     });
   });
 
-  describe('createOnchainLocationProof', () => {
+  describe('createOnchainLocationAttestation', () => {
     test('should throw ValidationError when no provider or signer is available', async () => {
-      const input: LocationProofInput = {
+      const input: LocationAttestationInput = {
         location: pointGeoJSON,
         memo: 'Test onchain proof',
       };
 
-      await expect(sdk.createOnchainLocationProof(input)).rejects.toThrow(ValidationError);
-      await expect(sdk.createOnchainLocationProof(input)).rejects.toThrow(
+      await expect(sdk.createOnchainLocationAttestation(input)).rejects.toThrow(ValidationError);
+      await expect(sdk.createOnchainLocationAttestation(input)).rejects.toThrow(
         'No provider or signer available for onchain operations'
       );
     });

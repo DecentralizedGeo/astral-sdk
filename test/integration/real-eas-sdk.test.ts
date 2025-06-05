@@ -13,7 +13,7 @@
  */
 
 import { AstralSDK } from '../../src/core/AstralSDK';
-import { LocationProofInput } from '../../src/core/types';
+import { LocationAttestationInput } from '../../src/core/types';
 import { EAS, SchemaEncoder } from '@ethereum-attestation-service/eas-sdk';
 import { ethers } from 'ethers';
 
@@ -72,7 +72,7 @@ describe('Real EAS SDK Integration Tests', () => {
 
   describe('Real Offchain UID Generation', () => {
     test('should generate real offchain UIDs using EAS SDK', async () => {
-      const input: LocationProofInput = {
+      const input: LocationAttestationInput = {
         location: {
           type: 'Point',
           coordinates: [-122.4194, 37.7749],
@@ -82,8 +82,8 @@ describe('Real EAS SDK Integration Tests', () => {
       };
 
       // Create and sign an offchain proof using real EAS SDK logic
-      const unsignedProof = await sdk.buildLocationProof(input);
-      const signedProof = await sdk.signOffchainLocationProof(unsignedProof);
+      const unsignedProof = await sdk.buildLocationAttestation(input);
+      const signedProof = await sdk.signOffchainLocationAttestation(unsignedProof);
 
       // Verify the UID is a real hex string, not a mock value
       expect(signedProof.uid).toMatch(/^0x[a-fA-F0-9]{64}$/);
@@ -105,27 +105,31 @@ describe('Real EAS SDK Integration Tests', () => {
     });
 
     test('should generate different UIDs for different proofs', async () => {
-      const input1: LocationProofInput = {
+      const input1: LocationAttestationInput = {
         location: { type: 'Point', coordinates: [-122.4194, 37.7749] },
         locationType: 'geojson',
         memo: 'First proof',
       };
 
-      const input2: LocationProofInput = {
+      const input2: LocationAttestationInput = {
         location: { type: 'Point', coordinates: [-122.4195, 37.775] },
         locationType: 'geojson',
         memo: 'Second proof',
       };
 
-      const proof1 = await sdk.signOffchainLocationProof(await sdk.buildLocationProof(input1));
-      const proof2 = await sdk.signOffchainLocationProof(await sdk.buildLocationProof(input2));
+      const proof1 = await sdk.signOffchainLocationAttestation(
+        await sdk.buildLocationAttestation(input1)
+      );
+      const proof2 = await sdk.signOffchainLocationAttestation(
+        await sdk.buildLocationAttestation(input2)
+      );
 
       expect(proof1.uid).not.toBe(proof2.uid);
       expect(proof1.signature).not.toBe(proof2.signature);
     });
 
     test('should verify real offchain signatures', async () => {
-      const input: LocationProofInput = {
+      const input: LocationAttestationInput = {
         location: {
           type: 'Point',
           coordinates: [-122.4194, 37.7749],
@@ -134,11 +138,11 @@ describe('Real EAS SDK Integration Tests', () => {
         memo: 'Verification test',
       };
 
-      const unsignedProof = await sdk.buildLocationProof(input);
-      const signedProof = await sdk.signOffchainLocationProof(unsignedProof);
+      const unsignedProof = await sdk.buildLocationAttestation(input);
+      const signedProof = await sdk.signOffchainLocationAttestation(unsignedProof);
 
       // Verify the proof using real EAS SDK verification
-      const verificationResult = await sdk.verifyOffchainLocationProof(signedProof);
+      const verificationResult = await sdk.verifyOffchainLocationAttestation(signedProof);
 
       expect(verificationResult.isValid).toBe(true);
       expect(verificationResult.signerAddress).toBe(await mockSigner.getAddress());
@@ -147,7 +151,7 @@ describe('Real EAS SDK Integration Tests', () => {
 
   describe('Real Schema Encoding/Decoding', () => {
     test('should use real EAS SchemaEncoder for location proofs', async () => {
-      const input: LocationProofInput = {
+      const input: LocationAttestationInput = {
         location: {
           type: 'Point',
           coordinates: [-122.4194, 37.7749],
@@ -163,7 +167,7 @@ describe('Real EAS SDK Integration Tests', () => {
       };
 
       // Build the proof which should use real schema encoding
-      const proof = await sdk.buildLocationProof(input);
+      const proof = await sdk.buildLocationAttestation(input);
 
       // The proof should have properly encoded data
       expect(proof.location).toBe('{"type":"Point","coordinates":[-122.4194,37.7749]}');
@@ -200,7 +204,7 @@ describe('Real EAS SDK Integration Tests', () => {
 
   describe('Offchain vs Onchain UID Differences', () => {
     test('should generate different UIDs for offchain vs onchain workflows with same data', async () => {
-      const input: LocationProofInput = {
+      const input: LocationAttestationInput = {
         location: {
           type: 'Point',
           coordinates: [-122.4194, 37.7749],
@@ -210,8 +214,8 @@ describe('Real EAS SDK Integration Tests', () => {
       };
 
       // Create offchain proof with real EAS SDK
-      const unsignedProof = await sdk.buildLocationProof(input);
-      const offchainProof = await sdk.signOffchainLocationProof(unsignedProof);
+      const unsignedProof = await sdk.buildLocationAttestation(input);
+      const offchainProof = await sdk.signOffchainLocationAttestation(unsignedProof);
 
       // Calculate what the onchain UID would be using real EAS logic
       const schemaUID = '0x853a55f39e2d1bf1e6731ae7148976fbfb0db06289d0de0c46d60d69dad9248a';
@@ -258,24 +262,24 @@ describe('Real EAS SDK Integration Tests', () => {
   describe('Real EAS SDK Error Handling', () => {
     test('should handle real EAS SDK validation errors', async () => {
       // Test with invalid schema encoding - this should trigger real EAS SDK validation
-      const invalidInput: LocationProofInput = {
+      const invalidInput: LocationAttestationInput = {
         location: '', // Invalid empty location
         locationType: 'geojson',
         memo: 'Error handling test',
       };
 
-      await expect(sdk.buildLocationProof(invalidInput)).rejects.toThrow();
+      await expect(sdk.buildLocationAttestation(invalidInput)).rejects.toThrow();
     });
 
     test('should handle signature verification failures with real EAS SDK', async () => {
-      const input: LocationProofInput = {
+      const input: LocationAttestationInput = {
         location: { type: 'Point', coordinates: [-122.4194, 37.7749] },
         locationType: 'geojson',
         memo: 'Signature failure test',
       };
 
-      const unsignedProof = await sdk.buildLocationProof(input);
-      const signedProof = await sdk.signOffchainLocationProof(unsignedProof);
+      const unsignedProof = await sdk.buildLocationAttestation(input);
+      const signedProof = await sdk.signOffchainLocationAttestation(unsignedProof);
 
       // Tamper with the signature to make it invalid
       const tamperedProof = {
@@ -283,7 +287,7 @@ describe('Real EAS SDK Integration Tests', () => {
         signature: '0x' + '0'.repeat(130), // Invalid signature
       };
 
-      const verificationResult = await sdk.verifyOffchainLocationProof(tamperedProof);
+      const verificationResult = await sdk.verifyOffchainLocationAttestation(tamperedProof);
       expect(verificationResult.isValid).toBe(false);
     });
   });
