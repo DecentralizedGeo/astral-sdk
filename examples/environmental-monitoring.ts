@@ -75,8 +75,17 @@ async function createOffchainSensorReadings(sdk: AstralSDK) {
         },
         data_quality: 'validated',
         compliance_level: station.readings.pm25 > 50 ? 'exceeded' : 'within_limits',
+        // In production, include references to underlying measurement attestations
+        raw_measurement_attestations: [
+          'bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi', // IPFS CID (example)
+          'bafybeie5gq4jxvzmsym6hjlwxej4rwdoxt7wadqvmmwbqi7r6yhzxqlhvm', // Another CID (example)
+        ],
+        measurement_count: 144, // 24 hours × 6 measurements/hour
       };
 
+      // Note: In this demo we only build the attestation (unsigned)
+      // In production, IoT devices would sign using secure enclave or HSM:
+      // const signedAttestation = await deviceSDK.createOffchainLocationAttestation(...)
       const attestation = await sdk.buildLocationAttestation({
         location: station.location,
         memo: `Air quality reading from ${station.name}`,
@@ -99,8 +108,11 @@ async function createOffchainSensorReadings(sdk: AstralSDK) {
     }
   }
 
-  console.log(`\n📈 Summary: Created ${attestations.length} offchain sensor attestations`);
-  console.log('💡 In production, these would be signed and stored for rapid access\n');
+  console.log(`\n📈 Summary: Created ${attestations.length} unsigned sensor attestations`);
+  console.log('💡 In production:');
+  console.log('   - IoT devices sign attestations using secure enclave/HSM');
+  console.log('   - Attestations stored in distributed network (IPFS, Arweave, etc.)');
+  console.log('   - High-frequency raw measurements referenced by CID/UID\n');
 
   return attestations;
 }
@@ -134,7 +146,7 @@ async function createOnchainRegulatoryReport(_sdk: AstralSDK) {
 
     await onchainSDK.extensions.ensureInitialized();
 
-    // Create regulatory compliance report
+    // Create regulatory compliance report with references to offchain data
     const reportData = {
       report_type: 'daily_compliance_summary',
       report_date: new Date().toISOString().split('T')[0],
@@ -147,6 +159,12 @@ async function createOnchainRegulatoryReport(_sdk: AstralSDK) {
       },
       regulatory_framework: 'WHO Air Quality Guidelines 2021',
       submitted_by: 'Environmental Monitoring Authority',
+      // Reference to offchain attestation collection (in production)
+      offchain_data_references: {
+        collection_cid: 'bafybeibc5sgo2plmjkq2tzmhrn54bk3crhnqyxvtq72n2xhwamgwj3cw5i', // IPFS collection
+        attestation_count: 432, // 3 stations × 144 readings each
+        verification_method: 'secure_enclave_signed',
+      },
       stations: monitoringStations.map(s => ({
         id: s.id,
         name: s.name,
@@ -231,10 +249,11 @@ async function main() {
 
     console.log('\n💡 Key patterns demonstrated:');
     console.log('   ✅ Hybrid workflow (offchain + onchain for different purposes)');
-    console.log('   ✅ Structured metadata in memo fields');
+    console.log('   ✅ Structured metadata in mediaData array (application/json)');
     console.log('   ✅ Global coordinate diversity');
     console.log('   ✅ Real-world environmental data structure');
     console.log('   ✅ Compliance and regulatory reporting');
+    console.log('   ✅ References to offchain attestation collections via CID/UID');
 
     console.log('\n📚 Next steps:');
     console.log('   - Explore the workflow guides for deeper patterns');
