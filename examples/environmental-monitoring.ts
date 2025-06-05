@@ -60,7 +60,7 @@ async function createOffchainSensorReadings(sdk: AstralSDK) {
     try {
       console.log(`📍 Processing station: ${station.name}`);
 
-      // Create structured memo with sensor data
+      // Create structured sensor data for media attachment
       const sensorData = {
         station_id: station.id,
         station_name: station.name,
@@ -79,8 +79,14 @@ async function createOffchainSensorReadings(sdk: AstralSDK) {
 
       const attestation = await sdk.buildLocationAttestation({
         location: station.location,
-        memo: JSON.stringify(sensorData),
+        memo: `Air quality reading from ${station.name}`,
         timestamp: new Date(),
+        media: [
+          {
+            mediaType: 'application/json',
+            data: JSON.stringify(sensorData),
+          },
+        ],
       });
 
       attestations.push(attestation);
@@ -165,7 +171,13 @@ async function createOnchainRegulatoryReport(_sdk: AstralSDK) {
           coordinates: [77.209, 28.6139], // New Delhi as network center
         },
       },
-      memo: JSON.stringify(reportData),
+      memo: 'Daily compliance report - Global Air Quality Initiative',
+      media: [
+        {
+          mediaType: 'application/json',
+          data: JSON.stringify(reportData),
+        },
+      ],
     });
 
     console.log('✅ Regulatory report created on blockchain!');

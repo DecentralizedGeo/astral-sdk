@@ -21,8 +21,7 @@
  */
 
 import { ethers } from 'ethers';
-import { AstralSDK } from '../src/core/AstralSDK';
-import { LocationAttestationInput } from '../src/core/types';
+import { AstralSDK, LocationAttestationInput } from '@decentralized-geo/astral-sdk';
 import * as dotenv from 'dotenv';
 
 // Load environment variables for onchain testing
@@ -33,10 +32,10 @@ async function demoSDK() {
   console.log('=========================================\n');
 
   // ====================================================================
-  // RECIPE 1: Basic SDK Setup and Location Proof Building
+  // RECIPE 1: Basic SDK Setup and Location Attestation Building
   // ====================================================================
 
-  console.log('📖 RECIPE 1: Building Location Proofs');
+  console.log('📖 RECIPE 1: Building Location Attestations');
   console.log('------------------------------------');
 
   // Create SDK instance (offchain-first, no provider needed initially)
@@ -73,23 +72,23 @@ async function demoSDK() {
   ];
 
   for (const example of locationExamples) {
-    console.log(`\n🗺️  Building proof for: ${example.name}`);
+    console.log(`\n🗺️  Building attestation for: ${example.name}`);
 
-    const proofInput: LocationAttestationInput = {
+    const attestationInput: LocationAttestationInput = {
       location: example.location,
-      memo: `Demo proof for ${example.name}`,
+      memo: `Demo attestation for ${example.name}`,
       timestamp: new Date(),
     };
 
-    const unsignedProof = await sdk.buildLocationAttestation(proofInput);
+    const unsignedAttestation = await sdk.buildLocationAttestation(attestationInput);
 
-    console.log('   ✅ Proof created:');
-    console.log('      📍 Location type:', unsignedProof.locationType);
-    console.log('      📝 Memo:', unsignedProof.memo);
-    console.log('      🕐 Timestamp:', new Date(unsignedProof.eventTimestamp * 1000));
+    console.log('   ✅ Attestation created:');
+    console.log('      📍 Location type:', unsignedAttestation.locationType);
+    console.log('      📝 Memo:', unsignedAttestation.memo);
+    console.log('      🕐 Timestamp:', new Date(unsignedAttestation.eventTimestamp * 1000));
     console.log('      🏷️  Schema fields (singular names):', {
-      mediaType: unsignedProof.mediaType.length,
-      recipeType: unsignedProof.recipeType.length,
+      mediaType: unsignedAttestation.mediaType.length,
+      recipeType: unsignedAttestation.recipeType.length,
     });
   }
 
@@ -97,14 +96,14 @@ async function demoSDK() {
   // RECIPE 2: Media Attachments
   // ====================================================================
 
-  console.log('\n\n📖 RECIPE 2: Location Proofs with Media');
+  console.log('\n\n📖 RECIPE 2: Location Attestations with Media');
   console.log('--------------------------------------');
 
   // Sample base64 encoded tiny image (1x1 pixel PNG)
   const sampleImage =
     'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
 
-  const proofWithMedia: LocationAttestationInput = {
+  const attestationWithMedia: LocationAttestationInput = {
     location: {
       type: 'Point',
       coordinates: [-74.006, 40.7128], // New York City
@@ -118,15 +117,15 @@ async function demoSDK() {
     ],
   };
 
-  const unsignedProofWithMedia = await sdk.buildLocationAttestation(proofWithMedia);
+  const unsignedAttestationWithMedia = await sdk.buildLocationAttestation(attestationWithMedia);
 
-  console.log('🖼️  Proof with media created:');
-  console.log('   📍 Location:', unsignedProofWithMedia.location);
-  console.log('   🖼️  Media types:', unsignedProofWithMedia.mediaType);
-  console.log('   📊 Media data entries:', unsignedProofWithMedia.mediaData.length);
+  console.log('🖼️  Attestation with media created:');
+  console.log('   📍 Location:', unsignedAttestationWithMedia.location);
+  console.log('   🖼️  Media types:', unsignedAttestationWithMedia.mediaType);
+  console.log('   📊 Media data entries:', unsignedAttestationWithMedia.mediaData.length);
   console.log(
     '   💾 First media preview:',
-    unsignedProofWithMedia.mediaData[0].substring(0, 50) + '...'
+    unsignedAttestationWithMedia.mediaData[0].substring(0, 50) + '...'
   );
 
   // ====================================================================
@@ -157,27 +156,31 @@ async function demoSDK() {
 
       console.log('   👤 Signer address:', await signer.getAddress());
 
-      // Create and sign an offchain proof
+      // Create and sign an offchain attestation
       const offchainInput: LocationAttestationInput = {
         location: {
           type: 'Point',
           coordinates: [-0.1278, 51.5074], // London
         },
-        memo: 'Signed offchain proof from London',
+        memo: 'Signed offchain attestation from London',
       };
 
-      console.log('\n🏗️  Creating offchain location proof...');
-      const offchainProof = await offchainSDK.createOffchainLocationAttestation(offchainInput);
+      console.log('\n🏗️  Creating offchain location attestation...');
+      const offchainAttestation =
+        await offchainSDK.createOffchainLocationAttestation(offchainInput);
 
-      console.log('   ✅ Offchain proof created:');
-      console.log('      🆔 UID:', offchainProof.uid);
-      console.log('      👤 Signer:', offchainProof.signer);
-      console.log('      📝 Version:', offchainProof.version);
-      console.log('      🔏 Signature preview:', offchainProof.signature.substring(0, 50) + '...');
+      console.log('   ✅ Offchain attestation created:');
+      console.log('      🆔 UID:', offchainAttestation.uid);
+      console.log('      👤 Signer:', offchainAttestation.signer);
+      console.log('      📝 Version:', offchainAttestation.version);
+      console.log(
+        '      🔏 Signature preview:',
+        offchainAttestation.signature.substring(0, 50) + '...'
+      );
 
-      // Verify the offchain proof (our Sub-task 1F fix in action!)
-      console.log('\n🔍 Verifying offchain proof...');
-      const verification = await offchainSDK.verifyOffchainLocationAttestation(offchainProof);
+      // Verify the offchain attestation (our Sub-task 1F fix in action!)
+      console.log('\n🔍 Verifying offchain attestation...');
+      const verification = await offchainSDK.verifyOffchainLocationAttestation(offchainAttestation);
 
       console.log('   ✅ Verification result:');
       console.log('      ✅ Valid:', verification.isValid);
@@ -188,8 +191,8 @@ async function demoSDK() {
 
       // Test invalid signature detection
       console.log('\n🧪 Testing invalid signature detection...');
-      const invalidProof = {
-        ...offchainProof,
+      const invalidAttestation = {
+        ...offchainAttestation,
         signer: '0x0000000000000000000000000000000000000000', // Invalid signer
         signature: JSON.stringify({
           r: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
@@ -198,8 +201,9 @@ async function demoSDK() {
         }),
       };
 
-      const invalidVerification = await offchainSDK.verifyOffchainLocationAttestation(invalidProof);
-      console.log('   ❌ Invalid proof verification:');
+      const invalidVerification =
+        await offchainSDK.verifyOffchainLocationAttestation(invalidAttestation);
+      console.log('   ❌ Invalid attestation verification:');
       console.log('      ❌ Valid:', invalidVerification.isValid);
       console.log('      📝 Reason:', invalidVerification.reason);
     } catch (error) {
@@ -253,35 +257,36 @@ async function demoSDK() {
       // Wait for extensions
       await onchainSDK.extensions.ensureInitialized();
 
-      // Create and register an onchain proof
+      // Create and register an onchain attestation
       const onchainInput: LocationAttestationInput = {
         location: {
           type: 'Point',
           coordinates: [2.3522, 48.8566], // Paris
         },
-        memo: 'Onchain proof from Paris - registered on Sepolia',
+        memo: 'Onchain attestation from Paris - registered on Sepolia',
       };
 
-      console.log('\n⛓️  Registering onchain location proof...');
+      console.log('\n⛓️  Registering onchain location attestation...');
       console.log('   📤 Submitting transaction to Sepolia...');
 
       // This uses our Sub-task 1B fix - real transaction metadata!
-      const onchainProof = await onchainSDK.createOnchainLocationAttestation(onchainInput);
+      const onchainAttestation = await onchainSDK.createOnchainLocationAttestation(onchainInput);
 
-      console.log('   ✅ Onchain proof registered:');
-      console.log('      🆔 UID:', onchainProof.uid);
-      console.log('      📜 Transaction hash:', onchainProof.txHash);
-      console.log('      🧱 Block number:', onchainProof.blockNumber);
-      console.log('      👤 Attester:', onchainProof.attester);
-      console.log('      ⛓️  Chain:', onchainProof.chain);
+      console.log('   ✅ Onchain attestation registered:');
+      console.log('      🆔 UID:', onchainAttestation.uid);
+      console.log('      📜 Transaction hash:', onchainAttestation.txHash);
+      console.log('      🧱 Block number:', onchainAttestation.blockNumber);
+      console.log('      👤 Attester:', onchainAttestation.attester);
+      console.log('      ⛓️  Chain:', onchainAttestation.chain);
       console.log(
         '      🔗 View on Etherscan:',
-        `https://sepolia.etherscan.io/tx/${onchainProof.txHash}`
+        `https://sepolia.etherscan.io/tx/${onchainAttestation.txHash}`
       );
 
-      // Verify the onchain proof
-      console.log('\n🔍 Verifying onchain proof...');
-      const onchainVerification = await onchainSDK.verifyOnchainLocationAttestation(onchainProof);
+      // Verify the onchain attestation
+      console.log('\n🔍 Verifying onchain attestation...');
+      const onchainVerification =
+        await onchainSDK.verifyOnchainLocationAttestation(onchainAttestation);
 
       console.log('   ✅ Onchain verification result:');
       console.log('      ✅ Valid:', onchainVerification.isValid);
@@ -336,12 +341,12 @@ async function demoSDK() {
       const noSignerSDK = new AstralSDK({ debug: true });
       await noSignerSDK.extensions.ensureInitialized();
 
-      const proof = await noSignerSDK.buildLocationAttestation({
+      const attestation = await noSignerSDK.buildLocationAttestation({
         location: { type: 'Point', coordinates: [0, 0] },
         memo: 'Test',
       });
 
-      await noSignerSDK.signOffchainLocationAttestation(proof);
+      await noSignerSDK.signOffchainLocationAttestation(attestation);
     } catch (error) {
       console.log('   ✅ Caught missing signer error:', error.constructor.name);
     }
@@ -357,7 +362,7 @@ async function demoSDK() {
   console.log('====================');
   console.log('');
   console.log('✅ Demonstrated functionality:');
-  console.log('   🏗️  Building location proofs (multiple formats)');
+  console.log('   🏗️  Building location attestations (multiple formats)');
   console.log('   🖼️  Media attachments');
   console.log('   🔐 Offchain signing and verification');
   console.log('   ⛓️  Onchain registration and verification');

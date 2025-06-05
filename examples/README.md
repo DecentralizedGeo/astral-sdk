@@ -20,47 +20,52 @@ This directory contains examples demonstrating how to use the Astral SDK for cre
    # Add your TEST_PRIVATE_KEY and INFURA_API_KEY
    ```
 
-## Current Examples (v0.1.0)
+## Current Examples
 
 ### **🚀 Essential Examples**
 
-- **`hello-world.ts`** - 30-second minimal working example (no setup required)
-- **`basic-workflows.ts`** - Both offchain and onchain patterns with error handling
-- **`environmental-monitoring.ts`** - Real-world sensor network use case with hybrid workflow
+1. **`hello-world.ts`** - 30-second minimal example
+   - Creates and signs an offchain attestation
+   - Uses test private key for simplicity
+   - Perfect starting point for new developers
 
-### **🧪 Development Examples**
+2. **`basic-workflows.ts`** - Both workflow patterns
+   - Demonstrates offchain (gasless) workflow
+   - Demonstrates onchain (blockchain) workflow  
+   - Includes proper error handling and environment setup
 
-- `complete-sdk-demo.ts` - Comprehensive SDK functionality demonstration
-- `create-location-attestation.ts` - Basic attestation creation patterns
-- `offchain-signer-test.ts` - Offchain workflow testing
-- `onchain-workflow-example.ts` - Onchain workflow patterns
-- `sdk-integration-example.ts` - Integration patterns and best practices
+3. **`environmental-monitoring.ts`** - Real-world use case
+   - Air quality sensor network across multiple cities
+   - Uses structured data in mediaData (application/json)
+   - Shows hybrid workflow for different purposes
+   - Production-ready patterns
 
-### **📋 Legacy Examples**
+### **📖 Reference Example**
 
-The following examples are maintained for compatibility but may use older patterns:
-- `minimal-demo.js` - JavaScript minimal example
-- `reference-demo.js` - Reference implementation patterns
-- `working-attestation-demo.js` - Working attestation demonstration
-- `extension-usage.ts` - Extension system usage
+4. **`complete-sdk-demo.ts`** - Comprehensive demonstration
+   - "Recipe book" format covering all features
+   - Multiple location formats
+   - Media attachments
+   - Error handling patterns
+   - Test suite for SDK functionality
 
-## Example Categories
+## Running the Examples
 
-### **🔐 Offchain Examples**
-Perfect for high-volume applications, private data, or gasless operations:
-- `hello-world.ts` - Unsigned attestation creation
-- `basic-workflows.ts` - Complete offchain workflow with signing
-- `offchain-signer-test.ts` - Advanced offchain patterns
+Each example can be run independently:
 
-### **⛓️ Onchain Examples** 
-Great for permanent records, smart contract integration, or public verification:
-- `basic-workflows.ts` - Complete onchain workflow
-- `onchain-workflow-example.ts` - Advanced onchain patterns
-- `environmental-monitoring.ts` - Regulatory compliance use case
+```bash
+# Quick start - creates and signs an attestation
+npx tsx examples/hello-world.ts
 
-### **🌍 Real-World Use Cases**
-Production-ready patterns for specific industries:
-- `environmental-monitoring.ts` - Air quality sensor network with compliance reporting
+# Learn both workflows
+npx tsx examples/basic-workflows.ts
+
+# See real-world patterns
+npx tsx examples/environmental-monitoring.ts
+
+# Explore all SDK features
+npx tsx examples/complete-sdk-demo.ts
+```
 
 ## Environment Setup
 
