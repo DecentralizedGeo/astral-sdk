@@ -7,6 +7,7 @@
  *
  * Real-world use case: Environmental sensor network with location attestations.
  * Demonstrates hybrid workflow, structured data, and practical patterns.
+ * Please note that this example is for illustration purposes only!
  *
  * Scenario: Air quality monitoring network across multiple cities
  * - Offchain attestations for high-frequency sensor readings

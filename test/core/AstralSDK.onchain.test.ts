@@ -434,7 +434,7 @@ describe('AstralSDK - Onchain Workflow', () => {
       const mockResult = {
         isValid: true,
         signerAddress: '0x1234567890123456789012345678901234567890',
-        proof: mockProof,
+        attestation: mockProof,
       };
 
       // Setup the mock to return our result
@@ -478,7 +478,7 @@ describe('AstralSDK - Onchain Workflow', () => {
       const mockResult = {
         isValid: false,
         signerAddress: '0x1234567890123456789012345678901234567890',
-        proof: revokedProof,
+        attestation: revokedProof,
         reason: 'Proof has been revoked',
       };
 
@@ -515,7 +515,7 @@ describe('AstralSDK - Onchain Workflow', () => {
       const mockResult = {
         isValid: false,
         signerAddress: '0x1234567890123456789012345678901234567890',
-        proof: expiredProof,
+        attestation: expiredProof,
         reason: 'Proof has expired',
       };
 
@@ -551,7 +551,7 @@ describe('AstralSDK - Onchain Workflow', () => {
       const mockResult = {
         isValid: false,
         signerAddress: undefined,
-        proof: nonExistentProof,
+        attestation: nonExistentProof,
         reason: 'Proof does not exist on chain',
       };
 
@@ -595,7 +595,7 @@ describe('AstralSDK - Onchain Workflow', () => {
       const mockResult = {
         isValid: true,
         signerAddress: '0x1234567890123456789012345678901234567890',
-        proof: baseProof,
+        attestation: baseProof,
       };
 
       (OnchainRegistrar.prototype.verifyOnchainLocationAttestation as jest.Mock).mockResolvedValue(
@@ -635,7 +635,7 @@ describe('AstralSDK - Onchain Workflow', () => {
       // The SDK doesn't throw, it returns a result with isValid: false and reason
       const mockResult = {
         isValid: false,
-        proof: mockProof,
+        attestation: mockProof,
         reason: 'RPC connection failed',
       };
 

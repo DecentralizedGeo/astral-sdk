@@ -335,8 +335,8 @@ import {
 
 // Input type ensures you provide required fields
 const input: LocationAttestationInput = {
-  location: [-0.1276, 51.5074],
-  memo: 'Type-safe input',
+  location: { type: 'Point', coordinates: [100.5018, 13.7563] }, // Bangkok
+  memo: 'Type-safe spatial record',
   timestamp: new Date() // Optional but typed
 };
 
@@ -382,8 +382,11 @@ await sdk.extensions.ensureInitialized();
 
 ### Type errors with location data
 ```typescript
-// Be explicit about coordinate order: [longitude, latitude]
-const coords: [number, number] = [-0.1276, 51.5074]; // lng, lat
+// Be explicit about GeoJSON coordinate order: [longitude, latitude]
+const point = { 
+  type: 'Point', 
+  coordinates: [31.2357, 30.0444] // Cairo: lng, lat
+};
 ```
 
 ## Support

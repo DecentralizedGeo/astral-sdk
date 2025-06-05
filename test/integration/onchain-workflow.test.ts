@@ -85,7 +85,7 @@ describe('AstralSDK - Onchain Workflow Integration', () => {
       .mockImplementation(async proof => {
         return {
           isValid: !proof.revoked,
-          proof,
+          attestation: proof,
           signerAddress: proof.attester,
         };
       });
