@@ -14,7 +14,7 @@ Astral SDK is a developer-friendly TypeScript library that makes location-based 
 ## Quick Navigation
 
 ### 🚀 **Getting Started**
-- **[Core Concepts](./core-concepts)** - Key terminology and concepts
+- **[Core Concepts](./core-concepts/)** - Key terminology and concepts
 - **[Quick Start](./quick-start)** - 30-second example
 - **[Getting Started Guide](./guides/getting-started)** - Complete tutorial
 

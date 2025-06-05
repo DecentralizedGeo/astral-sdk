@@ -102,7 +102,7 @@ for (const location of geoJsonExamples) {
 
 **What's next?**
 
-- **[Core Concepts](./core-concepts)** - Understand offchain vs onchain workflows
+- **[Core Concepts](./core-concepts/)** - Understand offchain vs onchain workflows
 - **[Getting Started Guide](./guides/getting-started)** - Complete tutorial with setup
 - **[Examples Cookbook](./examples/cookbook)** - Real-world usage patterns
 - **[API Reference](./api/reference)** - Complete method documentation
