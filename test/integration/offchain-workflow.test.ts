@@ -5,13 +5,13 @@
  * Integration tests for the complete offchain workflow in AstralSDK.
  *
  * These tests verify the full end-to-end flow:
- * SDK initialization → buildLocationProof → signOffchainLocationProof → verifyOffchainLocationProof
+ * SDK initialization → buildLocationAttestation → signOffchainLocationAttestation → verifyOffchainLocationAttestation
  */
 
 import { AstralSDK } from '../../src/core/AstralSDK';
-import { LocationProofInput } from '../../src/core/types';
+import { LocationAttestationInput } from '../../src/core/types';
 import { Wallet } from 'ethers';
-import { isOffchainLocationProof } from '../../src/utils/typeGuards';
+import { isOffchainLocationAttestation } from '../../src/utils/typeGuards';
 
 describe('AstralSDK - Offchain Workflow Integration', () => {
   describe('End-to-end offchain workflow', () => {
@@ -31,7 +31,7 @@ describe('AstralSDK - Offchain Workflow Integration', () => {
       await sdk.extensions.ensureInitialized();
 
       // Step 1: Create location proof input
-      const input: LocationProofInput = {
+      const input: LocationAttestationInput = {
         location: {
           type: 'Feature',
           properties: {},
@@ -46,25 +46,25 @@ describe('AstralSDK - Offchain Workflow Integration', () => {
       };
 
       // Step 2: Build unsigned location proof
-      const unsignedProof = await sdk.buildLocationProof(input);
+      const unsignedProof = await sdk.buildLocationAttestation(input);
       expect(unsignedProof).toBeDefined();
       expect(unsignedProof.locationType).toBe('geojson-feature');
       expect(unsignedProof.location).toContain('Point');
       expect(unsignedProof.memo).toBe('Integration test - San Francisco location');
 
       // Step 3: Sign the proof to create offchain location proof
-      const offchainProof = await sdk.signOffchainLocationProof(unsignedProof);
+      const offchainProof = await sdk.signOffchainLocationAttestation(unsignedProof);
       expect(offchainProof).toBeDefined();
-      expect(isOffchainLocationProof(offchainProof)).toBe(true);
+      expect(isOffchainLocationAttestation(offchainProof)).toBe(true);
       expect(offchainProof.uid).toBeDefined();
       expect(offchainProof.signature).toBeDefined();
       expect(offchainProof.signer.toLowerCase()).toBe(wallet.address.toLowerCase());
 
       // Step 4: Verify the offchain proof
-      const verificationResult = await sdk.verifyOffchainLocationProof(offchainProof);
+      const verificationResult = await sdk.verifyOffchainLocationAttestation(offchainProof);
       expect(verificationResult.isValid).toBe(true);
       expect(verificationResult.signerAddress?.toLowerCase()).toBe(wallet.address.toLowerCase());
-      expect(verificationResult.proof).toEqual(offchainProof);
+      expect(verificationResult.attestation).toEqual(offchainProof);
     });
 
     test('should complete offchain workflow with media attachments', async () => {
@@ -78,7 +78,7 @@ describe('AstralSDK - Offchain Workflow Integration', () => {
 
       await sdk.extensions.ensureInitialized();
 
-      const input: LocationProofInput = {
+      const input: LocationAttestationInput = {
         location: {
           type: 'Point',
           coordinates: [2.3522, 48.8566], // Paris
@@ -94,14 +94,14 @@ describe('AstralSDK - Offchain Workflow Integration', () => {
       };
 
       // Build, sign, and verify
-      const unsignedProof = await sdk.buildLocationProof(input);
+      const unsignedProof = await sdk.buildLocationAttestation(input);
       expect(unsignedProof.mediaType).toEqual(['image/jpeg']);
       expect(unsignedProof.mediaData).toHaveLength(1);
 
-      const offchainProof = await sdk.signOffchainLocationProof(unsignedProof);
+      const offchainProof = await sdk.signOffchainLocationAttestation(unsignedProof);
       expect(offchainProof.mediaType).toEqual(['image/jpeg']);
 
-      const verificationResult = await sdk.verifyOffchainLocationProof(offchainProof);
+      const verificationResult = await sdk.verifyOffchainLocationAttestation(offchainProof);
       expect(verificationResult.isValid).toBe(true);
     });
 
@@ -117,7 +117,7 @@ describe('AstralSDK - Offchain Workflow Integration', () => {
 
       await sdk1.extensions.ensureInitialized();
 
-      const input: LocationProofInput = {
+      const input: LocationAttestationInput = {
         location: {
           type: 'Point',
           coordinates: [-0.1276, 51.5074], // London coordinates
@@ -126,9 +126,9 @@ describe('AstralSDK - Offchain Workflow Integration', () => {
         memo: 'Testing different signer configurations',
       };
 
-      const unsignedProof1 = await sdk1.buildLocationProof(input);
-      const offchainProof1 = await sdk1.signOffchainLocationProof(unsignedProof1);
-      const result1 = await sdk1.verifyOffchainLocationProof(offchainProof1);
+      const unsignedProof1 = await sdk1.buildLocationAttestation(input);
+      const offchainProof1 = await sdk1.signOffchainLocationAttestation(unsignedProof1);
+      const result1 = await sdk1.verifyOffchainLocationAttestation(offchainProof1);
       expect(result1.isValid).toBe(true);
       expect(offchainProof1.signer.toLowerCase()).toBe(wallet1.address.toLowerCase());
 
@@ -143,13 +143,13 @@ describe('AstralSDK - Offchain Workflow Integration', () => {
 
       await sdk2.extensions.ensureInitialized();
 
-      const unsignedProof2 = await sdk2.buildLocationProof(input);
-      const offchainProof2 = await sdk2.signOffchainLocationProof(unsignedProof2);
-      const result2 = await sdk2.verifyOffchainLocationProof(offchainProof2);
+      const unsignedProof2 = await sdk2.buildLocationAttestation(input);
+      const offchainProof2 = await sdk2.signOffchainLocationAttestation(unsignedProof2);
+      const result2 = await sdk2.verifyOffchainLocationAttestation(offchainProof2);
       expect(result2.isValid).toBe(true);
       expect(offchainProof2.signer.toLowerCase()).toBe(wallet2.address.toLowerCase());
 
-      // Test 3: Using signOffchainLocationProof with options
+      // Test 3: Using signOffchainLocationAttestation with options
       const sdk3 = new AstralSDK({
         defaultChain: 'arbitrum',
       });
@@ -159,11 +159,11 @@ describe('AstralSDK - Offchain Workflow Integration', () => {
       const wallet3 = new Wallet(
         '0xfedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210'
       );
-      const unsignedProof3 = await sdk3.buildLocationProof(input);
-      const offchainProof3 = await sdk3.signOffchainLocationProof(unsignedProof3, {
+      const unsignedProof3 = await sdk3.buildLocationAttestation(input);
+      const offchainProof3 = await sdk3.signOffchainLocationAttestation(unsignedProof3, {
         signer: wallet3,
       });
-      const result3 = await sdk3.verifyOffchainLocationProof(offchainProof3);
+      const result3 = await sdk3.verifyOffchainLocationAttestation(offchainProof3);
       expect(result3.isValid).toBe(true);
       expect(offchainProof3.signer.toLowerCase()).toBe(wallet3.address.toLowerCase());
     });
@@ -177,24 +177,26 @@ describe('AstralSDK - Offchain Workflow Integration', () => {
       await sdk.extensions.ensureInitialized();
 
       // Test 1: No signer available
-      const input: LocationProofInput = {
+      const input: LocationAttestationInput = {
         location: { type: 'Point', coordinates: [0, 0] },
         locationType: 'geojson-point',
         memo: 'Testing error scenarios',
       };
 
-      const unsignedProof = await sdk.buildLocationProof(input);
-      await expect(sdk.signOffchainLocationProof(unsignedProof)).rejects.toThrow(
+      const unsignedProof = await sdk.buildLocationAttestation(input);
+      await expect(sdk.signOffchainLocationAttestation(unsignedProof)).rejects.toThrow(
         'No signer available'
       );
 
       // Test 2: Invalid location format
-      const invalidInput: LocationProofInput = {
+      const invalidInput: LocationAttestationInput = {
         location: 'not-a-valid-location',
         locationType: 'invalid-format',
       };
 
-      await expect(sdk.buildLocationProof(invalidInput)).rejects.toThrow('No extension found');
+      await expect(sdk.buildLocationAttestation(invalidInput)).rejects.toThrow(
+        'No extension found'
+      );
 
       // Test 3: Tampered proof verification
       // TODO: This test is currently commented out because the SDK's verification
@@ -209,16 +211,16 @@ describe('AstralSDK - Offchain Workflow Integration', () => {
 
       await sdkWithSigner.extensions.ensureInitialized();
 
-      const validProof = await sdkWithSigner.buildLocationProof(input);
-      const signedProof = await sdkWithSigner.signOffchainLocationProof(validProof);
+      const validProof = await sdkWithSigner.buildLocationAttestation(input);
+      const signedProof = await sdkWithSigner.signOffchainLocationAttestation(validProof);
 
       // Tamper with the proof
-      const tamperedProof: OffchainLocationProof = {
+      const tamperedProof: OffchainLocationAttestation = {
         ...signedProof,
         location: '{"type":"Point","coordinates":[100,100]}', // Changed location
       };
 
-      const verificationResult = await sdkWithSigner.verifyOffchainLocationProof(tamperedProof);
+      const verificationResult = await sdkWithSigner.verifyOffchainLocationAttestation(tamperedProof);
       expect(verificationResult.isValid).toBe(false);
       */
     });
@@ -239,20 +241,20 @@ describe('AstralSDK - Offchain Workflow Integration', () => {
 
         await sdk.extensions.ensureInitialized();
 
-        const input: LocationProofInput = {
+        const input: LocationAttestationInput = {
           location: { type: 'Point', coordinates: [0, 0] },
           locationType: 'geojson-point',
           memo: `Test on ${chain}`,
         };
 
-        const unsignedProof = await sdk.buildLocationProof(input);
-        const offchainProof = await sdk.signOffchainLocationProof(unsignedProof);
+        const unsignedProof = await sdk.buildLocationAttestation(input);
+        const offchainProof = await sdk.signOffchainLocationAttestation(unsignedProof);
 
         // Verify the proof includes chain-specific information
         expect(offchainProof).toBeDefined();
         expect(offchainProof.memo).toBe(`Test on ${chain}`);
 
-        const verificationResult = await sdk.verifyOffchainLocationProof(offchainProof);
+        const verificationResult = await sdk.verifyOffchainLocationAttestation(offchainProof);
         expect(verificationResult.isValid).toBe(true);
       }
     });

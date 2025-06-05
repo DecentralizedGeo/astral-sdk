@@ -5,15 +5,15 @@
  * Core type definitions for Astral SDK
  *
  * This file defines the main interfaces and types for the Astral SDK, with a clear
- * separation between offchain and onchain proof types to support the dual-workflow
+ * separation between offchain and onchain attestation types to support the dual-workflow
  * architecture.
  */
 
 /**
- * UnsignedLocationProof serves as the base type for all location proofs before
+ * UnsignedLocationAttestation serves as the base type for all location attestations before
  * cryptographic signing or on-chain registration.
  *
- * It contains the essential fields required by the EAS schema for location proofs,
+ * It contains the essential fields required by the EAS schema for location attestations,
  * with additional convenience fields for SDK operations.
  *
  * @property eventTimestamp - Timestamp of when the location event occurred (Unix timestamp in seconds)
@@ -24,14 +24,14 @@
  * @property recipePayloads - Array of recipe payloads (empty in v0.1)
  * @property mediaTypes - Array of MIME types and subtypes for attached media (e.g., "image/jpeg", "video/mp4")
  * @property mediaData - Array of data for each corresponding media attachment (base64, IPFS CIDs, etc.)
- * @property memo - Optional textual note attached to the proof
- * @property expirationTime - Optional timestamp after which the proof is considered invalid
- * @property revocable - Whether the proof can be revoked by the attester
- * @property recipient - Ethereum address for whom the proof is created (optional, defaults to signer's address)
+ * @property memo - Optional textual note attached to the attestation
+ * @property expirationTime - Optional timestamp after which the attestation is considered invalid
+ * @property revocable - Whether the attestation can be revoked by the attester
+ * @property recipient - Ethereum address for whom the attestation is created (optional, defaults to signer's address)
  *
  * @example
  * ```ts
- * const unsignedProof: UnsignedLocationProof = {
+ * const unsignedAttestation: UnsignedLocationAttestation = {
  *   eventTimestamp: Math.floor(Date.now() / 1000),
  *   srs: "EPSG:4326",
  *   locationType: "geojson-point",
@@ -40,13 +40,13 @@
  *   recipePayloads: [],
  *   mediaTypes: ["image/jpeg"],
  *   mediaData: ["ipfs://QmXyz..."],
- *   memo: "Testing location proof at Central Park",
+ *   memo: "Testing location attestation at Central Park",
  *   revocable: true,
  *   recipient: "0x1234..."
  * };
  * ```
  */
-export interface UnsignedLocationProof {
+export interface UnsignedLocationAttestation {
   // EAS-required fields
   readonly eventTimestamp: number;
   readonly srs: string;
@@ -77,21 +77,21 @@ export interface UnsignedLocationProof {
 }
 
 /**
- * OffchainLocationProof represents a location proof that has been signed using EIP-712
+ * OffchainLocationAttestation represents a location attestation that has been signed using EIP-712
  * but not registered on a blockchain.
  *
- * It extends UnsignedLocationProof with signature-related fields for cryptographic verification.
+ * It extends UnsignedLocationAttestation with signature-related fields for cryptographic verification.
  * This type belongs to the offchain workflow.
  *
  * @property uid - Unique identifier derived from hashing the signed data
  * @property signature - EIP-712 signature created by the attester
  * @property signer - Ethereum address of the signer (the account that created the signature)
- * @property publications - Optional records of where the proof has been published (e.g., IPFS)
+ * @property publications - Optional records of where the attestation has been published (e.g., IPFS)
  *
  * @example
  * ```ts
- * const offchainProof: OffchainLocationProof = {
- *   // All UnsignedLocationProof fields...
+ * const offchainAttestation: OffchainLocationAttestation = {
+ *   // All UnsignedLocationAttestation fields...
  *   eventTimestamp: Math.floor(Date.now() / 1000),
  *   srs: "EPSG:4326",
  *   // Plus signature-related fields
@@ -107,24 +107,24 @@ export interface UnsignedLocationProof {
  * };
  * ```
  */
-export interface OffchainLocationProof extends UnsignedLocationProof {
+export interface OffchainLocationAttestation extends UnsignedLocationAttestation {
   // EAS signature fields
   readonly uid: string;
   readonly signature: string; // CLAUDE: Is this correct?
   // signature may be an object with { v: signature.v, r: signature.r, s: signature.s } ???
   // I think this is from th EAS SDK — https://github.com/ethereum-attestation-service/eas-sdk/blob/ef99ad85754fa482610b20170e72b41a8333bf04/src/offchain/typed-data-handler.ts#L147C35-L147C86
   readonly signer: string;
-  readonly version: string; // For now, this is astral-core-v0.1.0. We are planning out a versioning system for the Location Proof Protocol.
+  readonly version: string; // For now, this is astral-core-v0.1.0. We are planning out a versioning system for the Location Attestation Protocol.
   // https://github.com/DecentralizedGeo/location-proofs/issues/4
   // Storage-related fields
   readonly publications?: PublicationRecord[];
 }
 
 /**
- * OnchainLocationProof represents a location proof that has been registered on a blockchain
+ * OnchainLocationAttestation represents a location attestation that has been registered on a blockchain
  * via an instance of an EAS contract.
  *
- * It extends UnsignedLocationProof with blockchain-related fields for on-chain verification.
+ * It extends UnsignedLocationAttestation with blockchain-related fields for on-chain verification.
  * This type belongs to the onchain workflow.
  *
  * @property uid - Unique identifier generated by the EAS contract
@@ -138,8 +138,8 @@ export interface OffchainLocationProof extends UnsignedLocationProof {
  *
  * @example
  * ```ts
- * const onchainProof: OnchainLocationProof = {
- *   // All UnsignedLocationProof fields...
+ * const onchainAttestation: OnchainLocationAttestation = {
+ *   // All UnsignedLocationAttestation fields...
  *   eventTimestamp: Math.floor(Date.now() / 1000),
  *   srs: "EPSG:4326",
  *   // Plus blockchain-related fields
@@ -154,7 +154,7 @@ export interface OffchainLocationProof extends UnsignedLocationProof {
  * };
  * ```
  */
-export interface OnchainLocationProof extends UnsignedLocationProof {
+export interface OnchainLocationAttestation extends UnsignedLocationAttestation {
   // EAS onchain fields
   readonly uid: string;
   readonly attester: string;
@@ -169,22 +169,22 @@ export interface OnchainLocationProof extends UnsignedLocationProof {
 }
 
 /**
- * LocationProof represents either an OffchainLocationProof or an OnchainLocationProof.
+ * LocationAttestation represents either an OffchainLocationAttestation or an OnchainLocationAttestation.
  *
- * This union type allows for handling both kinds of proofs with the same interface
+ * This union type allows for handling both kinds of attestations with the same interface
  * where appropriate, with type guards to safely narrow to the specific type.
  *
- * Use the type guards `isOffchainLocationProof` and `isOnchainLocationProof`
- * to determine which specific type a LocationProof instance is.
+ * Use the type guards `isOffchainLocationAttestation` and `isOnchainLocationAttestation`
+ * to determine which specific type a LocationAttestation instance is.
  */
-export type LocationProof = OffchainLocationProof | OnchainLocationProof;
+export type LocationAttestation = OffchainLocationAttestation | OnchainLocationAttestation;
 
 /**
- * PublicationRecord represents a reference to where an offchain proof has been published.
+ * PublicationRecord represents a reference to where an offchain attestation has been published.
  *
  * @property storageType - The type of storage (e.g., "ipfs", "url")
  * @property reference - The storage reference (e.g., CID, URL)
- * @property publishedAt - When the proof was published
+ * @property publishedAt - When the attestation was published
  * @property metadata - Optional additional metadata about the storage
  */
 export interface PublicationRecord {
@@ -195,10 +195,10 @@ export interface PublicationRecord {
 }
 
 /**
- * LocationProofInput defines the parameters for creating a new location proof.
+ * LocationAttestationInput defines the parameters for creating a new location attestation.
  *
  * This interface provides a developer-friendly way to specify location data
- * and other proof attributes, which will be converted to the appropriate format
+ * and other attestation attributes, which will be converted to the appropriate format
  * for the EAS schema.
  *
  * @property location - Location data in various formats (GeoJSON, WKT, coordinate pair, H3)
@@ -207,9 +207,9 @@ export interface PublicationRecord {
  * @property timestamp - When the location event occurred (defaults to current time)
  * @property media - Optional media attachments
  * @property memo - Optional textual note
- * @property recipient - Optional Ethereum address for whom the proof is created
+ * @property recipient - Optional Ethereum address for whom the attestation is created
  */
-export interface LocationProofInput {
+export interface LocationAttestationInput {
   // Location data (flexible format)
   readonly location: unknown;
   readonly locationType?: string;
@@ -226,7 +226,7 @@ export interface LocationProofInput {
 }
 
 /**
- * MediaInput represents a media attachment for a location proof.
+ * MediaInput represents a media attachment for a location attestation.
  *
  * @property mediaType - MIME type of the media (e.g., "image/jpeg", "video/mp4")
  * @property data - The media data as a base64 string or storage reference
@@ -239,43 +239,43 @@ export interface MediaInput {
 }
 
 /**
- * ProofOptions defines common options for creating location proofs.
+ * AttestationOptions defines common options for creating location attestations.
  *
- * @property revocable - Whether the proof can be revoked (default depends on the workflow)
- * @property expirationTime - When the proof expires (default is no expiration)
+ * @property revocable - Whether the attestation can be revoked (default depends on the workflow)
+ * @property expirationTime - When the attestation expires (default is no expiration)
  * @property subject - Optional recipient address (if different from the transaction sender)
  */
-export interface ProofOptions {
+export interface AttestationOptions {
   readonly revocable?: boolean;
   readonly expirationTime?: Date;
   readonly subject?: string;
 }
 
 /**
- * OffchainProofOptions extends ProofOptions with offchain-specific settings.
+ * OffchainAttestationOptions extends AttestationOptions with offchain-specific settings.
  *
  * This interface belongs to the offchain workflow.
  *
  * @property signer - Optional custom signer to use instead of the default
  * @property privateKey - Optional private key to create an in-memory signer - not recommended!
  */
-export interface OffchainProofOptions extends ProofOptions {
+export interface OffchainAttestationOptions extends AttestationOptions {
   readonly signer?: unknown; // Will be refined to ethers.Signer once we have the dependency
   readonly privateKey?: string;
 }
 
 /**
- * OnchainProofOptions extends ProofOptions with onchain-specific settings.
+ * OnchainAttestationOptions extends AttestationOptions with onchain-specific settings.
  *
  * This interface belongs to the onchain workflow.
  *
- * @property chain - Which blockchain to register the proof on
+ * @property chain - Which blockchain to register the attestation on
  * @property provider - Optional custom provider to use instead of the default
  * @property signer - Optional custom signer to use instead of the default
  * @property txOverrides - Optional transaction parameter overrides
- * @property allowDifferentSigner - Whether to allow the transaction sender to differ from the proof signer
+ * @property allowDifferentSigner - Whether to allow the transaction sender to differ from the attestation signer
  */
-export interface OnchainProofOptions extends ProofOptions {
+export interface OnchainAttestationOptions extends AttestationOptions {
   readonly chain?: string;
   readonly provider?: unknown; // Will be refined to ethers.Provider once we have the dependency
   readonly signer?: unknown; // Will be refined to ethers.Signer once we have the dependency
@@ -284,9 +284,9 @@ export interface OnchainProofOptions extends ProofOptions {
 }
 
 /**
- * ProofQuery defines filters for retrieving location proofs.
+ * AttestationQuery defines filters for retrieving location attestations.
  *
- * @property uid - Filter by specific proof UID
+ * @property uid - Filter by specific attestation UID
  * @property bbox - Bounding box [minLon, minLat, maxLon, maxLat]
  * @property timeRange - Filter by creation time range
  * @property chain - Filter by blockchain
@@ -294,7 +294,7 @@ export interface OnchainProofOptions extends ProofOptions {
  * @property limit - Maximum number of results to return
  * @property offset - Pagination offset
  */
-export interface ProofQuery {
+export interface AttestationQuery {
   readonly uid?: string;
   readonly bbox?: [number, number, number, number];
   readonly timeRange?: [Date, Date];
@@ -305,11 +305,11 @@ export interface ProofQuery {
 }
 
 /**
- * LocationProofCollection represents a collection of location proofs
+ * LocationAttestationCollection represents a collection of location attestations
  * returned from a query operation.
  *
- * @property proofs - The array of location proofs
- * @property total - Total number of matching proofs
+ * @property attestations - The array of location attestations
+ * @property total - Total number of matching attestations
  * @property pageSize - Current page size
  * @property currentPage - Current page number (1-based)
  * @property totalPages - Total number of pages
@@ -317,31 +317,31 @@ export interface ProofQuery {
  * @property hasPrevPage - Whether previous results exist
  * @property query - The original query parameters
  */
-export interface LocationProofCollection {
-  readonly proofs: LocationProof[];
+export interface LocationAttestationCollection {
+  readonly attestations: LocationAttestation[];
   readonly total: number;
   readonly pageSize: number;
   readonly currentPage: number;
   readonly totalPages: number;
   readonly hasNextPage: boolean;
   readonly hasPrevPage: boolean;
-  readonly query: ProofQuery;
+  readonly query: AttestationQuery;
 }
 
 /**
- * VerificationResult represents the result of verifying a location proof.
+ * VerificationResult represents the result of verifying a location attestation.
  *
- * @property isValid - Whether the proof is valid
- * @property revoked - Whether the proof has been revoked (for onchain proofs)
+ * @property isValid - Whether the attestation is valid
+ * @property revoked - Whether the attestation has been revoked (for onchain attestations)
  * @property signerAddress - The recovered address of the signer
- * @property proof - The verified proof
- * @property reason - The reason the proof is invalid (if applicable)
+ * @property attestation - The verified attestation
+ * @property reason - The reason the attestation is invalid (if applicable)
  */
 export interface VerificationResult {
   readonly isValid: boolean;
   readonly revoked?: boolean;
   readonly signerAddress?: string;
-  readonly proof?: LocationProof;
+  readonly attestation?: LocationAttestation;
   readonly reason?: string;
 }
 
@@ -350,9 +350,9 @@ export interface VerificationResult {
  */
 export enum VerificationError {
   INVALID_SIGNATURE = 'INVALID_SIGNATURE',
-  PROOF_REVOKED = 'PROOF_REVOKED',
-  PROOF_EXPIRED = 'PROOF_EXPIRED',
-  PROOF_NOT_FOUND = 'PROOF_NOT_FOUND',
+  ATTESTATION_REVOKED = 'ATTESTATION_REVOKED',
+  ATTESTATION_EXPIRED = 'ATTESTATION_EXPIRED',
+  ATTESTATION_NOT_FOUND = 'ATTESTATION_NOT_FOUND',
   SCHEMA_MISMATCH = 'SCHEMA_MISMATCH',
   SIGNER_MISMATCH = 'SIGNER_MISMATCH',
   CHAIN_CONNECTION_ERROR = 'CHAIN_CONNECTION_ERROR',
@@ -387,7 +387,7 @@ export interface AstralSDKConfig {
  * @property signer - Ethereum signer for creating signatures
  * @property privateKey - Private key to create an in-memory signer
  * @property chainId - ID of the blockchain to sign for
- * @property schemaUID - EAS schema UID for location proofs
+ * @property schemaUID - EAS schema UID for location attestations
  */
 export interface OffchainSignerConfig {
   readonly signer?: unknown; // ethers.Signer
@@ -405,7 +405,7 @@ export interface OffchainSignerConfig {
  * @property signer - Ethereum signer for creating transactions
  * @property chain - Default blockchain for registration
  * @property contractAddress - EAS contract address
- * @property schemaUID - EAS schema UID for location proofs
+ * @property schemaUID - EAS schema UID for location attestations
  */
 export interface OnchainRegistrarConfig {
   readonly provider?: unknown; // Will be refined to ethers.Provider
