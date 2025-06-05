@@ -14,7 +14,7 @@
 
 import { ethers } from 'ethers';
 import { AstralSDK } from '../src/core/AstralSDK';
-import { LocationProofInput } from '../src/core/types';
+import { LocationAttestationInput } from '../src/core/types';
 
 async function main() {
   try {
@@ -36,7 +36,7 @@ async function main() {
     });
 
     // Create location proof input with GeoJSON data
-    const locationInput: LocationProofInput = {
+    const locationInput: LocationAttestationInput = {
       location: {
         type: 'Point',
         coordinates: [-122.4194, 37.7749], // San Francisco coordinates
@@ -51,7 +51,7 @@ async function main() {
 
     // Create and sign an offchain location proof in one step
     console.log('\nCreating and signing the location proof...');
-    const offchainProof = await sdk.createOffchainLocationProof(locationInput);
+    const offchainProof = await sdk.createOffchainLocationAttestation(locationInput);
 
     console.log('\nOffchain attestation created successfully!');
     console.log('UID:', offchainProof.uid);
@@ -66,7 +66,7 @@ async function main() {
 
     // Verify the signed proof
     console.log('\nVerifying the attestation...');
-    const verificationResult = await sdk.verifyOffchainLocationProof(offchainProof);
+    const verificationResult = await sdk.verifyOffchainLocationAttestation(offchainProof);
 
     if (verificationResult.isValid) {
       console.log('✅ Attestation verified successfully!');

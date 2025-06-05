@@ -17,7 +17,7 @@
 
 import { ethers } from 'ethers';
 import { AstralSDK } from '../src/core/AstralSDK';
-import { LocationProofInput } from '../src/core/types';
+import { LocationAttestationInput } from '../src/core/types';
 import * as dotenv from 'dotenv';
 
 // Load environment variables
@@ -53,7 +53,7 @@ async function main() {
     });
 
     // Create location proof input with GeoJSON data
-    const locationInput: LocationProofInput = {
+    const locationInput: LocationAttestationInput = {
       location: {
         type: 'Point',
         coordinates: [-122.4194, 37.7749], // San Francisco coordinates
@@ -68,14 +68,14 @@ async function main() {
 
     // Build an unsigned location proof
     console.log('\nBuilding unsigned location proof...');
-    const unsignedProof = await sdk.buildLocationProof(locationInput);
+    const unsignedProof = await sdk.buildLocationAttestation(locationInput);
     console.log('Unsigned proof created:', unsignedProof);
 
     // In a real application, you would uncomment the following code to register the proof on-chain
     // This requires a funded wallet with ETH for gas on the Sepolia testnet
     /*
     console.log('\nRegistering the location proof on-chain...');
-    const onchainProof = await sdk.createOnchainLocationProof(locationInput);
+    const onchainProof = await sdk.createOnchainLocationAttestation(locationInput);
 
     console.log('\nOnchain location proof created successfully!');
     console.log('UID:', onchainProof.uid);
@@ -85,7 +85,7 @@ async function main() {
 
     // Verify the proof
     console.log('\nVerifying the onchain proof...');
-    const verificationResult = await sdk.verifyOnchainLocationProof(onchainProof);
+    const verificationResult = await sdk.verifyOnchainLocationAttestation(onchainProof);
 
     if (verificationResult.isValid) {
       console.log('✅ Onchain proof verification succeeded!');
@@ -101,11 +101,11 @@ async function main() {
       console.log('\nDemonstrating proof revocation...');
       
       // In a real application, you would uncomment the following code
-      // const revocationResponse = await sdk.revokeOnchainLocationProof(onchainProof);
+      // const revocationResponse = await sdk.revokeOnchainLocationAttestation(onchainProof);
       // console.log('Revocation transaction:', revocationResponse);
       
       // Verify the proof is now revoked
-      // const verificationAfterRevoke = await sdk.verifyOnchainLocationProof(onchainProof);
+      // const verificationAfterRevoke = await sdk.verifyOnchainLocationAttestation(onchainProof);
       // console.log('Verification after revocation:', verificationAfterRevoke);
     }
 

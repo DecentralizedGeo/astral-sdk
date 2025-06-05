@@ -14,7 +14,7 @@
 
 import { ethers } from 'ethers';
 import { OffchainSigner } from '../src/eas/OffchainSigner';
-import { UnsignedLocationProof } from '../src/core/types';
+import { UnsignedLocationAttestation } from '../src/core/types';
 
 async function main() {
   try {
@@ -34,7 +34,7 @@ async function main() {
     });
 
     // Create an unsigned location proof with GeoJSON data
-    const unsignedProof: UnsignedLocationProof = {
+    const unsignedProof: UnsignedLocationAttestation = {
       eventTimestamp: Math.floor(Date.now() / 1000),
       srs: 'EPSG:4326',
       locationType: 'geojson',
@@ -53,7 +53,7 @@ async function main() {
 
     // Sign the proof to create an offchain location proof
     console.log('\nSigning the location proof...');
-    const offchainProof = await signer.signOffchainLocationProof(unsignedProof);
+    const offchainProof = await signer.signOffchainLocationAttestation(unsignedProof);
 
     console.log('\nOffchain proof created successfully!');
     console.log('UID:', offchainProof.uid);
@@ -63,7 +63,7 @@ async function main() {
 
     // Verify the signed proof
     console.log('\nVerifying the offchain proof...');
-    const verificationResult = await signer.verifyOffchainLocationProof(offchainProof);
+    const verificationResult = await signer.verifyOffchainLocationAttestation(offchainProof);
 
     if (verificationResult.isValid) {
       console.log('✅ Proof verification succeeded!');

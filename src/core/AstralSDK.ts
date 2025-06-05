@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright © 2025 Sophia Systems Corporation
 
+/* eslint-disable no-console */
 /**
  * Main SDK entry point
  *

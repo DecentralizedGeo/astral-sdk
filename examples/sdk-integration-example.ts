@@ -49,7 +49,7 @@ async function main() {
     console.log('\n=== Offchain Workflow ===');
 
     // Build an unsigned location proof
-    const unsignedProof = await sdk.buildLocationProof({
+    const unsignedProof = await sdk.buildLocationAttestation({
       location: {
         type: 'Feature',
         properties: {},
@@ -65,18 +65,18 @@ async function main() {
     console.log('Unsigned proof created.');
 
     // Sign the proof to create an offchain location proof
-    const offchainProof = await sdk.signOffchainLocationProof(unsignedProof);
+    const offchainProof = await sdk.signOffchainLocationAttestation(unsignedProof);
     console.log('Offchain proof signed: ' + offchainProof.uid);
 
     // Optionally publish the proof to Astral's API
-    const publishedProof = await sdk.publishOffchainLocationProof(offchainProof);
+    const publishedProof = await sdk.publishOffchainLocationAttestation(offchainProof);
     console.log('Offchain proof published to API: ' + publishedProof.uid);
 
     // === Onchain Workflow ===
     console.log('\n=== Onchain Workflow ===');
 
     // Build another unsigned location proof
-    const onchainUnsignedProof = await sdk.buildLocationProof({
+    const onchainUnsignedProof = await sdk.buildLocationAttestation({
       location: [12.34, 56.78],
       locationType: 'coordinates-decimal+lon-lat',
       memo: 'Testing onchain workflow',
@@ -85,17 +85,17 @@ async function main() {
     console.log('Unsigned proof created for onchain registration.');
 
     // Register the proof on-chain
-    const onchainProof = await sdk.registerOnchainLocationProof(onchainUnsignedProof);
+    const onchainProof = await sdk.registerOnchainLocationAttestation(onchainUnsignedProof);
     console.log('Onchain proof registered: ' + onchainProof.uid);
     console.log('Transaction hash: ' + onchainProof.txHash);
 
     // Verify proofs
-    const offchainVerification = await sdk.verifyOffchainLocationProof(offchainProof);
+    const offchainVerification = await sdk.verifyOffchainLocationAttestation(offchainProof);
     console.log(
       'Offchain verification result: ' + (offchainVerification.isValid ? 'Valid' : 'Invalid')
     );
 
-    const onchainVerification = await sdk.verifyOnchainLocationProof(onchainProof);
+    const onchainVerification = await sdk.verifyOnchainLocationAttestation(onchainProof);
     console.log(
       'Onchain verification result: ' + (onchainVerification.isValid ? 'Valid' : 'Invalid')
     );

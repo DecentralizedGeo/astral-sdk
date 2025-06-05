@@ -16,7 +16,7 @@
 
 import { ethers } from 'ethers';
 // import { OnchainRegistrar } from '../src/eas/OnchainRegistrar';
-import { UnsignedLocationProof } from '../src/core/types';
+import { UnsignedLocationAttestation } from '../src/core/types';
 import * as dotenv from 'dotenv';
 
 // Load environment variables
@@ -50,7 +50,7 @@ async function main() {
     // });
 
     // Create an unsigned location proof with GeoJSON data
-    const unsignedProof: UnsignedLocationProof = {
+    const unsignedProof: UnsignedLocationAttestation = {
       eventTimestamp: Math.floor(Date.now() / 1000),
       srs: 'EPSG:4326',
       locationType: 'geojson',
@@ -73,7 +73,7 @@ async function main() {
 
     // Uncomment this to actually submit a transaction (requires a funded wallet)
     /*
-    const onchainProof = await registrar.registerOnchainLocationProof(unsignedProof);
+    const onchainProof = await registrar.registerOnchainLocationAttestation(unsignedProof);
     
     console.log('\nOn-chain proof created successfully!');
     console.log('UID:', onchainProof.uid);
@@ -83,7 +83,7 @@ async function main() {
     
     // Verify the on-chain proof
     console.log('\nVerifying the on-chain proof...');
-    const verificationResult = await registrar.verifyOnchainLocationProof(onchainProof);
+    const verificationResult = await registrar.verifyOnchainLocationAttestation(onchainProof);
     
     if (verificationResult.isValid) {
       console.log('✅ Proof verification succeeded!');

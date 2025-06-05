@@ -52,8 +52,8 @@ async function testOnchainWorkflow() {
     // Wait for extensions to load
     await new Promise(resolve => setTimeout(resolve, 100));
 
-    console.log('📍 Testing buildLocationProof...');
-    const unsignedProof = await sdk.buildLocationProof({
+    console.log('📍 Testing buildLocationAttestation...');
+    const unsignedProof = await sdk.buildLocationAttestation({
       location: {
         type: 'Point',
         coordinates: [-0.1278, 51.5074], // London
@@ -67,8 +67,8 @@ async function testOnchainWorkflow() {
       memo: unsignedProof.memo,
     });
 
-    console.log('\n🔐 Testing createOnchainLocationProof...');
-    const onchainProof = await sdk.createOnchainLocationProof({
+    console.log('\n🔐 Testing createOnchainLocationAttestation...');
+    const onchainProof = await sdk.createOnchainLocationAttestation({
       location: {
         type: 'Point',
         coordinates: [-0.1278, 51.5074], // London
@@ -83,8 +83,8 @@ async function testOnchainWorkflow() {
       attester: onchainProof.attester,
     });
 
-    //   console.log('\n🔍 Testing verifyOnchainLocationProof...');
-    //   const verification = await sdk.verifyOnchainLocationProof(onchainProof);
+    //   console.log('\n🔍 Testing verifyOnchainLocationAttestation...');
+    //   const verification = await sdk.verifyOnchainLocationAttestation(onchainProof);
 
     //   console.log('✅ Verification result:', {
     //     isValid: verification.isValid,
