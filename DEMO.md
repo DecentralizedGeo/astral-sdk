@@ -7,7 +7,7 @@ This guide provides instructions for running and understanding the Astral SDK de
 To get started immediately, run these commands from the project root:
 
 ```bash
-# Install dependencies
+# Install dependencies 
 pnpm install
 
 # Build the SDK
