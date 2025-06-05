@@ -8,9 +8,9 @@
 import { Wallet } from 'ethers';
 import { OnchainRegistrar } from '../../src/eas/OnchainRegistrar';
 import {
-  UnsignedLocationProof,
-  OnchainLocationProof,
-  OnchainProofOptions,
+  UnsignedLocationAttestation,
+  OnchainLocationAttestation,
+  OnchainAttestationOptions,
   VerificationError,
 } from '../../src/core/types';
 import { ValidationError, RegistrationError } from '../../src/core/errors';
@@ -141,7 +141,7 @@ jest.mock('ethers', () => {
 
 // Sample data for testing
 const testWallet = new Wallet('0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80');
-const testUnsignedProof: UnsignedLocationProof = {
+const testUnsignedProof: UnsignedLocationAttestation = {
   eventTimestamp: 1612345678,
   srs: 'EPSG:4326',
   locationType: 'geojson',
@@ -154,7 +154,7 @@ const testUnsignedProof: UnsignedLocationProof = {
 };
 
 // Sample onchain proof for testing
-const testOnchainProof: OnchainLocationProof = {
+const testOnchainProof: OnchainLocationAttestation = {
   ...testUnsignedProof,
   uid: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
   attester: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
@@ -167,14 +167,14 @@ const testOnchainProof: OnchainLocationProof = {
 };
 
 // Revoked proof for testing
-const revokedProof: OnchainLocationProof = {
+const revokedProof: OnchainLocationAttestation = {
   ...testOnchainProof,
   uid: '0xrevoked000000000000000000000000000000000000000000000000000000000',
   revoked: true,
 };
 
 // Expired proof for testing
-const expiredProof: OnchainLocationProof = {
+const expiredProof: OnchainLocationAttestation = {
   ...testOnchainProof,
   uid: '0xexpired00000000000000000000000000000000000000000000000000000000000',
   expirationTime: 1612345678, // Expired
@@ -318,9 +318,9 @@ describe('OnchainRegistrar', () => {
     });
   });
 
-  describe('registerOnchainLocationProof', () => {
+  describe('registerOnchainLocationAttestation', () => {
     it('should register an unsigned location proof', async () => {
-      const onchainProof = await registrar.registerOnchainLocationProof(testUnsignedProof);
+      const onchainProof = await registrar.registerOnchainLocationAttestation(testUnsignedProof);
 
       expect(onchainProof).toBeDefined();
       expect(onchainProof.uid).toBeDefined();
@@ -341,14 +341,17 @@ describe('OnchainRegistrar', () => {
     });
 
     it('should register with transaction overrides', async () => {
-      const options: OnchainProofOptions = {
+      const options: OnchainAttestationOptions = {
         txOverrides: {
           gasLimit: 500000,
           maxFeePerGas: 1000000000,
         },
       };
 
-      const onchainProof = await registrar.registerOnchainLocationProof(testUnsignedProof, options);
+      const onchainProof = await registrar.registerOnchainLocationAttestation(
+        testUnsignedProof,
+        options
+      );
 
       expect(onchainProof).toBeDefined();
       expect(onchainProof.uid).toBeDefined();
@@ -362,65 +365,65 @@ describe('OnchainRegistrar', () => {
         wait: jest.fn().mockResolvedValue(null),
       }));
 
-      await expect(registrar.registerOnchainLocationProof(testUnsignedProof)).rejects.toThrow(
+      await expect(registrar.registerOnchainLocationAttestation(testUnsignedProof)).rejects.toThrow(
         RegistrationError
       );
     });
   });
 
-  describe('verifyOnchainLocationProof', () => {
+  describe('verifyOnchainLocationAttestation', () => {
     it('should verify a valid onchain location proof', async () => {
-      const result = await registrar.verifyOnchainLocationProof(testOnchainProof);
+      const result = await registrar.verifyOnchainLocationAttestation(testOnchainProof);
 
       expect(result.isValid).toBe(true);
       expect(result.signerAddress).toBe('0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266');
-      expect(result.proof).toBe(testOnchainProof);
+      expect(result.attestation).toBe(testOnchainProof);
     });
 
     it('should return invalid for a revoked proof', async () => {
-      const result = await registrar.verifyOnchainLocationProof(revokedProof);
+      const result = await registrar.verifyOnchainLocationAttestation(revokedProof);
 
       expect(result.isValid).toBe(false);
       expect(result.revoked).toBe(true);
-      expect(result.reason).toBe(VerificationError.PROOF_REVOKED);
+      expect(result.reason).toBe(VerificationError.ATTESTATION_REVOKED);
     });
 
     it('should return invalid for an expired proof', async () => {
-      const result = await registrar.verifyOnchainLocationProof(expiredProof);
+      const result = await registrar.verifyOnchainLocationAttestation(expiredProof);
 
       expect(result.isValid).toBe(false);
-      expect(result.reason).toBe(VerificationError.PROOF_EXPIRED);
+      expect(result.reason).toBe(VerificationError.ATTESTATION_EXPIRED);
     });
 
     it('should return invalid for a non-existent proof', async () => {
-      const nonExistentProof: OnchainLocationProof = {
+      const nonExistentProof: OnchainLocationAttestation = {
         ...testOnchainProof,
         uid: '0x0000000000000000000000000000000000000000000000000000000000000000',
       };
 
-      const result = await registrar.verifyOnchainLocationProof(nonExistentProof);
+      const result = await registrar.verifyOnchainLocationAttestation(nonExistentProof);
 
       expect(result.isValid).toBe(false);
-      expect(result.reason).toBe(VerificationError.PROOF_NOT_FOUND);
+      expect(result.reason).toBe(VerificationError.ATTESTATION_NOT_FOUND);
     });
 
     it('should return invalid for a proof from a different chain', async () => {
-      const differentChainProof: OnchainLocationProof = {
+      const differentChainProof: OnchainLocationAttestation = {
         ...testOnchainProof,
         chain: 'celo',
         chainId: 42220,
       };
 
-      const result = await registrar.verifyOnchainLocationProof(differentChainProof);
+      const result = await registrar.verifyOnchainLocationAttestation(differentChainProof);
 
       expect(result.isValid).toBe(false);
       expect(result.reason).toContain('Proof was registered on chain celo');
     });
   });
 
-  describe('revokeOnchainLocationProof', () => {
+  describe('revokeOnchainLocationAttestation', () => {
     it('should revoke a valid onchain location proof', async () => {
-      const tx = await registrar.revokeOnchainLocationProof(testOnchainProof);
+      const tx = await registrar.revokeOnchainLocationAttestation(testOnchainProof);
 
       expect(tx).toBeDefined();
       // The tx is of unknown type but we know it has a hash for testing purposes
@@ -428,26 +431,28 @@ describe('OnchainRegistrar', () => {
     });
 
     it('should throw error for a non-revocable proof', async () => {
-      const nonRevocableProof: OnchainLocationProof = {
+      const nonRevocableProof: OnchainLocationAttestation = {
         ...testOnchainProof,
         revocable: false,
       };
 
-      await expect(registrar.revokeOnchainLocationProof(nonRevocableProof)).rejects.toThrow();
+      await expect(registrar.revokeOnchainLocationAttestation(nonRevocableProof)).rejects.toThrow();
     });
 
     it('should throw error for an already revoked proof', async () => {
-      await expect(registrar.revokeOnchainLocationProof(revokedProof)).rejects.toThrow();
+      await expect(registrar.revokeOnchainLocationAttestation(revokedProof)).rejects.toThrow();
     });
 
     it('should throw error for a proof from a different chain', async () => {
-      const differentChainProof: OnchainLocationProof = {
+      const differentChainProof: OnchainLocationAttestation = {
         ...testOnchainProof,
         chain: 'celo',
         chainId: 42220,
       };
 
-      await expect(registrar.revokeOnchainLocationProof(differentChainProof)).rejects.toThrow();
+      await expect(
+        registrar.revokeOnchainLocationAttestation(differentChainProof)
+      ).rejects.toThrow();
     });
   });
 });

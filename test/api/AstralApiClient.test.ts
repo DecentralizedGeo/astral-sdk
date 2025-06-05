@@ -166,7 +166,7 @@ describe('AstralApiClient', () => {
     });
   });
 
-  describe('getLocationProof', () => {
+  describe('getLocationAttestation', () => {
     it('should fetch a location proof by UID', async () => {
       const mockProof = {
         uid: '0xabcdef1234567890',
@@ -194,7 +194,7 @@ describe('AstralApiClient', () => {
       });
 
       const client = new AstralApiClient();
-      const proof = await client.getLocationProof('0xabcdef1234567890');
+      const proof = await client.getLocationAttestation('0xabcdef1234567890');
 
       expect(proof).toEqual(mockProof);
       expect(fetchMock).toHaveBeenCalledWith(
@@ -219,16 +219,16 @@ describe('AstralApiClient', () => {
       const client = new AstralApiClient();
 
       try {
-        await client.getLocationProof('0xnonexistent');
+        await client.getLocationAttestation('0xnonexistent');
         fail('Should have thrown NotFoundError');
       } catch (error) {
         expect(error).toBeInstanceOf(NotFoundError);
-        expect((error as NotFoundError).message).toContain('LocationProof not found');
+        expect((error as NotFoundError).message).toContain('LocationAttestation not found');
       }
     });
   });
 
-  describe('getLocationProofs', () => {
+  describe('getLocationAttestations', () => {
     it('should fetch location proofs with query parameters', async () => {
       const mockProofs = {
         proofs: [
@@ -270,9 +270,9 @@ describe('AstralApiClient', () => {
         offset: 0,
       };
 
-      const results = await client.getLocationProofs(query);
+      const results = await client.getLocationAttestations(query);
 
-      expect(results.proofs).toHaveLength(2);
+      expect(results.attestations).toHaveLength(2);
       expect(results.total).toBe(2);
       expect(fetchMock).toHaveBeenCalledWith(
         'https://api.astral.global/proofs?chain=sepolia&limit=10&offset=0',
@@ -313,7 +313,7 @@ describe('AstralApiClient', () => {
         attester: ['0x1234567890abcdef', '0xfedcba0987654321'],
       };
 
-      await client.getLocationProofs(query);
+      await client.getLocationAttestations(query);
 
       const url = fetchMock.mock.calls[0][0] as string;
       expect(url).toContain('bbox=10,20,11,21');

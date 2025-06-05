@@ -8,8 +8,8 @@
 import { Wallet } from 'ethers';
 import { OffchainSigner } from '../../src/eas/OffchainSigner';
 import {
-  UnsignedLocationProof,
-  OffchainLocationProof,
+  UnsignedLocationAttestation,
+  OffchainLocationAttestation,
   VerificationError,
 } from '../../src/core/types';
 import { ValidationError, EASError } from '../../src/core/errors';
@@ -90,7 +90,7 @@ jest.mock('../../src/eas/chains', () => ({
 
 // Sample data for testing
 const testWallet = new Wallet('0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80');
-const testUnsignedProof: UnsignedLocationProof = {
+const testUnsignedProof: UnsignedLocationAttestation = {
   eventTimestamp: 1612345678,
   srs: 'EPSG:4326',
   locationType: 'geojson',
@@ -196,14 +196,14 @@ describe('OffchainSigner', () => {
     });
   });
 
-  describe('signOffchainLocationProof', () => {
+  describe('signOffchainLocationAttestation', () => {
     it('should sign an unsigned location proof', async () => {
       // Mock the signer.getAddress method
       (testWallet.getAddress as jest.Mock) = jest
         .fn()
         .mockResolvedValue('0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266');
 
-      const offchainProof = await signer.signOffchainLocationProof(testUnsignedProof);
+      const offchainProof = await signer.signOffchainLocationAttestation(testUnsignedProof);
 
       expect(offchainProof).toBeDefined();
       expect(offchainProof.uid).toBeDefined();
@@ -227,14 +227,16 @@ describe('OffchainSigner', () => {
           throw new Error('Signature creation failed');
         });
 
-      await expect(signer.signOffchainLocationProof(testUnsignedProof)).rejects.toThrow(EASError);
+      await expect(signer.signOffchainLocationAttestation(testUnsignedProof)).rejects.toThrow(
+        EASError
+      );
     });
   });
 
-  describe('verifyOffchainLocationProof', () => {
+  describe('verifyOffchainLocationAttestation', () => {
     it('should verify a valid offchain location proof', async () => {
       // Create a valid proof for testing
-      const validProof: OffchainLocationProof = {
+      const validProof: OffchainLocationAttestation = {
         ...testUnsignedProof,
         uid: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
         signature: JSON.stringify({
@@ -246,16 +248,16 @@ describe('OffchainSigner', () => {
         version: 'astral-sdk-v0.1.0',
       };
 
-      const result = await signer.verifyOffchainLocationProof(validProof);
+      const result = await signer.verifyOffchainLocationAttestation(validProof);
 
       expect(result.isValid).toBe(true);
       expect(result.signerAddress).toBe('0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266');
-      expect(result.proof).toBe(validProof);
+      expect(result.attestation).toBe(validProof);
     });
 
     it('should return invalid for an invalid signature', async () => {
       // Create a proof with invalid signature
-      const invalidProof: OffchainLocationProof = {
+      const invalidProof: OffchainLocationAttestation = {
         ...testUnsignedProof,
         uid: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
         signature: JSON.stringify({
@@ -267,7 +269,7 @@ describe('OffchainSigner', () => {
         version: 'astral-sdk-v0.1.0',
       };
 
-      const result = await signer.verifyOffchainLocationProof(invalidProof);
+      const result = await signer.verifyOffchainLocationAttestation(invalidProof);
 
       expect(result.isValid).toBe(false);
       expect(result.reason).toBe(VerificationError.INVALID_SIGNATURE);
@@ -275,7 +277,7 @@ describe('OffchainSigner', () => {
 
     it('should return invalid for an expired proof', async () => {
       // Create an expired proof
-      const expiredProof: OffchainLocationProof = {
+      const expiredProof: OffchainLocationAttestation = {
         ...testUnsignedProof,
         uid: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
         signature: JSON.stringify({
@@ -288,10 +290,10 @@ describe('OffchainSigner', () => {
         expirationTime: Math.floor(Date.now() / 1000) - 3600, // Expired 1 hour ago
       };
 
-      const result = await signer.verifyOffchainLocationProof(expiredProof);
+      const result = await signer.verifyOffchainLocationAttestation(expiredProof);
 
       expect(result.isValid).toBe(false);
-      expect(result.reason).toBe(VerificationError.PROOF_EXPIRED);
+      expect(result.reason).toBe(VerificationError.ATTESTATION_EXPIRED);
     });
   });
 });

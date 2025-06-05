@@ -5,7 +5,7 @@
  * Extension system interfaces for Astral SDK
  *
  * This file defines the interfaces for the extension system, which allows the SDK
- * to be extended with new location formats, media types, and proof recipes.
+ * to be extended with new location formats, media types, and attestation recipes.
  */
 
 import { SchemaValue } from '../eas/SchemaEncoder';
@@ -165,7 +165,7 @@ export interface MediaAttachmentExtension extends BaseExtension {
  * ProofRecipeExtension interface for recipe data (reserved for future use).
  *
  * This interface is a placeholder for v0.1 and will be expanded in future versions
- * to support different proof recipe types.
+ * to support different attestation recipe types.
  */
 export interface ProofRecipeExtension extends BaseExtension {
   /**
@@ -272,9 +272,9 @@ export interface ExtensionRegistry {
   registerMediaExtension(extension: MediaAttachmentExtension): void;
 
   /**
-   * Registers a proof recipe extension
+   * Registers a attestation recipe extension
    *
-   * @param extension - The proof recipe extension to register
+   * @param extension - The attestation recipe extension to register
    */
   registerRecipeExtension(extension: ProofRecipeExtension): void;
 

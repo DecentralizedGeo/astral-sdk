@@ -67,30 +67,30 @@ astral-sdk/
 
 ### Offchain Workflow
 ```
-UnsignedLocationProof
+UnsignedLocationAttestation
        |
        v
-[createOffchainLocationProof]
+[createOffchainLocationAttestation]
        |
        v
-OffchainLocationProof (with signature)
+OffchainLocationAttestation (with signature)
        |
        v
-[publishOffchainLocationProof] (optional)
+[publishOffchainLocationAttestation] (optional)
        |
        v
-Stored OffchainLocationProof
+Stored OffchainLocationAttestation
 ```
 
 ### Onchain Workflow
 ```
-UnsignedLocationProof
+UnsignedLocationAttestation
        |
        v
-[createOnchainLocationProof]
+[createOnchainLocationAttestation]
        |
        v
-OnchainLocationProof (with txHash)
+OnchainLocationAttestation (with txHash)
 ```
 
 ## Key Classes and Responsibilities
@@ -103,7 +103,7 @@ OnchainLocationProof (with txHash)
 ### OffchainSigner (src/eas/OffchainSigner.ts)
 - Creates EIP-712 signatures for offchain attestations
 - Handles verification of offchain signatures
-- Manages typed data for location proofs
+- Manages typed data for location attestations
 
 ### OnchainRegistrar (src/eas/OnchainRegistrar.ts)
 - Sends transactions to register onchain attestations
@@ -137,14 +137,14 @@ OnchainLocationProof (with txHash)
 
 ## Architecture Guidelines
 - Maintain clear separation between offchain and onchain workflows
-- Follow the two-type approach for location proofs:
-  - `UnsignedLocationProof`: Base type for all proofs before signing/registration
-  - `OffchainLocationProof`: For proofs signed with EIP-712 signatures
-  - `OnchainLocationProof`: For proofs registered directly on a blockchain
+- Follow the two-type approach for location attestations:
+  - `UnsignedLocationAttestation`: Base type for all proofs before signing/registration
+  - `OffchainLocationAttestation`: For proofs signed with EIP-712 signatures
+  - `OnchainLocationAttestation`: For proofs registered directly on a blockchain
 - Use descriptive method names that clearly indicate their workflow:
-  - `signOffchainLocationProof` vs `registerOnchainLocationProof`
-  - `publishOffchainLocationProof`
-  - `createOffchainLocationProof` vs `createOnchainLocationProof`
+  - `signOffchainLocationAttestation` vs `registerOnchainLocationAttestation`
+  - `publishOffchainLocationAttestation`
+  - `createOffchainLocationAttestation` vs `createOnchainLocationAttestation`
 - Remember that offchain and onchain attestations have different UIDs and cannot be directly converted
 
 ## Extension System
@@ -158,14 +158,14 @@ To add a new location format:
 
 ### Offchain Workflow Example
 ```typescript
-// Create and sign an offchain location proof
+// Create and sign an offchain location attestation
 const sdk = new AstralSDK({
   provider: window.ethereum,
   chainId: 11155111 // Sepolia
 });
 
 // Create an unsigned proof
-const unsignedProof = await sdk.buildLocationProof({
+const unsignedProof = await sdk.buildLocationAttestation({
   location: {
       "type": "Feature",
       "properties": {},
@@ -181,38 +181,38 @@ const unsignedProof = await sdk.buildLocationProof({
   memo: 'Testing offchain workflow'
 });
 
-// Sign the proof to create an offchain location proof
-const offchainProof = await sdk.signOffchainLocationProof(unsignedProof);
+// Sign the proof to create an offchain location attestation
+const offchainProof = await sdk.signOffchainLocationAttestation(unsignedProof);
 
 // Optionally publish the proof to Astral's API
-const publishedProof = await sdk.publishOffchainLocationProof(offchainProof);
+const publishedProof = await sdk.publishOffchainLocationAttestation(offchainProof);
 ```
 
 ### Onchain Workflow Example
 ```typescript
-// Create and register an onchain location proof
+// Create and register an onchain location attestation
 const sdk = new AstralSDK({
   provider: window.ethereum,
   chainId: 11155111 // Sepolia
 });
 
 // Create an unsigned proof
-const unsignedProof = await sdk.buildLocationProof({
+const unsignedProof = await sdk.buildLocationAttestation({
   location:  [12.34, 56.78],
   locationType: 'coordinates-decimal+lon-lat',
   memo: 'Testing onchain workflow'
 });
 
 // Register the proof on-chain
-const onchainProof = await sdk.registerOnchainLocationProof(unsignedProof);
+const onchainProof = await sdk.registerOnchainLocationAttestation(unsignedProof);
 ```
 
 ## Search Keywords
 - Workflow identification: "offchain", "onchain"
-- Core types: "UnsignedLocationProof", "OffchainLocationProof", "OnchainLocationProof"
+- Core types: "UnsignedLocationAttestation", "OffchainLocationAttestation", "OnchainLocationAttestation"
 - Components: "OffchainSigner", "OnchainRegistrar", "AstralApiClient"
 - Extension system: "Extension", "LocationFormatExtension", "MediaTypeExtension"
-- Type guards: "isOffchainLocationProof", "isOnchainLocationProof"
+- Type guards: "isOffchainLocationAttestation", "isOnchainLocationAttestation"
 
 ## Common Development Tasks
 

@@ -1,31 +1,32 @@
 # Astral SDK
 
-Astral's Location Proof Protocol lets users create, store, and verify geospatial proofs as attestations on multiple blockchains using Ethereum Attestation Service (EAS).
+**Create, store, and verify location attestations on any blockchain.**
 
-Our SDK wraps this complex workflow into a developer-friendly, type-safe library.
+Astral SDK is a developer-friendly TypeScript library that makes location-based attestations simple. Built on Ethereum Attestation Service (EAS), it supports both gasless offchain signatures and permanent onchain registration across multiple networks.
 
-## Key Features
+🔥 **Get started in 30 seconds** → [Quick Start](#quick-start)  
+📖 **Complete guide** → [Getting Started](docs/getting-started.md)  
+🔍 **API docs** → [API Reference](docs/api-reference.md)
 
-- **Dual-Workflow Architecture**:
-  - **Offchain Workflow**: Create proofs with EIP-712 signatures without blockchain transactions
-  - **Onchain Workflow**: Register proofs directly to any of our supported blockchains
-  
-- **Location Format Support**:
-  - GeoJSON (Point, Polygon, LineString, Feature, FeatureCollection)
-  - Decimal coordinates (latitude, longitude)
-  - WKT (Well-Known Text)
-  - H3 (Hexagonal hierarchical geospatial indexing)
-  
-- **Multi-Chain Support**:
-  - Sepolia (testnet)
-  - Base
-  - Arbitrum
-  - Celo
-  
-- **Developer Experience**:
-  - Type-safe API with clear workflow separation
-  - Comprehensive documentation and examples
-  - Built with TypeScript
+## Why Astral SDK?
+
+**🚀 Two ways to create location attestations:**
+- **Offchain**: Gasless EIP-712 signatures, instant verification
+- **Onchain**: Permanent blockchain registration with smart contract integration
+
+**📍 Universal location support:**
+- GeoJSON (Points, Polygons, Features) 
+- Decimal coordinates `[lng, lat]`
+- Well-Known Text (WKT)
+- H3 geospatial indexing
+
+**⛓️ Multi-chain ready:**
+- Sepolia (testnet) • Base • Arbitrum • Celo
+
+**💫 Developer experience:**
+- 100% TypeScript with full type safety
+- Clear workflow separation (no confusion)
+- Comprehensive docs and working examples
 
 ## Installation
 
@@ -42,181 +43,162 @@ yarn add @astral-protocol/sdk
 
 ## Quick Start
 
-### Offchain Workflow Example
-```typescript
-// Create and sign an offchain location proof
-const astral = new AstralSDK({
-  provider: window.ethereum,
-  chainId: 11155111 // Sepolia
-});
-
-// Create an unsigned proof
-const unsignedProof = await astral.buildLocationProof({
-  location: {
-      "type": "Feature",
-      "properties": {},
-      "geometry": {
-        "coordinates": [
-          -0.163808,
-          51.5101
-        ],
-        "type": "Point"
-      }
-    },
-  locationType: 'geojson-point',
-  memo: 'Testing offchain workflow'
-});
-
-// Sign the proof to create an offchain location proof
-const offchainProof = await astral.signOffchainLocationProof(unsignedProof);
-
-// Optionally publish the proof to IPFS (soon)
-const publishedProof = await astral.publishOffchainLocationProof(offchainProof);
+### Installation
+```bash
+pnpm add @astral-protocol/sdk  # or npm/yarn
 ```
 
-### Onchain Workflow Example
+### 30-Second Example: Offchain Attestation (No Gas Required)
 ```typescript
-// Create and register an onchain location proof
-const astral = new AstralSDK({
+import { AstralSDK } from '@astral-protocol/sdk';
+
+// Connect to your wallet
+const sdk = new AstralSDK({ 
   provider: window.ethereum,
-  chainId: 11155111 // Sepolia
+  defaultChain: 'sepolia' 
 });
 
-// Create an unsigned proof
-const unsignedProof = await astral.buildLocationProof({
-  location:  [12.34, 56.78],
-  locationType: 'coordinates-decimal+lon-lat',
-  memo: 'Testing onchain workflow'
+// Create a location attestation
+const attestation = await sdk.createOffchainLocationAttestation({
+  location: [-0.163808, 51.5101], // London coordinates
+  memo: 'Visited Big Ben today!'
 });
 
-// Register the proof on-chain
-const onchainProof = await astral.registerOnchainLocationProof(unsignedProof);
+// ✅ Done! You have a cryptographically signed location attestation
+console.log('Attestation UID:', attestation.uid);
 ```
 
-### Verify a Location Proof
-
+### Onchain Attestation (Permanent Blockchain Record)
 ```typescript
-// Verify an offchain proof
-const isValidOffchain = await astral.verifyOffchainLocationProof(offchainProof);
+// Same API, different method - registers permanently on blockchain
+const onchainAttestation = await sdk.createOnchainLocationAttestation({
+  location: { 
+    type: 'Point', 
+    coordinates: [2.3522, 48.8566] // Paris
+  },
+  memo: 'Onchain proof from the Eiffel Tower'
+});
 
-// Verify an onchain proof
-const isValidOnchain = await astral.verifyOnchainLocationProof(onchainProof);
+console.log('Transaction:', attestation.txHash);
+```
 
-// The SDK also provides type guards to determine proof type
-import { isOffchainLocationProof, isOnchainLocationProof } from '@astral-protocol/sdk';
+### Location Format Flexibility
+```typescript
+// Supports multiple location formats automatically
+const formats = [
+  [-0.163808, 51.5101],                    // Coordinates [lng, lat]
+  { type: 'Point', coordinates: [lng, lat] }, // GeoJSON
+  'POINT(-0.163808 51.5101)',               // Well-Known Text
+  '8c1fb46741ae9ff'                        // H3 cell ID
+];
 
-function verifyAnyProof(proof) {
-  if (isOffchainLocationProof(proof)) {
-    return astral.verifyOffchainLocationProof(proof);
-  } else if (isOnchainLocationProof(proof)) {
-    return astral.verifyOnchainLocationProof(proof);
-  } else {
-    throw new Error('Unknown proof type');
-  }
+// All of these work the same way
+for (const location of formats) {
+  const attestation = await sdk.createOffchainLocationAttestation({
+    location,
+    memo: 'Different format, same result'
+  });
 }
 ```
 
-### Query Location Proofs
-
+### Verification & Type Safety
 ```typescript
-// Query all proofs for a specific address
-const proofs = await astral.queryLocationProofs({
-  attester: '0x1234...',  // For onchain proofs
-  signer: '0x1234...',    // For offchain proofs
-  // Other filter options available
-});
+// Verify any attestation 
+const result = await sdk.verifyOffchainLocationAttestation(attestation);
+if (result.isValid) {
+  console.log('✅ Valid signature from:', result.signerAddress);
+} else {
+  console.log('❌ Invalid:', result.reason);
+}
 
-// Access results
-console.log(`Found ${proofs.total} proofs`);
-proofs.proofs.forEach(proof => {
-  console.log(`Proof ${proof.uid}: ${proof.location}`);
-});
+// Type guards for handling mixed attestation types
+import { isOffchainLocationAttestation } from '@astral-protocol/sdk';
+
+if (isOffchainLocationAttestation(someAttestation)) {
+  // TypeScript knows this is an offchain attestation
+  console.log('Signed by:', someAttestation.signer);
+}
 ```
 
-## Architecture
+## How It Works
 
-Astral SDK has a dual-workflow architecture that separates offchain and onchain attestation paths:
+Astral SDK provides **two distinct workflows** for different use cases:
 
-- **Offchain Workflow**: Build → Sign → Optionally Publish
-- **Onchain Workflow**: Build → Register directly on blockchain
-
-This separation exists because EAS's offchain and onchain attestations have different UIDs and cannot be directly converted while maintaining identity.
-
-## Why Two Workflows?
-
-- **Offchain**: 
-  - No gas costs (free)
-  - Faster (no waiting for transactions)
-  - Completely private until you choose to publish
-  - Great for high-volume applications
-
-- **Onchain**:
-  - Immediate blockchain verification
-  - Integrated with smart contracts
-  - Native to EAS ecosystem
-  - Ideal for applications requiring immutable on-chain proof
-
-### Supported Location Formats
-
-- GeoJSON (point, polygon, linestring)
-- Decimal coordinates (latitude, longitude)
-- WKT (Well-Known Text)
-- H3 (Hexagonal hierarchical geospatial indexing)
-
-### Supported Chains
-
-- Sepolia (testnet)
-- Base
-- Arbitrum
-- Celo
-
-## Documentation
-
-For complete documentation, see:
-
-- [Getting Started](docs/getting-started.md)
-- [API Reference](docs/api-reference.md)
-- [Workflows](docs/workflows/README.md)
-- [Guides](docs/guides/README.md)
-- [Examples](examples/README.md)
-
-## Development
-
-### Environment Setup
-
-1. Copy the environment template:
-```bash
-cp .env.example .env
+### 🔐 Offchain Workflow
 ```
+Build Attestation → Sign with EIP-712 → Optionally Publish
+```
+**Perfect for:** High-volume apps, private proofs, gasless operations
+- ✅ Free (no gas costs)
+- ✅ Instant (no blockchain wait times)
+- ✅ Private until you publish
+- ✅ Works without blockchain connection
 
-2. Configure your environment variables:
-   - **Required for testing**: `SEPOLIA_RPC_URL` (get from [Infura](https://infura.io/) or [Alchemy](https://alchemy.com/))
-   - **Optional**: `TEST_PRIVATE_KEY` for a dedicated test wallet with minimal Sepolia ETH
-   - **For production**: Configure additional RPC URLs and API keys as needed
+### ⛓️ Onchain Workflow  
+```
+Build Attestation → Submit Transaction → Permanent Blockchain Record
+```
+**Perfect for:** Smart contracts, immutable records, public verification
+- ✅ Permanent blockchain storage
+- ✅ Smart contract integration
+- ✅ Public verification by default
+- ✅ Native EAS ecosystem compatibility
 
-3. See [.env.example](.env.example) for a complete list of available configuration options.
+> **Note:** These workflows create different attestation types with unique identifiers. An offchain attestation cannot be "moved" onchain while preserving its identity.
 
-### Development Commands
+## Supported Networks & Formats
 
+**🌐 Networks:** Sepolia (testnet) • Base • Arbitrum • Celo  
+**📍 Formats:** GeoJSON • Coordinates • WKT • H3 • [Custom extensions](docs/extensions.md)
+
+## 📚 Documentation
+
+| Guide | Description |
+|-------|-------------|
+| [**Getting Started**](docs/getting-started.md) | Step-by-step tutorial from zero to first attestation |
+| [**API Reference**](docs/api-reference.md) | Complete API documentation with types |
+| [**Offchain Guide**](docs/offchain-workflow.md) | Deep dive into gasless attestations |
+| [**Onchain Guide**](docs/onchain-workflow.md) | Blockchain integration patterns |
+| [**Examples Cookbook**](docs/examples.md) | Real-world usage patterns |
+| [**Extension System**](docs/extensions.md) | Custom location formats and media types |
+
+## 🔧 Development
+
+### Quick Setup
 ```bash
-# Install dependencies
+# Clone and install
+git clone <repo-url>
+cd astral-sdk
 pnpm install
 
-# Build the SDK
+# Copy environment template
+cp .env.example .env.local
+
+# Build and test
 pnpm build
-
-# Run tests
 pnpm test
-
-# Lint code
-pnpm lint
-
-# Type checking
-pnpm typecheck
-
-# Development mode (watch for changes)
-pnpm dev
 ```
+
+### Environment Variables
+```bash
+# Required for onchain testing
+TEST_PRIVATE_KEY=0x...     # Test wallet private key
+INFURA_API_KEY=...         # Get from infura.io
+
+# Optional
+ASTRAL_API_URL=...         # Custom API endpoint
+```
+
+### Commands
+```bash
+pnpm build      # Build the SDK
+pnpm test       # Run all tests  
+pnpm lint       # Check code style
+pnpm typecheck  # Verify TypeScript
+pnpm dev        # Watch mode
+```
+
+**📖 See [Development Guide](docs/development.md) for contributing guidelines.**
 
 ## License
 

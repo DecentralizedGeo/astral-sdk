@@ -5,71 +5,79 @@
  * Type guard utilities for Astral SDK
  *
  * This file provides type guards that help to safely distinguish between
- * different types of location proofs in the dual-workflow architecture.
+ * different types of location attestations in the dual-workflow architecture.
  */
 
-import { LocationProof, OffchainLocationProof, OnchainLocationProof } from '../core/types';
+import {
+  LocationAttestation,
+  OffchainLocationAttestation,
+  OnchainLocationAttestation,
+} from '../core/types';
 
 /**
- * Determines if a location proof is an OffchainLocationProof.
+ * Determines if a location attestation is an OffchainLocationAttestation.
  *
- * This type guard allows for safely narrowing a LocationProof union type
- * to an OffchainLocationProof by checking for the presence of signature-related fields.
+ * This type guard allows for safely narrowing a LocationAttestation union type
+ * to an OffchainLocationAttestation by checking for the presence of signature-related fields.
  *
  * This function is used in the offchain workflow.
  *
- * @param proof - The location proof to check
- * @returns True if the proof is an OffchainLocationProof
+ * @param attestation - The location attestation to check
+ * @returns True if the attestation is an OffchainLocationAttestation
  *
  * @example
  * ```ts
- * const proof: LocationProof = await astral.getLocationProof(uid);
+ * const attestation: LocationAttestation = await astral.getLocationAttestation(uid);
  *
- * if (isOffchainLocationProof(proof)) {
- *   // TypeScript knows proof is OffchainLocationProof here
- *   console.log(`Signature: ${proof.signature}`);
+ * if (isOffchainLocationAttestation(attestation)) {
+ *   // TypeScript knows attestation is OffchainLocationAttestation here
+ *   console.log(`Signature: ${attestation.signature}`);
  * }
  * ```
  */
-export function isOffchainLocationProof(proof: LocationProof): proof is OffchainLocationProof {
+export function isOffchainLocationAttestation(
+  attestation: LocationAttestation
+): attestation is OffchainLocationAttestation {
   return (
-    'signature' in proof &&
-    typeof proof.signature === 'string' &&
-    'signer' in proof &&
-    typeof proof.signer === 'string'
+    'signature' in attestation &&
+    typeof attestation.signature === 'string' &&
+    'signer' in attestation &&
+    typeof attestation.signer === 'string'
   );
 }
 
 /**
- * Determines if a location proof is an OnchainLocationProof.
+ * Determines if a location attestation is an OnchainLocationAttestation.
  *
- * This type guard allows for safely narrowing a LocationProof union type
- * to an OnchainLocationProof by checking for the presence of blockchain-related fields.
+ * This type guard allows for safely narrowing a LocationAttestation union type
+ * to an OnchainLocationAttestation by checking for the presence of blockchain-related fields.
  *
  * This function is used in the onchain workflow.
  *
- * @param proof - The location proof to check
- * @returns True if the proof is an OnchainLocationProof
+ * @param attestation - The location attestation to check
+ * @returns True if the attestation is an OnchainLocationAttestation
  *
  * @example
  * ```ts
- * const proof: LocationProof = await astral.getLocationProof(uid);
+ * const attestation: LocationAttestation = await astral.getLocationAttestation(uid);
  *
- * if (isOnchainLocationProof(proof)) {
- *   // TypeScript knows proof is OnchainLocationProof here
- *   console.log(`Transaction hash: ${proof.txHash}`);
- *   console.log(`Chain: ${proof.chain} (${proof.chainId})`);
+ * if (isOnchainLocationAttestation(attestation)) {
+ *   // TypeScript knows attestation is OnchainLocationAttestation here
+ *   console.log(`Transaction hash: ${attestation.txHash}`);
+ *   console.log(`Chain: ${attestation.chain} (${attestation.chainId})`);
  * }
  * ```
  */
-export function isOnchainLocationProof(proof: LocationProof): proof is OnchainLocationProof {
+export function isOnchainLocationAttestation(
+  attestation: LocationAttestation
+): attestation is OnchainLocationAttestation {
   return (
-    'txHash' in proof &&
-    typeof proof.txHash === 'string' &&
-    'chain' in proof &&
-    typeof proof.chain === 'string' &&
-    'chainId' in proof &&
-    typeof proof.chainId === 'number'
+    'txHash' in attestation &&
+    typeof attestation.txHash === 'string' &&
+    'chain' in attestation &&
+    typeof attestation.chain === 'string' &&
+    'chainId' in attestation &&
+    typeof attestation.chainId === 'number'
   );
 }
 
@@ -99,14 +107,14 @@ export function isEthereumAddress(value: unknown): value is string {
 }
 
 /**
- * Checks if a value is a valid UID for a location proof.
+ * Checks if a value is a valid UID for a location attestation.
  *
  * This is a simple format validation for the 32-byte hex string UID.
  *
  * @param value - The value to check
- * @returns True if the value appears to be a valid location proof UID
+ * @returns True if the value appears to be a valid location attestation UID
  */
-export function isLocationProofUID(value: unknown): value is string {
+export function isLocationAttestationUID(value: unknown): value is string {
   return isNonEmptyString(value) && /^0x[a-fA-F0-9]{64}$/.test(value);
 }
 

@@ -1,65 +1,109 @@
-# Astral SDK Demo Examples
+# Astral SDK Examples
 
-This folder contains demo scripts for the Astral SDK that showcase how to create and verify location attestations using the Ethereum Attestation Service (EAS).
+This directory contains examples demonstrating how to use the Astral SDK for creating location attestations.
 
-## Available Demos
+## Quick Start
 
-### 1. Minimal Demo (Basic SDK)
+1. **Build the SDK:**
+   ```bash
+   pnpm run build
+   ```
+
+2. **Run any example:**
+   ```bash
+   npx tsx examples/hello-world.ts
+   ```
+
+3. **For onchain examples, setup environment:**
+   ```bash
+   cp .env.example .env.local
+   # Add your TEST_PRIVATE_KEY and INFURA_API_KEY
+   ```
+
+## Current Examples
+
+### **🚀 Essential Examples**
+
+1. **`hello-world.ts`** - 30-second minimal example
+   - Creates and signs an offchain attestation
+   - Uses test private key for simplicity
+   - Perfect starting point for new developers
+
+2. **`basic-workflows.ts`** - Both workflow patterns
+   - Demonstrates offchain (gasless) workflow
+   - Demonstrates onchain (blockchain) workflow  
+   - Includes proper error handling and environment setup
+
+3. **`environmental-monitoring.ts`** - Real-world use case
+   - Air quality sensor network across multiple cities
+   - Uses structured data in mediaData (application/json)
+   - Shows hybrid workflow for different purposes
+   - Production-ready patterns
+
+### **📖 Reference Example**
+
+4. **`complete-sdk-demo.ts`** - Comprehensive demonstration
+   - "Recipe book" format covering all features
+   - Multiple location formats
+   - Media attachments
+   - Error handling patterns
+   - Test suite for SDK functionality
+
+## Running the Examples
+
+Each example can be run independently:
+
+```bash
+# Quick start - creates and signs an attestation
+npx tsx examples/hello-world.ts
+
+# Learn both workflows
+npx tsx examples/basic-workflows.ts
+
+# See real-world patterns
+npx tsx examples/environmental-monitoring.ts
+
+# Explore all SDK features
+npx tsx examples/complete-sdk-demo.ts
 ```
-node examples/minimal-demo.js
-```
-This demo shows basic SDK initialization and configuration. It's the simplest way to verify that the SDK builds correctly and can be imported.
 
-### 2. Reference Demo (SDK Overview)
-```
-node examples/reference-demo.js
-```
-This demo provides a comprehensive overview of the SDK, including different location format examples, workflow patterns, and documentation references.
+## Environment Setup
 
-### 3. OffchainSigner Demo (Component Focus)
-```
-node examples/offchain-signer-demo.js
-```
-This demo focuses specifically on the OffchainSigner component, showing available methods and data format requirements.
+For onchain examples, create `.env.local`:
 
-### 4. Working Attestation Demo (End-to-End)
-```
-node examples/working-attestation-demo.js
-```
-This demo creates and verifies a complete location attestation by manually registering extensions, signing with EIP-712, and validating the signature.
+```bash
+# Required for onchain examples
+TEST_PRIVATE_KEY=0x...     # Test wallet private key (get sepolia ETH from faucet)
+INFURA_API_KEY=...         # Get from infura.io
 
-## Setup
-
-To run these demos:
-
-1. Make sure you've built the SDK:
-```
-pnpm run build
+# Optional
+ASTRAL_API_URL=...         # Custom API endpoint
 ```
 
-2. Run any of the example scripts from the project root:
-```
-node examples/working-attestation-demo.js
-```
+## Key Concepts Demonstrated
 
-## What You'll See
+- **Location Formats**: GeoJSON Points, Features, and Polygons
+- **Workflows**: Offchain (gasless) vs Onchain (permanent) patterns
+- **Error Handling**: Comprehensive error patterns and recovery
+- **Global Coordinates**: Examples from cities worldwide
+- **Professional Use Cases**: Environmental monitoring, infrastructure, compliance
+- **Structured Data**: JSON metadata in memo fields for complex data
 
-Each demo illustrates different aspects of the SDK:
-- SDK initialization with a wallet/signer
-- Extension registration and management
-- Location data formats and validation
-- Cryptographic signing and verification
-- Complete attestation workflow
+## Future Examples
 
-The Working Attestation Demo is particularly useful as it demonstrates an end-to-end workflow that results in a valid, verifiable location attestation.
+See **[ROADMAP.md](./ROADMAP.md)** for planned expansion including:
+- Frontend integration (React + Mapbox)
+- Backend services (Node.js APIs)  
+- Database integration (PostGIS)
+- Advanced use cases (supply chain, field research, infrastructure)
+- Architecture patterns (microservices, event-driven)
 
-## Troubleshooting
+## Contributing Examples
 
-If you encounter issues:
-
-1. Ensure the SDK is built with `pnpm run build`
-2. Check that dependencies are installed with `pnpm install`
-3. Make sure you're running demos from the project root
-4. For extension-related errors, see the working-attestation-demo.js approach that manually registers extensions
-
-For more details, see the main DEMO.md file in the project root.
+When adding new examples:
+1. Follow the established patterns and naming conventions
+2. Include comprehensive error handling
+3. Use diverse global coordinates
+4. Add clear documentation and comments
+5. Test with actual SDK installation
+6. Update this README

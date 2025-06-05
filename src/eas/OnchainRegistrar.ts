@@ -5,16 +5,16 @@
  * OnchainRegistrar for Astral SDK
  *
  * This module provides functionality for creating and verifying on-chain attestations
- * for location proofs using EAS SDK.
+ * for location attestations using EAS SDK.
  */
 
 import { Signer, Provider } from 'ethers';
 import { EAS, SchemaEncoder } from '@ethereum-attestation-service/eas-sdk';
 import {
   OnchainRegistrarConfig,
-  UnsignedLocationProof,
-  OnchainLocationProof,
-  OnchainProofOptions,
+  UnsignedLocationAttestation,
+  OnchainLocationAttestation,
+  OnchainAttestationOptions,
   VerificationResult,
   VerificationError,
 } from '../core/types';
@@ -23,7 +23,7 @@ import { getChainConfig, getSchemaUID, getSchemaString } from './chains';
 
 /**
  * OnchainRegistrar handles the registration of attestations on the blockchain
- * for location proofs in the onchain workflow.
+ * for location attestations in the onchain workflow.
  */
 export class OnchainRegistrar {
   private provider?: Provider;
@@ -274,12 +274,12 @@ export class OnchainRegistrar {
   }
 
   /**
-   * Convert an UnsignedLocationProof to EAS-compatible format
+   * Convert an UnsignedLocationAttestation to EAS-compatible format
    *
-   * @param proof - The unsigned location proof
+   * @param proof - The unsigned location attestation
    * @returns Encoded data string for EAS attestation
    */
-  private formatProofForEAS(proof: UnsignedLocationProof): string {
+  private formatProofForEAS(proof: UnsignedLocationAttestation): string {
     try {
       // Create schema items array for encoding
       const schemaItems = [
@@ -302,7 +302,7 @@ export class OnchainRegistrar {
       return this.schemaEncoder!.encodeData(schemaItems);
     } catch (error) {
       throw new ValidationError(
-        'Failed to format location proof for EAS',
+        'Failed to format location attestation for EAS',
         error instanceof Error ? error : undefined,
         { proof }
       );
@@ -310,16 +310,16 @@ export class OnchainRegistrar {
   }
 
   /**
-   * Registers an unsigned location proof on-chain using EAS
+   * Registers an unsigned location attestation on-chain using EAS
    *
-   * @param unsignedProof - The unsigned location proof to register
+   * @param unsignedProof - The unsigned location attestation to register
    * @param options - Options for the registration process
-   * @returns A complete OnchainLocationProof with transaction details
+   * @returns A complete OnchainLocationAttestation with transaction details
    */
-  public async registerOnchainLocationProof(
-    unsignedProof: UnsignedLocationProof,
-    options?: OnchainProofOptions
-  ): Promise<OnchainLocationProof> {
+  public async registerOnchainLocationAttestation(
+    unsignedProof: UnsignedLocationAttestation,
+    options?: OnchainAttestationOptions
+  ): Promise<OnchainLocationAttestation> {
     try {
       // Ensure EAS modules are initialized
       await this.ensureEASModulesInitialized();
@@ -377,8 +377,8 @@ export class OnchainRegistrar {
       const txHash = transactionReceipt.hash;
       const blockNumber = Number(transactionReceipt.blockNumber);
 
-      // Construct the onchain location proof
-      const onchainProof: OnchainLocationProof = {
+      // Construct the onchain location attestation
+      const onchainProof: OnchainLocationAttestation = {
         ...unsignedProof,
         uid,
         attester,
@@ -393,7 +393,7 @@ export class OnchainRegistrar {
       return onchainProof;
     } catch (error) {
       throw new RegistrationError(
-        'Failed to register onchain location proof',
+        'Failed to register onchain location attestation',
         error instanceof Error ? error : undefined,
         {
           unsignedProof,
@@ -405,13 +405,13 @@ export class OnchainRegistrar {
   }
 
   /**
-   * Verifies an onchain location proof by checking its existence on the blockchain
+   * Verifies an onchain location attestation by checking its existence on the blockchain
    *
-   * @param proof - The onchain location proof to verify
+   * @param proof - The onchain location attestation to verify
    * @returns Verification result with status and details
    */
-  public async verifyOnchainLocationProof(
-    proof: OnchainLocationProof
+  public async verifyOnchainLocationAttestation(
+    proof: OnchainLocationAttestation
   ): Promise<VerificationResult> {
     try {
       // Ensure EAS modules are initialized
@@ -421,7 +421,7 @@ export class OnchainRegistrar {
       if (proof.chainId !== this.chainId) {
         return {
           isValid: false,
-          proof,
+          attestation: proof,
           reason: `Proof was registered on chain ${proof.chain} (ID: ${proof.chainId}), but verifier is connected to chain ID ${this.chainId}`,
         };
       }
@@ -433,8 +433,8 @@ export class OnchainRegistrar {
       if (!attestation) {
         return {
           isValid: false,
-          proof,
-          reason: VerificationError.PROOF_NOT_FOUND,
+          attestation: proof,
+          reason: VerificationError.ATTESTATION_NOT_FOUND,
         };
       }
 
@@ -452,8 +452,8 @@ export class OnchainRegistrar {
           isValid: false,
           revoked: true,
           signerAddress: attestationTyped.attester,
-          proof,
-          reason: VerificationError.PROOF_REVOKED,
+          attestation: proof,
+          reason: VerificationError.ATTESTATION_REVOKED,
         };
       }
 
@@ -466,8 +466,8 @@ export class OnchainRegistrar {
         return {
           isValid: false,
           signerAddress: attestationTyped.attester,
-          proof,
-          reason: VerificationError.PROOF_EXPIRED,
+          attestation: proof,
+          reason: VerificationError.ATTESTATION_EXPIRED,
         };
       }
 
@@ -476,25 +476,27 @@ export class OnchainRegistrar {
         isValid: true,
         revoked: false,
         signerAddress: attestationTyped.attester,
-        proof,
+        attestation: proof,
       };
     } catch (error) {
       // Return verification error
       return {
         isValid: false,
-        proof,
+        attestation: proof,
         reason: error instanceof Error ? error.message : VerificationError.CHAIN_CONNECTION_ERROR,
       };
     }
   }
 
   /**
-   * Revokes an onchain location proof
+   * Revokes an onchain location attestation
    *
-   * @param proof - The onchain location proof to revoke
+   * @param proof - The onchain location attestation to revoke
    * @returns Transaction response from the revocation
    */
-  public async revokeOnchainLocationProof(proof: OnchainLocationProof): Promise<unknown> {
+  public async revokeOnchainLocationAttestation(
+    proof: OnchainLocationAttestation
+  ): Promise<unknown> {
     try {
       // Ensure EAS modules are initialized
       await this.ensureEASModulesInitialized();
@@ -514,12 +516,16 @@ export class OnchainRegistrar {
 
       // Check if the proof is revocable
       if (!proof.revocable) {
-        throw new ValidationError('This location proof is not revocable', undefined, { proof });
+        throw new ValidationError('This location attestation is not revocable', undefined, {
+          proof,
+        });
       }
 
       // Check if the proof is already revoked
       if (proof.revoked) {
-        throw new ValidationError('This location proof is already revoked', undefined, { proof });
+        throw new ValidationError('This location attestation is already revoked', undefined, {
+          proof,
+        });
       }
 
       // Revoke the attestation using EAS SDK
@@ -533,7 +539,7 @@ export class OnchainRegistrar {
       return tx;
     } catch (error) {
       throw new RegistrationError(
-        'Failed to revoke onchain location proof',
+        'Failed to revoke onchain location attestation',
         error instanceof Error ? error : undefined,
         {
           proofUid: proof.uid,
