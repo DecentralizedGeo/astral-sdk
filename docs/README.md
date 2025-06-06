@@ -4,9 +4,9 @@ This directory contains comprehensive documentation for the Astral SDK.
 
 ## Contents
 
-- [Getting Started](./getting-started.md)
-- [API Reference](./api-reference.md)
-- [Workflows](./workflows/README.md)
-- [Guides](./guides/README.md)
+- [Quick Start](./quick-start.md)
+- [Core Concepts](./core-concepts/index.md)
+- [Getting Started Guide](./guides/getting-started.md)
+- [Extensions](./extensions.md)
 
-See the [examples](../examples) directory for working code examples.
+For API reference, see the [API documentation](/sdk/api).

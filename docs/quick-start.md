@@ -1,10 +1,15 @@
 ---
-title: Quick Start
-sidebar_position: 3
-description: Get up and running with your first location attestation in 30 seconds
+title: Quick Start (Legacy)
+sidebar_position: 99
+sidebar_class_name: hidden
+description: This page has been reorganized
 ---
 
-# Quick Start
+# Quick Start → Moved
+
+This content has been reorganized for better navigation.
+
+→ **[View the new Quick Start guide](/sdk/quick-start)**
 
 Get your first location attestation working in under 30 seconds.
 
@@ -22,13 +27,13 @@ Perfect for getting started - no blockchain setup needed:
 import { AstralSDK } from '@decentralized-geo/astral-sdk';
 
 // Connect to your wallet
-const sdk = new AstralSDK({ 
+const astral = new AstralSDK({ 
   provider: window.ethereum,
   defaultChain: 'sepolia' 
 });
 
 // Create a location attestation
-const attestation = await sdk.createOffchainLocationAttestation({
+const attestation = await astral.createOffchainLocationAttestation({
   location: [-0.163808, 51.5101], // London coordinates [lng, lat]
   memo: 'GPS reading at Westminster Bridge'
 });
@@ -38,7 +43,7 @@ console.log('Attestation UID:', attestation.uid);
 console.log('Signed by:', attestation.signer);
 
 // Verify it works
-const verification = await sdk.verifyOffchainLocationAttestation(attestation);
+const verification = await astral.verifyOffchainLocationAttestation(attestation);
 console.log('Valid signature:', verification.isValid);
 ```
 
@@ -48,7 +53,7 @@ For blockchain permanence (requires testnet ETH):
 
 ```typescript
 // Same API, different method - creates permanent blockchain record
-const onchainAttestation = await sdk.createOnchainLocationAttestation({
+const onchainAttestation = await astral.createOnchainLocationAttestation({
   location: { 
     type: 'Point', 
     coordinates: [-58.3816, -34.6037] // Buenos Aires
@@ -60,9 +65,9 @@ console.log('Transaction hash:', onchainAttestation.txHash);
 console.log('View on Etherscan:', `https://sepolia.etherscan.io/tx/${onchainAttestation.txHash}`);
 ```
 
-## Multiple Location Formats
+## GeoJSON Feature Types
 
-The SDK automatically handles different location formats:
+The SDK currently supports different GeoJSON feature types:
 
 ```typescript
 // Currently supported: GeoJSON format
@@ -88,7 +93,7 @@ const geoJsonExamples = [
 ];
 
 for (const location of geoJsonExamples) {
-  const attestation = await sdk.createOffchainLocationAttestation({
+  const attestation = await astral.createOffchainLocationAttestation({
     location,
     memo: `Spatial record using ${location.type} geometry`
   });
@@ -102,12 +107,12 @@ for (const location of geoJsonExamples) {
 
 **What's next?**
 
-- **[Core Concepts](./core-concepts/)** - Understand offchain vs onchain workflows
-- **[Getting Started Guide](./guides/getting-started)** - Complete tutorial with setup
-- **[Examples Cookbook](./examples/cookbook)** - Real-world usage patterns
-- **[API Reference](./api/reference)** - Complete method documentation
+- **[Core Concepts](/core-concepts)** - Understand offchain vs onchain workflows
+- **[Getting Started Guide](/sdk/guides/getting-started)** - Complete tutorial with setup
+- **[Extensions Guide](/sdk/extensions)** - Extension system overview
+- **[API Reference](/sdk/api)** - Complete method documentation
 
 **Need help?**
-- Check the troubleshooting section in [Getting Started](./guides/getting-started#common-issues--solutions)
-- See working examples in the [Examples Cookbook](./examples/cookbook)
-- Review the [Core Concepts](./core-concepts) for terminology
+- Check the troubleshooting section in [Getting Started](/sdk/guides/getting-started#common-issues--solutions)
+- See working examples in the documentation
+- Review the [Core Concepts](/core-concepts) for terminology

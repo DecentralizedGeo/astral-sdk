@@ -10,14 +10,32 @@ If you're comfortable with spatial data but new to blockchain and Web3 concepts,
 
 ## What is Web3?
 
-Web3 refers to decentralized internet applications built on blockchain technology. Instead of relying on centralized servers, Web3 systems use:
+Web3 represents a vision for the internet built on three core principles:
 
-- **Distributed networks** - No single point of failure
-- **Cryptographic verification** - Math-based trust instead of institutional trust  
-- **User-controlled accounts** - You own your data and identity
-- **Immutable records** - Once written, data cannot be altered
+### → Open
+• **Open protocols** - Anyone can build on and interact with the system
+• **Open source** - Code is transparent and auditable
+• **Open participation** - No gatekeepers or permission required
 
-For spatial data, this means you can create location records that are verifiable by anyone, permanently stored, and don't depend on any single company or server.
+### → Durable
+• **Persistent data** - Information survives beyond any single organization
+• **Decentralized storage** - No single point of failure
+• **Cryptographic integrity** - Data cannot be tampered with
+
+### → Consensual
+• **User sovereignty** - You control your own data and identity
+• **Explicit permissions** - Clear consent for data usage
+• **Verifiable actions** - Every action has cryptographic proof
+
+## Web3 for Location Data
+
+These principles transform how we work with spatial information:
+
+※ **Location data becomes portable** - Not locked in proprietary systems
+※ **Provenance is built-in** - Every record has verifiable authorship
+※ **Trust is mathematical** - No need to trust institutions for verification
+
+Blockchains are one tool for achieving these principles, but Web3 encompasses more: decentralized storage (IPFS), peer-to-peer networks, cryptographic proofs, and user-controlled identity.
 
 ## Ethereum and EAS
 
@@ -85,8 +103,8 @@ This is a key concept for understanding how Astral SDK works:
 |---------|------|---------|----------|
 | **Sepolia** | Testnet | Development/testing | Free |
 | **Ethereum** | Mainnet | Production (expensive) | $5-50 per transaction |
-| **Base** | Layer 2 | Production (cheap) | $0.10-1 per transaction |
-| **Arbitrum** | Layer 2 | Production (cheap) | $0.15-1.50 per transaction |
+| **Base** | Layer 2 | Production (cheap) | $0.01-0.10 per transaction |
+| **Arbitrum** | Layer 2 | Production (cheap) | $0.01-0.10 per transaction |
 
 **Gas** is the fee you pay for blockchain transactions. Think of it as postage for sending mail through the blockchain network.
 
@@ -151,8 +169,27 @@ for (const row of results) {
 
 The beauty of Web3 is that once you understand these concepts, they work the same way across all decentralized applications - not just spatial ones.
 
+## External Resources
+
+### → Learn More
+
+• **[Ethereum.org Wallets Guide](https://ethereum.org/en/wallets/)** - Overview and security tips
+• **[Set up Development Environment](https://ethereum.org/en/developers/local-environment/)** - Testnets and local nodes
+• **[Hello World Smart Contract](https://ethereum.org/en/developers/tutorials/hello-world-smart-contract/)** - Wallet + testnet + deploy tutorial
+
+### → Track Costs
+
+• **[L2Fees.info](https://l2fees.info)** - Real-time Layer 2 fee dashboard
+• **[L2Beat Activity](https://l2beat.com/scaling/activity)** - Base & Arbitrum TPS numbers
+
+### → Dive Deeper
+
+• **[EAS Documentation](https://docs.attest.sh)** - Ethereum Attestation Service
+• **[IPFS Documentation](https://docs.ipfs.io)** - Decentralized storage
+• **[Web3 Design Principles](https://www.web3designprinciples.com)** - UX best practices
+
 ## Next Steps
 
-- **[Quick Start](../quick-start)** - Create your first attestation in 30 seconds
-- **[Getting Started Guide](../guides/getting-started)** - Complete tutorial with wallet setup
-- **[Geospatial Concepts](./geospatial)** - If you want to understand the spatial data side too
+• **[Quick Start](/sdk/quick-start)** - Create your first attestation in 30 seconds
+• **[Getting Started Guide](/sdk/guides/getting-started)** - Complete tutorial with wallet setup
+• **[Geospatial Concepts](/sdk/background/geospatial)** - If you want to understand the spatial data side too
