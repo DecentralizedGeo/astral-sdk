@@ -1,5 +1,5 @@
 {
-  "name": "@astral-protocol/sdk",
+  "name": "@decentralized-geo/astral-sdk",
   "version": "0.1.0",
   "description": "Astral's Location Proof Protocol SDK",
   "main": "dist/index.js",
