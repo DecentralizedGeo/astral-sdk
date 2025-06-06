@@ -51,6 +51,9 @@
   ],
   "author": "Astral Protocol",
   "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@ethereum-attestation-service/eas-sdk": "^2.7.0",
     "@turf/boolean-valid": "7.2.0",
