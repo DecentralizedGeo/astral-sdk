@@ -14,8 +14,8 @@ Understanding these key concepts will help you work effectively with Astral SDK 
 
 **New to this area? Choose your background:**
 
-- **[Web3 Concepts](/sdk/core-concepts/web3)** - For geospatial developers who need blockchain context
-- **[Geospatial Concepts](/sdk/core-concepts/geospatial)** - For Web3 developers who need spatial data context  
+- **[Web3 Concepts](/sdk/background/web3)** - For geospatial developers who need blockchain context
+- **[Geospatial Concepts](/sdk/background/geospatial)** - For Web3 developers who need spatial data context  
 - **[Quick Start](/sdk/quick-start)** - Jump straight to code examples
 
 **Learn more about the protocol:** [Location Protocol Specification](https://easierdata.org/updates/2025/2025-05-19-location-protocol-spec)
@@ -277,8 +277,8 @@ const onchainAttestation = await sdk.createOnchainLocationAttestation(data);
 Now that you understand the core concepts:
 
 **Need more context?**
-- **[Web3 Concepts](/sdk/core-concepts/web3)** - Blockchain, signatures, and verification for geospatial developers  
-- **[Geospatial Concepts](/sdk/core-concepts/geospatial)** - Spatial data and coordinate systems for Web3 developers
+- **[Web3 Concepts](/sdk/background/web3)** - Blockchain, signatures, and verification for geospatial developers  
+- **[Geospatial Concepts](/sdk/background/geospatial)** - Spatial data and coordinate systems for Web3 developers
 
 **Ready to build?**
 1. **[Quick Start](/sdk/quick-start)** - 30-second working example

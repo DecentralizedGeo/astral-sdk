@@ -360,8 +360,6 @@ Now that you've created your first location attestations, explore these advanced
 
 - **[Offchain Workflow Guide](offchain-workflow.md)** - Deep dive into gasless attestations
 - **[Onchain Workflow Guide](onchain-workflow.md)** - Blockchain integration patterns  
-- **[API Reference](/sdk/api)** - Complete method documentation
-- **[Examples Cookbook](examples.md)** - Real-world usage patterns
 - **[Extension System](/sdk/extensions)** - Custom location formats and media types
 
 ## Common Issues & Solutions

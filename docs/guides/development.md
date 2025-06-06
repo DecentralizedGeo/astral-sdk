@@ -365,6 +365,4 @@ test: add integration tests
 
 ## Next Steps
 
-• **[API Reference](/sdk/api)** - Complete method documentation
 • **[Extension System](/sdk/extensions)** - Build custom extensions
-• **[Examples](/sdk/examples)** - Real-world usage patterns
