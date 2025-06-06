@@ -36,6 +36,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "typecheck": "tsc --noEmit",
+    "release": "changeset publish",
     "prepare": "husky",
     "prepublishOnly": "pnpm run build",
     "commit-wip": "git commit --no-verify -m \"WIP: Work in progress commit\""
