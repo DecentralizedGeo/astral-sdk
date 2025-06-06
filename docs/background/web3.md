@@ -13,26 +13,26 @@ If you're comfortable with spatial data but new to blockchain and Web3 concepts,
 Web3 represents a vision for the internet built on three core principles:
 
 ### → Open
-• **Open protocols** - Anyone can build on and interact with the system
-• **Open source** - Code is transparent and auditable
-• **Open participation** - No gatekeepers or permission required
+• **Open protocols** - Anyone can build on and interact with the system<br/>
+• **Open source** - Code is transparent and auditable<br/>
+• **Open participation** - No gatekeepers or permission required<br/>
 
 ### → Durable
-• **Persistent data** - Information survives beyond any single organization
-• **Decentralized storage** - No single point of failure
-• **Cryptographic integrity** - Data cannot be tampered with
+• **Persistent data** - Information survives beyond any single organization<br/>
+• **Decentralized storage** - No single point of failure<br/>
+• **Cryptographic integrity** - Data cannot be tampered with<br/>
 
 ### → Consensual
-• **User sovereignty** - You control your own data and identity
-• **Explicit permissions** - Clear consent for data usage
-• **Verifiable actions** - Every action has cryptographic proof
+• **User sovereignty** - You control your own data and identity<br/>
+• **Explicit permissions** - Clear consent for data usage<br/>
+• **Verifiable actions** - Every action has cryptographic proof<br/>
 
 ## Web3 for Location Data
 
 These principles transform how we work with spatial information:
 
-※ **Location data becomes portable** - Not locked in proprietary systems
-※ **Provenance is built-in** - Every record has verifiable authorship
+※ **Location data becomes portable** - Not locked in proprietary systems<br/>
+※ **Provenance is built-in** - Every record has verifiable authorship<br/>
 ※ **Trust is mathematical** - No need to trust institutions for verification
 
 Blockchains are one tool for achieving these principles, but Web3 encompasses more: decentralized storage (IPFS), peer-to-peer networks, cryptographic proofs, and user-controlled identity.

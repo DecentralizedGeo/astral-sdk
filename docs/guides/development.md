@@ -12,9 +12,9 @@ Essential information for developing with and contributing to the Astral SDK.
 
 ### Prerequisites
 
-• Node.js 18+ and pnpm
-• A Web3 wallet (MetaMask or similar)
-• Access to a blockchain RPC endpoint
+• Node.js 18+ and pnpm<br/>
+• A Web3 wallet (MetaMask or similar)<br/>
+• Access to a blockchain RPC endpoint<br/>
 
 ### Environment Configuration
 
