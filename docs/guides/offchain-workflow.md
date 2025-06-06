@@ -16,6 +16,8 @@ Offchain attestations use EIP-712 signatures to create cryptographically verifia
 **Privacy:** Completely private until you choose to publish  
 **Use cases:** Social apps, gaming, analytics, high-frequency location tracking
 
+※ **Data Persistence**: Offchain attestations exist only where you store them. If you delete the file or database record, they disappear. Consider backing up important attestations.
+
 ## Core Workflow
 
 ```
@@ -536,6 +538,6 @@ app.post('/api/attestations', async (req, res) => {
 ## Next Steps
 
 - **[Onchain Workflow Guide](onchain-workflow.md)** - Learn about permanent blockchain attestations
-- **[API Reference](api-reference.md)** - Complete method documentation  
+- **[API Reference](/sdk/api)** - Complete method documentation  
 - **[Examples Cookbook](examples.md)** - Real-world usage patterns
-- **[Extension System](extensions.md)** - Custom location formats and media types
+- **[Extension System](/sdk/extensions)** - Custom location formats and media types
