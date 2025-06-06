@@ -4,26 +4,24 @@
 
 Astral SDK is a developer-friendly TypeScript library that makes location-based attestations simple. Built on Ethereum Attestation Service (EAS), it supports both gasless offchain signatures and permanent onchain registration across multiple networks.
 
-🔥 **Get started in 30 seconds** → [Quick Start](#quick-start)  
-📖 **Complete guide** → [Getting Started](docs/getting-started.md)  
-🔍 **API docs** → [API Reference](docs/api-reference.md)
+→ **Get started in 30 seconds** - [Quick Start](#quick-start)  
+→ **Complete guide** - [Getting Started](https://docs.astral.global/sdk/guides/getting-started)  
+→ **API docs** - [API Reference](https://docs.astral.global/sdk/api)
 
 ## Why Astral SDK?
 
-**🚀 Two ways to create location attestations:**
+**→ Two ways to create location attestations:**
 - **Offchain**: Gasless EIP-712 signatures, instant verification
 - **Onchain**: Permanent blockchain registration with smart contract integration
 
-**📍 Universal location support:**
-- GeoJSON (Points, Polygons, Features) 
-- Decimal coordinates `[lng, lat]`
-- Well-Known Text (WKT)
-- H3 geospatial indexing
+**→ Location format support:**
+- GeoJSON (Points, Polygons, Features, FeatureCollections) - ■ Available now
+- Decimal coordinates, WKT, H3 indexing - □ Coming soon
 
-**⛓️ Multi-chain ready:**
+**→ Multi-chain ready:**
 - Sepolia (testnet) • Base • Arbitrum • Celo
 
-**💫 Developer experience:**
+**→ Developer experience:**
 - 100% TypeScript with full type safety
 - Clear workflow separation (no confusion)
 - Comprehensive docs and working examples
@@ -32,39 +30,42 @@ Astral SDK is a developer-friendly TypeScript library that makes location-based 
 
 ```bash
 # Using pnpm (recommended)
-pnpm add @astral-protocol/sdk
+pnpm add @decentralized-geo/astral-sdk
 
 # Using npm
-npm install @astral-protocol/sdk
+npm install @decentralized-geo/astral-sdk
 
 # Using yarn
-yarn add @astral-protocol/sdk
+yarn add @decentralized-geo/astral-sdk
 ```
 
 ## Quick Start
 
 ### Installation
 ```bash
-pnpm add @astral-protocol/sdk  # or npm/yarn
+pnpm add @decentralized-geo/astral-sdk  # or npm/yarn
 ```
 
 ### 30-Second Example: Offchain Attestation (No Gas Required)
 ```typescript
-import { AstralSDK } from '@astral-protocol/sdk';
+import { AstralSDK } from '@decentralized-geo/astral-sdk';
 
 // Connect to your wallet
 const sdk = new AstralSDK({ 
   provider: window.ethereum,
-  defaultChain: 'sepolia' 
+  chainId: 11155111 // Sepolia
 });
 
-// Create a location attestation
+// Create a location attestation with GeoJSON Point
 const attestation = await sdk.createOffchainLocationAttestation({
-  location: [-0.163808, 51.5101], // London coordinates
+  location: {
+    type: 'Point',
+    coordinates: [-0.163808, 51.5101] // [longitude, latitude]
+  },
   memo: 'Visited Big Ben today!'
 });
 
-// ✅ Done! You have a cryptographically signed location attestation
+// Done! You have a cryptographically signed location attestation
 console.log('Attestation UID:', attestation.uid);
 ```
 
@@ -74,29 +75,46 @@ console.log('Attestation UID:', attestation.uid);
 const onchainAttestation = await sdk.createOnchainLocationAttestation({
   location: { 
     type: 'Point', 
-    coordinates: [2.3522, 48.8566] // Paris
+    coordinates: [2.3522, 48.8566] // Paris [longitude, latitude]
   },
   memo: 'Onchain proof from the Eiffel Tower'
 });
 
-console.log('Transaction:', attestation.txHash);
+console.log('Transaction:', onchainAttestation.txHash);
 ```
 
-### Location Format Flexibility
+### GeoJSON Location Support
 ```typescript
-// Supports multiple location formats automatically
-const formats = [
-  [-0.163808, 51.5101],                    // Coordinates [lng, lat]
-  { type: 'Point', coordinates: [lng, lat] }, // GeoJSON
-  'POINT(-0.163808 51.5101)',               // Well-Known Text
-  '8c1fb46741ae9ff'                        // H3 cell ID
+// Supports all GeoJSON geometry types
+const locations = [
+  // Point
+  {
+    type: 'Point',
+    coordinates: [-0.163808, 51.5101] // [longitude, latitude]
+  },
+  // Polygon
+  {
+    type: 'Polygon',
+    coordinates: [[[-1, 50], [1, 50], [1, 52], [-1, 52], [-1, 50]]]
+  },
+  // Feature with properties
+  {
+    type: 'Feature',
+    geometry: {
+      type: 'Point',
+      coordinates: [-0.163808, 51.5101]
+    },
+    properties: {
+      name: 'Big Ben'
+    }
+  }
 ];
 
-// All of these work the same way
-for (const location of formats) {
+// All GeoJSON formats work the same way
+for (const location of locations) {
   const attestation = await sdk.createOffchainLocationAttestation({
     location,
-    memo: 'Different format, same result'
+    memo: 'GeoJSON location proof'
   });
 }
 ```
@@ -106,13 +124,13 @@ for (const location of formats) {
 // Verify any attestation 
 const result = await sdk.verifyOffchainLocationAttestation(attestation);
 if (result.isValid) {
-  console.log('✅ Valid signature from:', result.signerAddress);
+  console.log('Valid signature from:', result.signerAddress);
 } else {
-  console.log('❌ Invalid:', result.reason);
+  console.log('Invalid:', result.reason);
 }
 
 // Type guards for handling mixed attestation types
-import { isOffchainLocationAttestation } from '@astral-protocol/sdk';
+import { isOffchainLocationAttestation } from '@decentralized-geo/astral-sdk';
 
 if (isOffchainLocationAttestation(someAttestation)) {
   // TypeScript knows this is an offchain attestation
@@ -124,45 +142,45 @@ if (isOffchainLocationAttestation(someAttestation)) {
 
 Astral SDK provides **two distinct workflows** for different use cases:
 
-### 🔐 Offchain Workflow
+### → Offchain Workflow
 ```
 Build Attestation → Sign with EIP-712 → Optionally Publish
 ```
 **Perfect for:** High-volume apps, private proofs, gasless operations
-- ✅ Free (no gas costs)
-- ✅ Instant (no blockchain wait times)
-- ✅ Private until you publish
-- ✅ Works without blockchain connection
+- Free (no gas costs)
+- Instant (no blockchain wait times)
+- Private until you publish
+- Works without blockchain connection
 
-### ⛓️ Onchain Workflow  
+### → Onchain Workflow  
 ```
 Build Attestation → Submit Transaction → Permanent Blockchain Record
 ```
 **Perfect for:** Smart contracts, immutable records, public verification
-- ✅ Permanent blockchain storage
-- ✅ Smart contract integration
-- ✅ Public verification by default
-- ✅ Native EAS ecosystem compatibility
+- Permanent blockchain storage
+- Smart contract integration
+- Public verification by default
+- Native EAS ecosystem compatibility
 
 > **Note:** These workflows create different attestation types with unique identifiers. An offchain attestation cannot be "moved" onchain while preserving its identity.
 
 ## Supported Networks & Formats
 
-**🌐 Networks:** Sepolia (testnet) • Base • Arbitrum • Celo  
-**📍 Formats:** GeoJSON • Coordinates • WKT • H3 • [Custom extensions](docs/extensions.md)
+**→ Networks:** Sepolia (testnet) • Base • Arbitrum • Celo  
+**→ Formats:** GeoJSON (all types) • [Custom extensions](https://docs.astral.global/sdk/extensions)
 
-## 📚 Documentation
+## Documentation
 
 | Guide | Description |
 |-------|-------------|
-| [**Getting Started**](docs/getting-started.md) | Step-by-step tutorial from zero to first attestation |
-| [**API Reference**](docs/api-reference.md) | Complete API documentation with types |
-| [**Offchain Guide**](docs/offchain-workflow.md) | Deep dive into gasless attestations |
-| [**Onchain Guide**](docs/onchain-workflow.md) | Blockchain integration patterns |
-| [**Examples Cookbook**](docs/examples.md) | Real-world usage patterns |
-| [**Extension System**](docs/extensions.md) | Custom location formats and media types |
+| [**Getting Started**](https://docs.astral.global/sdk/guides/getting-started) | Step-by-step tutorial from zero to first attestation |
+| [**API Reference**](https://docs.astral.global/sdk/api) | Complete API documentation with types |
+| [**Offchain Guide**](https://docs.astral.global/sdk/guides/offchain-workflow) | Deep dive into gasless attestations |
+| [**Onchain Guide**](https://docs.astral.global/sdk/guides/onchain-workflow) | Blockchain integration patterns |
+| [**Core Concepts**](https://docs.astral.global/sdk/core-concepts) | Key terminology and concepts |
+| [**Extension System**](https://docs.astral.global/sdk/extensions) | Custom location formats and media types |
 
-## 🔧 Development
+## Development
 
 ### Quick Setup
 ```bash
@@ -198,7 +216,7 @@ pnpm typecheck  # Verify TypeScript
 pnpm dev        # Watch mode
 ```
 
-**📖 See [Development Guide](docs/development.md) for contributing guidelines.**
+**→ See [Development Guide](https://docs.astral.global/sdk/guides/development) for contributing guidelines.**
 
 ## License
 
