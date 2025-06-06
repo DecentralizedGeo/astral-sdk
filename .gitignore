@@ -43,3 +43,7 @@ coverage
 # TypeScript
 *.tsbuildinfo
 **/.claude/settings.local.json
+
+# Package files (keep clean for publishing)
+*.tgz
+test-install/
