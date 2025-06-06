@@ -1,222 +1,186 @@
 # Astral SDK
 
-**Create, store, and verify location attestations on any blockchain.**
+**A spatial extension for the decentralized web.**
 
-Astral SDK is a developer-friendly TypeScript library that makes location-based attestations simple. Built on Ethereum Attestation Service (EAS), it supports both gasless offchain signatures and permanent onchain registration across multiple networks.
+Astral SDK lets you create location attestations - signed records that prove "this location data came from this person at this time." Think of them like digital signatures for geographic information.
 
 → **Get started in 30 seconds** - [Quick Start](#quick-start)  
 → **Complete guide** - [Getting Started](https://docs.astral.global/sdk/guides/getting-started)  
-→ **API docs** - [API Reference](https://docs.astral.global/sdk/api)
+→ **How it works** - [Core Concepts](https://docs.astral.global/core-concepts)
 
-## Why Astral SDK?
+## What you can build
 
-**→ Two ways to create location attestations:**
-- **Offchain**: Gasless EIP-712 signatures, instant verification
-- **Onchain**: Permanent blockchain registration with smart contract integration
+**Location-based apps** - Verify user locations without trusting a central server
 
-**→ Location format support:**
-- GeoJSON (Points, Polygons, Features, FeatureCollections) - ■ Available now
-- Decimal coordinates, WKT, H3 indexing - □ Coming soon
+**Supply chain tracking** - Create tamper-proof records of where goods have been
 
-**→ Multi-chain ready:**
-- Sepolia (testnet) • Base • Arbitrum • Celo
+**Compliance reporting** - Prove where operations took place for regulations or audits
 
-**→ Developer experience:**
-- 100% TypeScript with full type safety
-- Clear workflow separation (no confusion)
-- Comprehensive docs and working examples
+**Digital identity** - Add verifiable location history to user profiles
+
+**IoT and sensors** - Sign location data from devices so others can trust it
+
+## How it works
+
+Instead of just storing coordinates in a database, you create **signed records** that include:
+- The location data (coordinates, boundaries, etc.)
+- Who created it
+- When it was created
+- A cryptographic signature proving it hasn't been tampered with
+
+These records can be held privately, stored on a server, or stored on a blockchain. Anyone can verify these records without asking you or trusting a third party.
 
 ## Installation
 
 ```bash
-# Using pnpm (recommended)
-pnpm add @decentralized-geo/astral-sdk
-
-# Using npm
 npm install @decentralized-geo/astral-sdk
-
-# Using yarn
-yarn add @decentralized-geo/astral-sdk
 ```
 
 ## Quick Start
 
-### Installation
-```bash
-pnpm add @decentralized-geo/astral-sdk  # or npm/yarn
-```
+### Create a signed location record (no blockchain required)
 
-### 30-Second Example: Offchain Attestation (No Gas Required)
 ```typescript
 import { AstralSDK } from '@decentralized-geo/astral-sdk';
 
 // Connect to your wallet
 const sdk = new AstralSDK({ 
   provider: window.ethereum,
-  chainId: 11155111 // Sepolia
+  chainId: 11155111 // Sepolia testnet
 });
 
-// Create a location attestation with GeoJSON Point
+// Create a signed location record
 const attestation = await sdk.createOffchainLocationAttestation({
   location: {
     type: 'Point',
-    coordinates: [-0.163808, 51.5101] // [longitude, latitude]
+    coordinates: [-122.4194, 37.7749] // San Francisco
   },
-  memo: 'Visited Big Ben today!'
+  memo: 'Checked in at conference'
 });
 
-// Done! You have a cryptographically signed location attestation
-console.log('Attestation UID:', attestation.uid);
+// You now have a signed record that proves you created this location data
+console.log('Record ID:', attestation.uid);
+console.log('Your signature:', attestation.signature);
 ```
 
-### Onchain Attestation (Permanent Blockchain Record)
+### Verify someone else's location record
+
 ```typescript
-// Same API, different method - registers permanently on blockchain
-const onchainAttestation = await sdk.createOnchainLocationAttestation({
-  location: { 
-    type: 'Point', 
-    coordinates: [2.3522, 48.8566] // Paris [longitude, latitude]
-  },
-  memo: 'Onchain proof from the Eiffel Tower'
-});
-
-console.log('Transaction:', onchainAttestation.txHash);
-```
-
-### GeoJSON Location Support
-```typescript
-// Supports all GeoJSON geometry types
-const locations = [
-  // Point
-  {
-    type: 'Point',
-    coordinates: [-0.163808, 51.5101] // [longitude, latitude]
-  },
-  // Polygon
-  {
-    type: 'Polygon',
-    coordinates: [[[-1, 50], [1, 50], [1, 52], [-1, 52], [-1, 50]]]
-  },
-  // Feature with properties
-  {
-    type: 'Feature',
-    geometry: {
-      type: 'Point',
-      coordinates: [-0.163808, 51.5101]
-    },
-    properties: {
-      name: 'Big Ben'
-    }
-  }
-];
-
-// All GeoJSON formats work the same way
-for (const location of locations) {
-  const attestation = await sdk.createOffchainLocationAttestation({
-    location,
-    memo: 'GeoJSON location proof'
-  });
-}
-```
-
-### Verification & Type Safety
-```typescript
-// Verify any attestation 
+// Verify any location record
 const result = await sdk.verifyOffchainLocationAttestation(attestation);
+
 if (result.isValid) {
-  console.log('Valid signature from:', result.signerAddress);
+  console.log('✓ Valid - signed by:', result.signerAddress);
+  console.log('✓ Location data hasn\'t been tampered with');
 } else {
-  console.log('Invalid:', result.reason);
-}
-
-// Type guards for handling mixed attestation types
-import { isOffchainLocationAttestation } from '@decentralized-geo/astral-sdk';
-
-if (isOffchainLocationAttestation(someAttestation)) {
-  // TypeScript knows this is an offchain attestation
-  console.log('Signed by:', someAttestation.signer);
+  console.log('✗ Invalid or corrupted');
 }
 ```
 
-## How It Works
+### Store records permanently on blockchain
 
-Astral SDK provides **two distinct workflows** for different use cases:
+```typescript
+// Same API, but stores on blockchain forever
+const onchainRecord = await sdk.createOnchainLocationAttestation({
+  location: {
+    type: 'Polygon',
+    coordinates: [[
+      [-122.4, 37.8], [-122.4, 37.7], 
+      [-122.3, 37.7], [-122.3, 37.8], 
+      [-122.4, 37.8]
+    ]]
+  },
+  memo: 'Service area boundary'
+});
 
-### → Offchain Workflow
+console.log('Blockchain transaction:', onchainRecord.txHash);
 ```
-Build Attestation → Sign with EIP-712 → Optionally Publish
+
+## Two ways to create records
+
+**Offchain (recommended for most use cases)**
+- No blockchain fees
+- Instant creation
+- Private until you share them
+- Still cryptographically verifiable
+
+**Onchain (for permanent public records)**
+- Stored on blockchain forever
+- Public by default
+- Costs gas fees
+- Integrates with smart contracts
+
+## Supported location formats
+
+Currently supports **GeoJSON** (the web standard for geographic data):
+
+```typescript
+// All of these work:
+
+// Points (coordinates)
+{ type: 'Point', coordinates: [-122.4194, 37.7749] }
+
+// Areas (polygons)
+{ 
+  type: 'Polygon', 
+  coordinates: [[[-122.4, 37.8], [-122.4, 37.7], [-122.3, 37.7], [-122.4, 37.8]]]
+}
+
+// Places with metadata
+{
+  type: 'Feature',
+  geometry: { type: 'Point', coordinates: [-122.4194, 37.7749] },
+  properties: { name: 'Moscone Center', event: 'Conference 2024' }
+}
 ```
-**Perfect for:** High-volume apps, private proofs, gasless operations
-- Free (no gas costs)
-- Instant (no blockchain wait times)
-- Private until you publish
-- Works without blockchain connection
 
-### → Onchain Workflow  
-```
-Build Attestation → Submit Transaction → Permanent Blockchain Record
-```
-**Perfect for:** Smart contracts, immutable records, public verification
-- Permanent blockchain storage
-- Smart contract integration
-- Public verification by default
-- Native EAS ecosystem compatibility
+*Coming soon: Simple coordinate arrays, Well-Known Text (WKT), and H3 cells*
 
-> **Note:** These workflows create different attestation types with unique identifiers. An offchain attestation cannot be "moved" onchain while preserving its identity.
+## Supported networks
 
-## Supported Networks & Formats
-
-**→ Networks:** Sepolia (testnet) • Base • Arbitrum • Celo  
-**→ Formats:** GeoJSON (all types) • [Custom extensions](https://docs.astral.global/sdk/extensions)
+Works on Ethereum testnets and Layer 2 networks:
+- **Sepolia** (testnet - free for development)
+- **Base** (Coinbase's L2)
+- **Arbitrum** (Ethereum L2)
+- **Celo** (mobile-first blockchain)
 
 ## Documentation
 
 | Guide | Description |
 |-------|-------------|
-| [**Getting Started**](https://docs.astral.global/sdk/guides/getting-started) | Step-by-step tutorial from zero to first attestation |
-| [**API Reference**](https://docs.astral.global/sdk/api) | Complete API documentation with types |
-| [**Offchain Guide**](https://docs.astral.global/sdk/guides/offchain-workflow) | Deep dive into gasless attestations |
-| [**Onchain Guide**](https://docs.astral.global/sdk/guides/onchain-workflow) | Blockchain integration patterns |
-| [**Core Concepts**](https://docs.astral.global/sdk/core-concepts) | Key terminology and concepts |
-| [**Extension System**](https://docs.astral.global/sdk/extensions) | Custom location formats and media types |
+| [**Getting Started**](https://docs.astral.global/sdk/guides/getting-started) | Complete tutorial from setup to first record |
+| [**Offchain Guide**](https://docs.astral.global/sdk/guides/offchain-workflow) | Creating signed records without blockchain |
+| [**Onchain Guide**](https://docs.astral.global/sdk/guides/onchain-workflow) | Storing records on blockchain |
+| [**Core Concepts**](https://docs.astral.global/core-concepts) | How location attestations work |
+| [**Quick Start**](https://docs.astral.global/sdk/quick-start) | Rapid setup guide |
 
 ## Development
 
-### Quick Setup
 ```bash
 # Clone and install
-git clone <repo-url>
+git clone https://github.com/DecentralizedGeo/astral-sdk
 cd astral-sdk
-pnpm install
+npm install
 
-# Copy environment template
-cp .env.example .env.local
+# Run tests
+npm test
 
-# Build and test
-pnpm build
-pnpm test
-```
-
-### Environment Variables
-```bash
-# Required for onchain testing
-TEST_PRIVATE_KEY=0x...     # Test wallet private key
-INFURA_API_KEY=...         # Get from infura.io
-
-# Optional
-ASTRAL_API_URL=...         # Custom API endpoint
-```
-
-### Commands
-```bash
-pnpm build      # Build the SDK
-pnpm test       # Run all tests  
-pnpm lint       # Check code style
-pnpm typecheck  # Verify TypeScript
-pnpm dev        # Watch mode
+# Build
+npm run build
 ```
 
 **→ See [Development Guide](https://docs.astral.global/sdk/guides/development) for contributing guidelines.**
+
+## What's the Location Protocol?
+
+Astral SDK implements the **Location Protocol** - an open standard for creating portable, verifiable location records. 
+
+The protocol defines:
+- How to structure location data so it's interoperable
+- How to sign records so others can verify them
+- How to include proof that location claims are accurate
+
+While our SDK uses Ethereum Attestation Service (EAS), the protocol itself works with any signing system. Records created with different tools can still verify each other.
 
 ## License
 
