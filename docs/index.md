@@ -1,11 +1,12 @@
 ---
-title: Astral SDK Documentation
+title: Introduction
 sidebar_position: 1
+sidebar_label: Introduction
 description: Create, store, and verify location attestations on any blockchain
-slug: /
+slug: /sdk/
 ---
 
-# Astral SDK Documentation
+# Introduction
 
 **Create, store, and verify location attestations on any blockchain.**
 
@@ -13,36 +14,35 @@ Astral SDK is a developer-friendly TypeScript library that makes location-based 
 
 ## Quick Navigation
 
-### 🚀 **Getting Started**
-- **[Core Concepts](./core-concepts/)** - Key terminology and concepts
-- **[Quick Start](./quick-start)** - 30-second example
-- **[Getting Started Guide](./guides/getting-started)** - Complete tutorial
+### → Getting Started
+- **[Core Concepts](/sdk/core-concepts)** - Key terminology and concepts
+- **[Quick Start](/sdk/quick-start)** - 30-second example
+- **[Getting Started Guide](/sdk/guides/getting-started)** - Complete tutorial
 
-### 📖 **Workflows** 
-- **[Offchain Workflow](./guides/offchain-workflow)** - Gasless EIP-712 signatures
-- **[Onchain Workflow](./guides/onchain-workflow)** - Permanent blockchain records
+### ◆ Workflows
+- **[Offchain Workflow](/sdk/guides/offchain-workflow)** - Gasless EIP-712 signatures
+- **[Onchain Workflow](/sdk/guides/onchain-workflow)** - Permanent blockchain records
 
-### 📚 **Reference**
-- **[API Reference](./api/reference)** - Complete method documentation
-- **[Examples Cookbook](./examples/cookbook)** - Real-world patterns
-- **[Developer Guide](./guides/development)** - Build and contribute
+### § Reference
+- **[SDK API Reference](/sdk/api)** - Complete method documentation
+- **[Extensions Guide](/sdk/extensions)** - Extension system overview
 
 ## Why Astral SDK?
 
-**🚀 Two ways to create location attestations:**
+### → Two ways to create location attestations
 - **Offchain**: Gasless EIP-712 signatures, instant verification
 - **Onchain**: Permanent blockchain registration with smart contract integration
 
-**📍 Universal location support:**
-- GeoJSON (Points, Polygons, Features) 
-- Decimal coordinates `[lng, lat]`
-- Well-Known Text (WKT)
-- H3 geospatial indexing
+### → Supported location formats
+- GeoJSON (Points, Polygons, Features) - ■ Available now
+- Decimal coordinates `[lng, lat]` - □ Coming soon
+- Well-Known Text (WKT) - □ Coming soon
+- H3 geospatial indexing - □ Coming soon
 
-**⚡ Multi-chain ready:**
+### → Multi-chain ready
 - Sepolia (testnet) • Base • Arbitrum • Celo
 
-**💫 Developer experience:**
+### → Developer experience
 - 100% TypeScript with full type safety
 - Clear workflow separation (no confusion)
 - Comprehensive docs and working examples
@@ -76,7 +76,7 @@ console.log('Attestation UID:', attestation.uid);
 
 ## What's Next?
 
-1. **New to location attestations?** Start with [Core Concepts](./core-concepts)
-2. **Want to build something?** Try the [Getting Started Guide](./guides/getting-started)
-3. **Need specific examples?** Check the [Examples Cookbook](./examples/cookbook)
-4. **Looking for a method?** See the [API Reference](./api/reference)
+1. **New to location attestations?** Start with [Core Concepts](/core-concepts)
+2. **Want to build something?** Try the [Getting Started Guide](/sdk/guides/getting-started)
+3. **Need reference docs?** See the [API Reference](/sdk/api)
+4. **Looking for extensions?** Check the [Extensions Guide](/sdk/extensions)

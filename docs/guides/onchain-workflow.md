@@ -11,10 +11,12 @@ Onchain attestations are permanently stored on the blockchain as EAS (Ethereum A
 ## Overview
 
 **What it is:** Location attestations registered as blockchain transactions using EAS contracts  
-**Gas cost:** Network-dependent (usually $1-10 on L2s, more on mainnet)  
+**Gas cost:** Network-dependent (usually $0.01-0.10 on L2s, more on mainnet)  
 **Speed:** Block confirmation time (seconds to minutes)  
 **Privacy:** Public by default (anyone can query)  
 **Use cases:** DeFi protocols, public records, smart contract integration, immutable proofs
+
+※ **Privacy Warning**: These transactions publish location data to a public blockchain. Make sure users understand and consent before signing.
 
 ## Core Workflow
 
@@ -669,8 +671,8 @@ async function createRestrictedAttestation(
 
 ## Next Steps
 
-- **[API Reference](api-reference.md)** - Complete method documentation
+- **[API Reference](/sdk/api)** - Complete method documentation
 - **[Offchain Workflow Guide](offchain-workflow.md)** - Learn about gasless attestations  
 - **[Examples Cookbook](examples.md)** - Real-world usage patterns
-- **[Extension System](extensions.md)** - Custom location formats and media types
-- **[Smart Contract Integration](smart-contracts.md)** - Advanced blockchain patterns
+- **[Extension System](/sdk/extensions)** - Custom location formats and media types
+- **[Smart Contract Integration](/sdk/api)** - Advanced blockchain patterns

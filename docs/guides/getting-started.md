@@ -41,13 +41,13 @@ yarn add @decentralized-geo/astral-sdk
 
 Astral SDK offers two distinct ways to create location attestations:
 
-**🔐 Offchain Workflow**
-- Uses EIP-712 signatures (like MetaMask message signing)
-- No gas costs, instant creation
-- Perfect for: apps with many users, private attestations, real-time features
+**→ Offchain Workflow**
+• Uses EIP-712 signatures (like MetaMask message signing)
+• No gas costs, instant creation
+• Perfect for: apps with many users, private attestations, real-time features
 
-**⛓️ Onchain Workflow** 
-- Creates permanent blockchain transactions
+**→ Onchain Workflow** 
+• Creates permanent blockchain transactions
 - Costs gas, takes time to confirm
 - Perfect for: smart contracts, public records, immutable proofs
 
@@ -360,9 +360,9 @@ Now that you've created your first location attestations, explore these advanced
 
 - **[Offchain Workflow Guide](offchain-workflow.md)** - Deep dive into gasless attestations
 - **[Onchain Workflow Guide](onchain-workflow.md)** - Blockchain integration patterns  
-- **[API Reference](api-reference.md)** - Complete method documentation
+- **[API Reference](/sdk/api)** - Complete method documentation
 - **[Examples Cookbook](examples.md)** - Real-world usage patterns
-- **[Extension System](extensions.md)** - Custom location formats and media types
+- **[Extension System](/sdk/extensions)** - Custom location formats and media types
 
 ## Common Issues & Solutions
 

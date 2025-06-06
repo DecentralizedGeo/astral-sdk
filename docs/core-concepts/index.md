@@ -1,6 +1,7 @@
 ---
-title: Core Concepts
+title: Introduction
 sidebar_position: 2
+sidebar_label: Introduction
 description: Essential concepts and terminology for working with location attestations
 slug: /core-concepts
 ---
@@ -13,9 +14,9 @@ Understanding these key concepts will help you work effectively with Astral SDK 
 
 **New to this area? Choose your background:**
 
-- **[Web3 Concepts](./web3)** - For geospatial developers who need blockchain context
-- **[Geospatial Concepts](./geospatial)** - For Web3 developers who need spatial data context  
-- **[Quick Start](./quick-start)** - Jump straight to code examples
+- **[Web3 Concepts](/sdk/core-concepts/web3)** - For geospatial developers who need blockchain context
+- **[Geospatial Concepts](/sdk/core-concepts/geospatial)** - For Web3 developers who need spatial data context  
+- **[Quick Start](/sdk/quick-start)** - Jump straight to code examples
 
 **Learn more about the protocol:** [Location Protocol Specification](https://easierdata.org/updates/2025/2025-05-19-location-protocol-spec)
 
@@ -36,7 +37,7 @@ All records are signed to ensure integrity and authorship, and can be shared pub
 
 Astral SDK provides **two distinct ways** to create location attestations, each optimized for different use cases:
 
-### 🔐 Offchain Workflow
+### → Offchain Workflow
 
 **What it is:** Location attestations signed with EIP-712 (like MetaMask message signing)
 
@@ -52,12 +53,12 @@ Build Attestation → Sign with Wallet → Optionally Publish
 ```
 
 **Key characteristics:**
-- ✅ **Free** - No blockchain transactions or gas costs
-- ✅ **Instant** - Created immediately without waiting
-- ✅ **Private** - Only you have it until you choose to publish
-- ✅ **Verifiable** - Cryptographically signed and provable
+• **Free** - No blockchain transactions or gas costs
+• **Instant** - Created immediately without waiting
+• **Private** - Only you have it until you choose to publish
+• **Verifiable** - Cryptographically signed and provable
 
-### ⛓️ Onchain Workflow  
+### → Onchain Workflow  
 
 **What it is:** Location attestations registered as blockchain transactions
 
@@ -73,10 +74,12 @@ Build Attestation → Submit Transaction → Permanent Blockchain Record
 ```
 
 **Key characteristics:**
-- ✅ **Permanent** - Stored on blockchain forever
-- ✅ **Public** - Anyone can verify and query
-- ✅ **Smart contract ready** - Directly accessible by contracts
-- ✅ **Immutable** - Cannot be altered once created
+• **Permanent** - Stored on blockchain forever
+• **Public** - Anyone can verify and query
+• **Smart contract ready** - Directly accessible by contracts
+• **Immutable** - Cannot be altered once created
+
+※ **Privacy Notice**: Onchain transactions publish location data to a public blockchain. Ensure users understand and consent before signing.
 
 :::info Important
 These workflows create **different attestation types** with unique identifiers. An offchain attestation cannot be "converted" to onchain while preserving its identity.
@@ -156,9 +159,11 @@ Support various file types for media attachments (images, video, audio, document
 ### Location Proof Extensions
 Enable attachment of supporting evidence to validate spatial claims (coming soon).
 
-Learn more in the [Extension System Guide](./guides/extensions).
+Learn more in the [Extension System Guide](/sdk/extensions).
 
 ## Verification & Trust
+
+※ **Important**: Current verification checks cryptographic signatures and data integrity only. Location Proof extensions (coming soon) will add evidence of truthfulness such as GPS sensor proofs.
 
 ### Offchain Verification
 Offchain attestations are verified by checking the EIP-712 signature:
@@ -182,7 +187,7 @@ if (result.isValid && !result.revoked) {
 
 ## Ethereum Attestation Service (EAS)
 
-Astral SDK is a **reference implementation** of the Location Protocol, built on top of [EAS](https://attest.sh/) (Ethereum Attestation Service). The Location Protocol itself is implementation-agnostic - any system that follows the specification can produce compatible records.
+Astral SDK is an SDK **for working with** the reference implementation of the Location Protocol, built on top of [EAS](https://attest.sh/) (Ethereum Attestation Service). The Location Protocol itself is implementation-agnostic - any system that follows the specification can produce compatible records.
 
 **Why EAS for the reference implementation:**
 - **Standardized format** - Established attestation framework
@@ -272,15 +277,15 @@ const onchainAttestation = await sdk.createOnchainLocationAttestation(data);
 Now that you understand the core concepts:
 
 **Need more context?**
-- **[Web3 Concepts](./web3)** - Blockchain, signatures, and verification for geospatial developers  
-- **[Geospatial Concepts](./geospatial)** - Spatial data and coordinate systems for Web3 developers
+- **[Web3 Concepts](/sdk/core-concepts/web3)** - Blockchain, signatures, and verification for geospatial developers  
+- **[Geospatial Concepts](/sdk/core-concepts/geospatial)** - Spatial data and coordinate systems for Web3 developers
 
 **Ready to build?**
-1. **[Quick Start](./quick-start)** - 30-second working example
-2. **[Getting Started Guide](./guides/getting-started)** - Complete tutorial with setup
-3. **[Workflow Guides](./guides/getting-started#workflows)** - Deep dives into offchain and onchain patterns
-4. **[Examples Cookbook](./examples/cookbook)** - Real-world usage patterns
+1. **[Quick Start](/sdk/quick-start)** - 30-second working example
+2. **[Getting Started Guide](/sdk/guides/getting-started)** - Complete tutorial with setup
+3. **[Workflow Guides](/sdk/guides/getting-started#workflows)** - Deep dives into offchain and onchain patterns
+4. **[Extensions Guide](/sdk/extensions)** - Extension system overview
 
 **Reference materials:**
 - **[Location Protocol Specification](https://easierdata.org/updates/2025/2025-05-19-location-protocol-spec)** - Full protocol details
-- **[API Reference](./api/reference)** - Complete method documentation
+- **[API Reference](/sdk/api)** - Complete method documentation
