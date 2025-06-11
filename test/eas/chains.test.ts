@@ -18,9 +18,9 @@ import {
   getSupportedChainNames,
   getSchemaConfig,
   getSchemaUID,
-  EASConfig,
 } from '../../src/eas/chains';
 import { ChainConnectionError } from '../../src/core/errors';
+import { EASConfig } from '@/core/config';
 
 // Mock the configuration for testing
 const mockConfig: EASConfig = {
