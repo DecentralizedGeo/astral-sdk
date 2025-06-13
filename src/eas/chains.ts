@@ -24,7 +24,7 @@ let cachedConfig: EASConfig | null = null;
 /**
  * Loads the EAS configuration from the config file
  *
- * @param configPath - Optional custom path to the config file
+ * @param configPath - Optional custom path to the config file (defaults to null, which uses the default EAS_CONFIG)
  * @returns The parsed EAS configuration
  * @throws {ChainConnectionError} If the config file cannot be loaded or parsed
  */
