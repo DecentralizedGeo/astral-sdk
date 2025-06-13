@@ -9,45 +9,14 @@
  */
 
 import * as fs from 'fs';
-import * as path from 'path';
 import { ChainConnectionError } from '../core/errors';
-
-/**
- * Interface for EAS schema configuration
- */
-export interface EASSchemaConfig {
-  interface: Record<string, string>;
-  rawString: string;
-}
-
-/**
- * Interface for EAS chain configuration
- */
-export interface EASChainConfig {
-  chain: string;
-  deploymentBlock: number;
-  rpcUrl: string;
-  easContractAddress: string;
-  schemaUID: string;
-}
-
-/**
- * Interface for version-specific EAS configuration
- */
-export interface EASVersionConfig {
-  schema: EASSchemaConfig;
-  chains: Record<string, EASChainConfig>;
-}
-
-/**
- * Complete EAS configuration with version support
- */
-export interface EASConfig {
-  [version: string]: EASVersionConfig;
-}
-
-// Default path to the EAS configuration file
-const CONFIG_PATH = path.resolve(process.cwd(), 'config', 'EAS-config.json');
+import {
+  EAS_CONFIG,
+  EASChainConfig,
+  EASConfig,
+  EASSchemaConfig,
+  EASVersionConfig,
+} from '@/core/config';
 
 // Cache the loaded configuration
 let cachedConfig: EASConfig | null = null;
@@ -55,11 +24,13 @@ let cachedConfig: EASConfig | null = null;
 /**
  * Loads the EAS configuration from the config file
  *
- * @param configPath - Optional custom path to the config file
+ * @param configPath - Optional custom path to the config file (defaults to null, which uses the default EAS_CONFIG)
  * @returns The parsed EAS configuration
  * @throws {ChainConnectionError} If the config file cannot be loaded or parsed
  */
-export function loadEASConfig(configPath: string = CONFIG_PATH): EASConfig {
+export function loadEASConfig(configPath: string | null = null): EASConfig {
+  if (!configPath) return EAS_CONFIG;
+
   // Return cached config if available and not in test mode
   if (cachedConfig !== null && process.env.NODE_ENV !== 'test') {
     return cachedConfig;

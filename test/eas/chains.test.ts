@@ -18,9 +18,9 @@ import {
   getSupportedChainNames,
   getSchemaConfig,
   getSchemaUID,
-  EASConfig,
 } from '../../src/eas/chains';
 import { ChainConnectionError } from '../../src/core/errors';
+import { EASConfig } from '@/core/config';
 
 // Mock the configuration for testing
 const mockConfig: EASConfig = {
@@ -41,11 +41,11 @@ const mockConfig: EASConfig = {
         'uint256 eventTimestamp,string srs,string locationType,string location,string[] recipeType,bytes[] recipePayload,string[] mediaType,string[] mediaData,string memo',
     },
     chains: {
-      '11155111': {
-        chain: 'sepolia',
-        deploymentBlock: 6269763,
-        rpcUrl: 'https://sepolia.infura.io/v3/',
-        easContractAddress: '0xC2679fBD37d54388Ce493F1DB75320D236e1815e',
+      '42220': {
+        chain: 'celo',
+        deploymentBlock: 26901063,
+        rpcUrl: 'https://celo-mainnet.infura.io/v3/',
+        easContractAddress: '0x72E1d8ccf5299fb36fEfD8CC4394B8ef7e98Af92',
         schemaUID: '0xba4171c92572b1e4f241d044c32cdf083be9fd946b8766977558ca6378c824e2',
       },
       '42161': {
@@ -55,26 +55,6 @@ const mockConfig: EASConfig = {
         easContractAddress: '0xbD75f629A22Dc1ceD33dDA0b68c546A1c035c458',
         schemaUID: '0xba4171c92572b1e4f241d044c32cdf083be9fd946b8766977558ca6378c824e2',
       },
-    },
-  },
-  'v0.2': {
-    schema: {
-      interface: {
-        eventTimestamp: 'uint256',
-        srs: 'string',
-        locationType: 'string',
-        location: 'string',
-        recipeType: 'string[]',
-        recipePayload: 'bytes[]',
-        mediaType: 'string[]',
-        mediaData: 'string[]',
-        memo: 'string',
-        extra: 'string',
-      },
-      rawString:
-        'uint256 eventTimestamp,string srs,string locationType,string location,string[] recipeType,bytes[] recipePayload,string[] mediaType,string[] mediaData,string memo,string extra',
-    },
-    chains: {
       '11155111': {
         chain: 'sepolia',
         deploymentBlock: 6269763,
@@ -125,8 +105,7 @@ describe('EAS Chain Configuration', () => {
     it('should load and parse the configuration file', () => {
       const config = loadEASConfig();
 
-      expect(fs.readFileSync).toHaveBeenCalled();
-      expect(config).toEqual(mockConfig);
+      expect(JSON.stringify(config)).toEqual(JSON.stringify(mockConfig));
     });
 
     it('should throw ChainConnectionError if the file cannot be read', () => {
@@ -134,8 +113,8 @@ describe('EAS Chain Configuration', () => {
         throw new Error('File not found');
       });
 
-      expect(() => loadEASConfig()).toThrow(ChainConnectionError);
-      expect(() => loadEASConfig()).toThrow('Failed to load EAS configuration');
+      expect(() => loadEASConfig('./invaliddir')).toThrow(ChainConnectionError);
+      expect(() => loadEASConfig('./invaliddir')).toThrow('Failed to load EAS configuration');
     });
   });
 
@@ -143,7 +122,7 @@ describe('EAS Chain Configuration', () => {
     it('should return the latest version configuration', () => {
       const versionConfig = getLatestVersionConfig(mockConfig);
 
-      expect(versionConfig).toEqual(mockConfig['v0.2']);
+      expect(versionConfig).toEqual(mockConfig['v0.1']);
     });
 
     it('should throw ChainConnectionError if no versions are available', () => {
@@ -171,7 +150,7 @@ describe('EAS Chain Configuration', () => {
     it('should return the configuration for a specific chain ID', () => {
       const chainConfig = getChainConfig(11155111);
 
-      expect(chainConfig).toEqual(mockConfig['v0.2'].chains['11155111']);
+      expect(chainConfig).toEqual(mockConfig['v0.1'].chains['11155111']);
     });
 
     it('should return the configuration for a specific chain ID and version', () => {
@@ -190,13 +169,13 @@ describe('EAS Chain Configuration', () => {
     it('should return the configuration for a specific chain name', () => {
       const chainConfig = getChainConfigByName('sepolia');
 
-      expect(chainConfig).toEqual(mockConfig['v0.2'].chains['11155111']);
+      expect(chainConfig).toEqual(mockConfig['v0.1'].chains['11155111']);
     });
 
     it('should be case-insensitive when matching chain names', () => {
       const chainConfig = getChainConfigByName('SePoLiA');
 
-      expect(chainConfig).toEqual(mockConfig['v0.2'].chains['11155111']);
+      expect(chainConfig).toEqual(mockConfig['v0.1'].chains['11155111']);
     });
 
     it('should throw ChainConnectionError if the chain name is not supported', () => {
@@ -213,7 +192,7 @@ describe('EAS Chain Configuration', () => {
     });
 
     it('should be case-insensitive when matching chain names', () => {
-      const chainId = getChainId('BaSe', 'v0.2');
+      const chainId = getChainId('BaSe', 'v0.1');
 
       expect(chainId).toBe(8453);
     });
@@ -248,7 +227,7 @@ describe('EAS Chain Configuration', () => {
       const chainIds = getSupportedChainIds();
 
       // IDs should be returned in ascending order
-      expect(chainIds).toEqual([8453, 11155111]);
+      expect(chainIds).toEqual([8453, 42161, 42220, 11155111]);
     });
 
     it('should return all supported chain IDs for a specific version', () => {
@@ -257,7 +236,7 @@ describe('EAS Chain Configuration', () => {
       // Since we're testing with mock data, we should expect what's in the mock, not the real config
       expect(chainIds).toContain(11155111);
       expect(chainIds).toContain(42161);
-      expect(chainIds.length).toBe(2);
+      expect(chainIds.length).toBe(4);
     });
   });
 
@@ -266,14 +245,14 @@ describe('EAS Chain Configuration', () => {
       const chainNames = getSupportedChainNames();
 
       // Names should be alphabetically sorted
-      expect(chainNames).toEqual(['base', 'sepolia']);
+      expect(chainNames).toEqual(['arbitrum', 'base', 'celo', 'sepolia']);
     });
 
     it('should return all supported chain names for a specific version', () => {
       const chainNames = getSupportedChainNames('v0.1');
 
       // Names should be alphabetically sorted
-      expect(chainNames).toEqual(['arbitrum', 'sepolia']);
+      expect(chainNames).toEqual(['arbitrum', 'base', 'celo', 'sepolia']);
     });
   });
 
@@ -281,7 +260,7 @@ describe('EAS Chain Configuration', () => {
     it('should return the schema configuration for the latest version', () => {
       const schemaConfig = getSchemaConfig();
 
-      expect(schemaConfig).toEqual(mockConfig['v0.2'].schema);
+      expect(schemaConfig).toEqual(mockConfig['v0.1'].schema);
     });
 
     it('should return the schema configuration for a specific version', () => {
