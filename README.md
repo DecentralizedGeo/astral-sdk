@@ -42,11 +42,15 @@ npm install @decentralized-geo/astral-sdk
 
 ```typescript
 import { AstralSDK } from '@decentralized-geo/astral-sdk';
+import { Wallet } from 'ethers';
 
-// Connect to your wallet
+// Create a test wallet (for production, use your actual wallet)
+const privateKey = Wallet.createRandom().privateKey;
+const wallet = new Wallet(privateKey);
+
+// Initialize SDK with the signer
 const sdk = new AstralSDK({ 
-  provider: window.ethereum,
-  chainId: 11155111 // Sepolia testnet
+  signer: wallet
 });
 
 // Create a signed location record
@@ -80,8 +84,19 @@ if (result.isValid) {
 ### Store records permanently on blockchain
 
 ```typescript
+import { JsonRpcProvider } from 'ethers';
+
+// For blockchain storage, you need a provider
+const provider = new JsonRpcProvider('https://sepolia.infura.io/v3/YOUR_INFURA_KEY');
+const walletWithProvider = wallet.connect(provider);
+
+const sdkWithProvider = new AstralSDK({
+  signer: walletWithProvider,
+  chainId: 11155111 // Sepolia testnet
+});
+
 // Same API, but stores on blockchain forever
-const onchainRecord = await sdk.createOnchainLocationAttestation({
+const onchainRecord = await sdkWithProvider.createOnchainLocationAttestation({
   location: {
     type: 'Polygon',
     coordinates: [[
