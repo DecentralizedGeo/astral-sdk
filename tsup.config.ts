@@ -1,11 +1,7 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: [
-    'src/index.ts',
-    'src/offchain/index.ts',
-    'src/onchain/index.ts',
-  ],
+  entry: ['src/index.ts', 'src/offchain/index.ts', 'src/onchain/index.ts'],
   format: ['cjs', 'esm'],
   dts: true,
   splitting: false,
@@ -13,4 +9,6 @@ export default defineConfig({
   clean: true,
   treeshake: true,
   minify: false,
+  platform: 'neutral',
+  shims: false,
 });
