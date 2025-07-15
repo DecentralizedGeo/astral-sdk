@@ -116,6 +116,24 @@ describe('EAS Chain Configuration', () => {
       expect(() => loadEASConfig('./invaliddir')).toThrow(ChainConnectionError);
       expect(() => loadEASConfig('./invaliddir')).toThrow('Failed to load EAS configuration');
     });
+
+    it('should throw appropriate error in browser environment', () => {
+      // Save original window object
+      const originalWindow = global.window;
+
+      // Mock browser environment
+      global.window = {} as Window & typeof globalThis;
+
+      try {
+        expect(() => loadEASConfig('./some-path')).toThrow(ChainConnectionError);
+        expect(() => loadEASConfig('./some-path')).toThrow(
+          'Custom configuration paths are not supported in browser environments'
+        );
+      } finally {
+        // Restore original window object
+        global.window = originalWindow;
+      }
+    });
   });
 
   describe('getLatestVersionConfig', () => {

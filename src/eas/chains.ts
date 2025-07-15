@@ -8,7 +8,6 @@
  * and provides utilities for working with EAS contracts on different chains.
  */
 
-import * as fs from 'fs';
 import { ChainConnectionError } from '../core/errors';
 import {
   EAS_CONFIG,
@@ -36,15 +35,28 @@ export function loadEASConfig(configPath: string | null = null): EASConfig {
     return cachedConfig;
   }
 
-  try {
-    // Read and parse the configuration file
-    const configData = fs.readFileSync(configPath, 'utf-8');
-    cachedConfig = JSON.parse(configData) as EASConfig;
-    return cachedConfig;
-  } catch (error) {
+  // Only import fs when needed (for Node.js environments)
+  if (typeof window === 'undefined') {
+    try {
+      // Dynamic import for Node.js environments only
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const fs = require('fs') as typeof import('fs');
+      // Read and parse the configuration file
+      const configData = fs.readFileSync(configPath, 'utf-8');
+      cachedConfig = JSON.parse(configData) as EASConfig;
+      return cachedConfig;
+    } catch (error) {
+      throw new ChainConnectionError(
+        `Failed to load EAS configuration from ${configPath}`,
+        error instanceof Error ? error : undefined,
+        { configPath }
+      );
+    }
+  } else {
+    // In browser environments, custom config paths are not supported
     throw new ChainConnectionError(
-      `Failed to load EAS configuration from ${configPath}`,
-      error instanceof Error ? error : undefined,
+      'Custom configuration paths are not supported in browser environments',
+      undefined,
       { configPath }
     );
   }
