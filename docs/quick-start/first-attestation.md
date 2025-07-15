@@ -14,16 +14,23 @@ Start with an offchain attestation - no blockchain fees required:
 
 ```typescript
 import { AstralSDK } from '@decentralized-geo/astral-sdk';
+import { Wallet } from 'ethers';
+
+// Create a test wallet (for production, use your actual wallet)
+const privateKey = Wallet.createRandom().privateKey;
+const wallet = new Wallet(privateKey);
 
 // Initialize SDK
 const sdk = new AstralSDK({ 
-  provider: window.ethereum,
-  defaultChain: 'sepolia' 
+  signer: wallet
 });
 
 // Create attestation
 const attestation = await sdk.createOffchainLocationAttestation({
-  location: [-0.163808, 51.5101], // [lng, lat]
+  location: {
+    type: 'Point',
+    coordinates: [-0.163808, 51.5101] // [lng, lat]
+  },
   memo: 'Westminster Bridge, London'
 });
 
