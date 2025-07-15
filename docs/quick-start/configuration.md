@@ -10,15 +10,19 @@ Connect the SDK to your Web3 wallet and choose your network.
 
 ## Basic Configuration
 
-The simplest setup uses your browser wallet:
+The simplest setup creates a test wallet:
 
 ```typescript
 import { AstralSDK } from '@decentralized-geo/astral-sdk';
+import { Wallet } from 'ethers';
 
-// Connect to browser wallet (MetaMask, etc.)
+// Create a test wallet (for production, use your actual wallet)
+const privateKey = Wallet.createRandom().privateKey;
+const wallet = new Wallet(privateKey);
+
+// Initialize SDK with the signer
 const sdk = new AstralSDK({ 
-  provider: window.ethereum,
-  defaultChain: 'sepolia' // testnet for development
+  signer: wallet
 });
 ```
 
@@ -39,10 +43,10 @@ type SupportedChain =
 ```typescript
 const sdk = new AstralSDK({
   // Required
-  provider: window.ethereum,          // Web3 provider
+  signer: wallet,                    // Wallet signer
   
   // Optional
-  defaultChain: 'sepolia',           // Default: 'sepolia'
+  chainId: 11155111,                 // Chain ID (11155111 = Sepolia)
   apiUrl: 'https://api.astral.com',  // Custom API endpoint
   debug: true                        // Enable debug logging
 });
@@ -50,26 +54,28 @@ const sdk = new AstralSDK({
 
 ## Provider Options
 
-### Browser Wallet (Recommended)
+### For Offchain Attestations (No Gas)
 
 ```typescript
-// MetaMask or other injected wallets
+// Simple wallet without provider - perfect for offchain attestations
+const wallet = new Wallet(privateKey);
 const sdk = new AstralSDK({ 
-  provider: window.ethereum 
+  signer: wallet 
 });
 ```
 
-### Custom Provider
+### For Onchain Attestations (Requires Gas)
 
 ```typescript
-import { ethers } from 'ethers';
+import { JsonRpcProvider } from 'ethers';
 
-// Using ethers.js provider
-const provider = new ethers.JsonRpcProvider('https://rpc.sepolia.org');
-const signer = new ethers.Wallet(privateKey, provider);
+// Connect wallet to provider for blockchain transactions
+const provider = new JsonRpcProvider('https://sepolia.infura.io/v3/YOUR_KEY');
+const walletWithProvider = wallet.connect(provider);
 
 const sdk = new AstralSDK({ 
-  provider: signer 
+  signer: walletWithProvider,
+  chainId: 11155111 // Sepolia
 });
 ```
 
