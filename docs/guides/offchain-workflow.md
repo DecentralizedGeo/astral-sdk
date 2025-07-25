@@ -38,9 +38,16 @@ import { ethers } from 'ethers';
 const provider = new ethers.BrowserProvider(window.ethereum);
 const signer = await provider.getSigner();
 
+// Option 1: Using chain name (e.g., 'sepolia', 'celo', 'arbitrum', 'base')
 const sdk = new AstralSDK({
   signer,
   defaultChain: 'sepolia'
+});
+
+// Option 2: Using chain ID directly (recommended for explicit chain selection)
+const sdkCelo = new AstralSDK({
+  signer,
+  chainId: 42220  // Celo mainnet
 });
 
 // Create attestation (builds + signs in one step)
@@ -225,6 +232,44 @@ const mediaAttestation = await sdk.createOffchainLocationAttestation({
 
 console.log('Media types attached:', mediaAttestation.mediaType);
 ```
+
+## Supported Chains
+
+The SDK supports creating offchain attestations for the following chains:
+
+| Chain | Chain ID | Chain Name | Contract Address |
+|-------|----------|------------|------------------|
+| Sepolia | 11155111 | `sepolia` | 0xC2679fBD37d54388Ce493F1DB75320D236e1815e |
+| Celo | 42220 | `celo` | 0x72E1d8ccf5299fb36fEfD8CC4394B8ef7e98Af92 |
+| Arbitrum | 42161 | `arbitrum` | 0xbD75f629A22Dc1ceD33dDA0b68c546A1c035c458 |
+| Base | 8453 | `base` | 0x4200000000000000000000000000000000000021 |
+
+### Configuring Chains
+
+```typescript
+// Using chain ID (recommended for explicit control)
+const sdkCelo = new AstralSDK({
+  signer,
+  chainId: 42220
+});
+
+// Using chain name
+const sdkBase = new AstralSDK({
+  signer,
+  defaultChain: 'base'
+});
+```
+
+> **⚠️ Important: Chain ID Precedence**  
+> If both `chainId` and `defaultChain` are provided, **`chainId` takes precedence**:
+> ```typescript
+> const sdk = new AstralSDK({
+>   signer,
+>   chainId: 42220,         // ✅ This will be used
+>   defaultChain: 'sepolia' // ⚠️ This will be ignored
+> });
+> ```
+> In debug mode, the SDK will log a warning when both are provided.
 
 ## Verification Patterns
 

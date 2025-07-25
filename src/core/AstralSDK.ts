@@ -26,7 +26,7 @@ import { SchemaValue } from '../eas/SchemaEncoder';
 import { CustomSchemaExtensionOptions } from '../extensions/schema/helpers';
 import { OffchainSigner } from '../eas/OffchainSigner';
 import { OnchainRegistrar } from '../eas/OnchainRegistrar';
-import { getChainId } from '../eas/chains';
+import { getChainId, getChainName } from '../eas/chains';
 
 /**
  * AstralSDK is the main entry point for the Astral SDK.
@@ -90,8 +90,19 @@ export class AstralSDK {
    * @private
    */
   private initializeOffchainSigner(): void {
-    // Get chain ID from the chain name or use default
-    const chainId = getChainId(this.config.defaultChain || 'sepolia');
+    // Get chain ID from config, defaulting to chainId if provided, otherwise derive from defaultChain
+    let chainId: number;
+    if (this.config.chainId) {
+      chainId = this.config.chainId;
+      // Log warning if both chainId and defaultChain are provided
+      if (this.config.defaultChain && this.debug) {
+        console.log(
+          `Both chainId (${this.config.chainId}) and defaultChain (${this.config.defaultChain}) provided. Using chainId.`
+        );
+      }
+    } else {
+      chainId = getChainId(this.config.defaultChain || 'sepolia');
+    }
 
     try {
       this.offchainSigner = new OffchainSigner({
@@ -100,10 +111,13 @@ export class AstralSDK {
       });
 
       if (this.debug) {
-        // Debug: OffchainSigner initialized for chain ${chainId} (${this.config.defaultChain})
+        const chainName = this.config.defaultChain || getChainName(chainId);
+        console.log(`OffchainSigner initialized for chain ${chainId} (${chainName})`);
       }
     } catch (error) {
-      // Warning: Failed to initialize OffchainSigner
+      if (this.debug) {
+        console.warn('Failed to initialize OffchainSigner:', error);
+      }
     }
   }
 
@@ -140,7 +154,19 @@ export class AstralSDK {
     if (!this.offchainSigner) {
       // If we don't have an OffchainSigner, try to initialize one with options
       if (options && (options.signer || options.privateKey)) {
-        const chainId = getChainId(this.config.defaultChain || 'sepolia');
+        // Get chain ID from config, defaulting to chainId if provided, otherwise derive from defaultChain
+        let chainId: number;
+        if (this.config.chainId) {
+          chainId = this.config.chainId;
+          // Log warning if both chainId and defaultChain are provided
+          if (this.config.defaultChain && this.debug) {
+            console.log(
+              `Both chainId (${this.config.chainId}) and defaultChain (${this.config.defaultChain}) provided. Using chainId.`
+            );
+          }
+        } else {
+          chainId = getChainId(this.config.defaultChain || 'sepolia');
+        }
         this.offchainSigner = new OffchainSigner({
           signer: options.signer,
           privateKey: options.privateKey,
