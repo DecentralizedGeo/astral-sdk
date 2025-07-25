@@ -128,17 +128,33 @@ export class AstralSDK {
    */
   private initializeOnchainRegistrar(): void {
     try {
+      // Get chain name from chainId if provided, otherwise use defaultChain
+      let chain: string;
+      if (this.config.chainId) {
+        chain = getChainName(this.config.chainId);
+        // Log warning if both chainId and defaultChain are provided
+        if (this.config.defaultChain && this.debug) {
+          console.log(
+            `Both chainId (${this.config.chainId}) and defaultChain (${this.config.defaultChain}) provided. Using chainId.`
+          );
+        }
+      } else {
+        chain = this.config.defaultChain || 'sepolia';
+      }
+
       this.onchainRegistrar = new OnchainRegistrar({
         provider: this.config.provider,
         signer: this.config.signer,
-        chain: this.config.defaultChain || 'sepolia',
+        chain,
       });
 
       if (this.debug) {
-        // console.log(`OnchainRegistrar initialized for chain ${this.config.defaultChain}`);
+        console.log(`OnchainRegistrar initialized for chain ${chain}`);
       }
     } catch (error) {
-      // Warning: Failed to initialize OnchainRegistrar
+      if (this.debug) {
+        console.warn('Failed to initialize OnchainRegistrar:', error);
+      }
     }
   }
 

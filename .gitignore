@@ -47,3 +47,4 @@ coverage
 # Package files (keep clean for publishing)
 *.tgz
 test-install/
+tmp/
