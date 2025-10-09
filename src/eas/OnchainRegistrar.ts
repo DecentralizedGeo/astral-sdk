@@ -79,6 +79,12 @@ export class OnchainRegistrar {
         const chainConfig = getChainConfig(this.chainId);
         this.contractAddress = chainConfig.easContractAddress;
         this.schemaUID = config.schemaUID || getSchemaUID(this.chainId);
+      } else if (config.chain === 'optimism') {
+        this.chainId = 10;
+        this.chainName = 'optimism';
+        const chainConfig = getChainConfig(this.chainId);
+        this.contractAddress = chainConfig.easContractAddress;
+        this.schemaUID = config.schemaUID || getSchemaUID(this.chainId);
       } else {
         // For real implementation we'd look up the chain in the config
         try {
@@ -188,6 +194,8 @@ export class OnchainRegistrar {
             this.chainName = 'arbitrum';
           } else if (this.chainId === 8453) {
             this.chainName = 'base';
+          } else if (this.chainId === 10) {
+            this.chainName = 'optimism';
           } else {
             this.chainName = `chain-${this.chainId}`;
           }
