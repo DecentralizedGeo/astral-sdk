@@ -1,5 +1,11 @@
 # @decentralized-geo/astral-sdk
 
+## 0.1.4
+
+### Patch Changes
+
+- fe33323: Add Optimism Mainnet support. The SDK now works with Optimism (chain ID: 10) using the same Location Protocol schema deployed at block 142210865.
+
 ## 0.1.3
 
 ### Patch Changes
