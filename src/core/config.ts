@@ -78,6 +78,13 @@ export const EAS_CONFIG: EASConfig = {
         easContractAddress: '0x4200000000000000000000000000000000000021',
         schemaUID: '0xba4171c92572b1e4f241d044c32cdf083be9fd946b8766977558ca6378c824e2',
       },
+      '10': {
+        chain: 'optimism',
+        deploymentBlock: 142210865,
+        rpcUrl: 'https://optimism-mainnet.infura.io/v3/',
+        easContractAddress: '0x4200000000000000000000000000000000000021',
+        schemaUID: '0xba4171c92572b1e4f241d044c32cdf083be9fd946b8766977558ca6378c824e2',
+      },
     },
   },
 };
