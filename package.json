@@ -1,6 +1,6 @@
 {
   "name": "@decentralized-geo/astral-sdk",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Astral Location Protocol SDK",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
