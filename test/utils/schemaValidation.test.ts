@@ -367,6 +367,133 @@ describe('getSchemaFieldNames', () => {
   });
 });
 
+describe('edge cases', () => {
+  describe('field name edge cases', () => {
+    test('should reject field names with hyphens', () => {
+      const result = validateLocationProtocolSchema('string field-name');
+      expect(result.valid).toBe(false);
+      expect(result.errors.some(e => e.includes('Invalid field name'))).toBe(true);
+    });
+
+    test('should reject field names with special characters', () => {
+      const result = validateLocationProtocolSchema('string field@name');
+      expect(result.valid).toBe(false);
+    });
+
+    test('should reject field names with unicode characters', () => {
+      const result = validateLocationProtocolSchema('string fieldñame');
+      expect(result.valid).toBe(false);
+    });
+  });
+
+  describe('comma handling', () => {
+    test('should handle trailing comma as invalid', () => {
+      const result = parseSchemaString('uint256 a,string b,');
+      expect(result).toBeNull();
+    });
+
+    test('should handle leading comma as invalid', () => {
+      const result = parseSchemaString(',uint256 a,string b');
+      expect(result).toBeNull();
+    });
+
+    test('should handle multiple consecutive commas as invalid', () => {
+      const result = parseSchemaString('uint256 a,,string b');
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('whitespace handling', () => {
+    test('should handle tab characters in field definitions', () => {
+      const fields = parseSchemaString('uint256\teventTimestamp,string\tsrs');
+      expect(fields).not.toBeNull();
+      expect(fields).toHaveLength(2);
+    });
+
+    test('should handle mixed whitespace', () => {
+      const fields = parseSchemaString('uint256 \t eventTimestamp , \t string \t srs');
+      expect(fields).not.toBeNull();
+      expect(fields).toHaveLength(2);
+    });
+  });
+
+  describe('type validation edge cases', () => {
+    test('should accept all bytes variants (bytes1 through bytes32)', () => {
+      for (let i = 1; i <= 32; i++) {
+        const result = validateLocationProtocolSchema(`bytes${i} testField`);
+        expect(result.valid).toBe(true);
+        expect(result.errors).toHaveLength(0);
+      }
+    });
+
+    test('should reject malformed array syntax (missing bracket)', () => {
+      const result = validateLocationProtocolSchema('uint256[ field');
+      expect(result.valid).toBe(false);
+      expect(result.errors.some(e => e.includes('Invalid Solidity type'))).toBe(true);
+    });
+
+    test('should reject multi-dimensional arrays', () => {
+      const result = validateLocationProtocolSchema('uint256[][] field');
+      expect(result.valid).toBe(false);
+      expect(result.errors.some(e => e.includes('Invalid Solidity type'))).toBe(true);
+    });
+
+    test('should reject fixed-size arrays', () => {
+      const result = validateLocationProtocolSchema('uint256[10] field');
+      expect(result.valid).toBe(false);
+      expect(result.errors.some(e => e.includes('Invalid Solidity type'))).toBe(true);
+    });
+
+    test('should reject empty array type', () => {
+      const result = validateLocationProtocolSchema('[] field');
+      expect(result.valid).toBe(false);
+    });
+  });
+
+  describe('input length validation', () => {
+    test('should reject extremely long schemas', () => {
+      // Create a schema string longer than 10000 characters
+      const longSchema = 'string ' + 'a'.repeat(10001);
+      const result = validateLocationProtocolSchema(longSchema);
+      expect(result.valid).toBe(false);
+    });
+
+    test('should accept schemas just under the limit', () => {
+      // Create a valid schema close to but under the limit
+      const fields = [];
+      for (let i = 0; i < 100; i++) {
+        fields.push(`string field${i}`);
+      }
+      const schema = fields.join(',');
+      expect(schema.length).toBeLessThan(10000);
+      const result = validateLocationProtocolSchema(schema);
+      expect(result.valid).toBe(true);
+    });
+  });
+
+  describe('duplicate detection performance', () => {
+    test('should efficiently detect duplicates in large schemas', () => {
+      // Create a schema with many fields including duplicates
+      const fields = [];
+      for (let i = 0; i < 50; i++) {
+        fields.push(`string field${i}`);
+      }
+      // Add a duplicate
+      fields.push('string field25');
+      const schema = fields.join(',');
+
+      const start = Date.now();
+      const result = validateLocationProtocolSchema(schema);
+      const elapsed = Date.now() - start;
+
+      expect(result.valid).toBe(false);
+      expect(result.errors.some(e => e.includes('Duplicate field names'))).toBe(true);
+      // Should complete quickly (under 100ms for 50 fields)
+      expect(elapsed).toBeLessThan(100);
+    });
+  });
+});
+
 describe('integration with actual EAS schemas', () => {
   test('should validate the actual v0.1 Location Protocol schema', () => {
     // This is the actual schema deployed on-chain
@@ -392,5 +519,17 @@ describe('integration with actual EAS schemas', () => {
     expect(result.version).toBe(2);
     expect(result.conformant).toBe(true);
     expect(result.fields).toHaveLength(7);
+  });
+
+  test('should validate against deployed schema from config', () => {
+    // Import the actual config to validate the deployed schema
+    const deployedSchema =
+      'uint256 eventTimestamp,string srs,string locationType,string location,string[] recipeType,bytes[] recipePayload,string[] mediaType,string[] mediaData,string memo';
+
+    const result = validateLocationProtocolSchema(deployedSchema);
+
+    expect(result.valid).toBe(true);
+    expect(result.conformant).toBe(true);
+    expect(result.version).toBe(1);
   });
 });
