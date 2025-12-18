@@ -99,15 +99,46 @@ const VALID_SOLIDITY_TYPES = new Set([
   'bool',
   'string',
   'bytes',
-  // Fixed-size bytes
+  // Fixed-size bytes (all 32 variants)
   'bytes1',
   'bytes2',
+  'bytes3',
   'bytes4',
+  'bytes5',
+  'bytes6',
+  'bytes7',
   'bytes8',
+  'bytes9',
+  'bytes10',
+  'bytes11',
+  'bytes12',
+  'bytes13',
+  'bytes14',
+  'bytes15',
   'bytes16',
+  'bytes17',
+  'bytes18',
+  'bytes19',
+  'bytes20',
+  'bytes21',
+  'bytes22',
+  'bytes23',
+  'bytes24',
+  'bytes25',
+  'bytes26',
+  'bytes27',
+  'bytes28',
+  'bytes29',
+  'bytes30',
+  'bytes31',
   'bytes32',
   // Array versions (we check for [] suffix separately)
 ]);
+
+/**
+ * Maximum allowed schema string length to prevent resource exhaustion.
+ */
+const MAX_SCHEMA_LENGTH = 10000;
 
 /**
  * Regex pattern for valid Solidity identifier names.
@@ -139,6 +170,11 @@ export function parseSchemaString(rawSchema: string): SchemaField[] | null {
     return null;
   }
 
+  // Prevent resource exhaustion from extremely long inputs
+  if (trimmed.length > MAX_SCHEMA_LENGTH) {
+    return null;
+  }
+
   const fields: SchemaField[] = [];
   const fieldStrings = trimmed.split(',');
 
@@ -158,13 +194,39 @@ export function parseSchemaString(rawSchema: string): SchemaField[] | null {
 /**
  * Validates that a type string is a valid Solidity type for EAS schemas.
  *
+ * Handles:
+ * - Base types (uint256, string, etc.)
+ * - Single-dimension arrays (uint256[], string[])
+ * - Rejects invalid patterns (uint256[, uint256[][], etc.)
+ *
  * @param type - The type string to validate
  * @returns True if the type is valid
  */
 function isValidSolidityType(type: string): boolean {
-  // Check for array suffix
+  // Reject empty or whitespace-only types
+  if (!type || type.trim().length === 0) {
+    return false;
+  }
+
+  // Check for array suffix (only single-dimension arrays are valid in EAS)
   const isArray = type.endsWith('[]');
+
+  // Reject malformed array syntax (e.g., uint256[, uint256[10], uint256[][])
+  if (type.includes('[') && !isArray) {
+    return false;
+  }
+
+  // Reject multi-dimensional arrays (e.g., uint256[][])
+  if (type.includes('[][]')) {
+    return false;
+  }
+
   const baseType = isArray ? type.slice(0, -2) : type;
+
+  // Reject if base type is empty after removing array suffix
+  if (baseType.length === 0) {
+    return false;
+  }
 
   return VALID_SOLIDITY_TYPES.has(baseType);
 }
@@ -265,11 +327,18 @@ export function validateLocationProtocolSchema(
     }
   }
 
-  // Check for duplicate field names
-  const fieldNames = fields.map(f => f.name);
-  const duplicates = fieldNames.filter((name, index) => fieldNames.indexOf(name) !== index);
-  if (duplicates.length > 0) {
-    errors.push(`Duplicate field names: ${[...new Set(duplicates)].join(', ')}`);
+  // Check for duplicate field names (O(n) algorithm using Set)
+  const seen = new Set<string>();
+  const duplicates = new Set<string>();
+  for (const field of fields) {
+    if (seen.has(field.name)) {
+      duplicates.add(field.name);
+    } else {
+      seen.add(field.name);
+    }
+  }
+  if (duplicates.size > 0) {
+    errors.push(`Duplicate field names: ${[...duplicates].join(', ')}`);
   }
 
   // Determine if this is a valid EAS schema (no format errors)
