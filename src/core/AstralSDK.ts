@@ -21,12 +21,14 @@ import {
   VerificationResult,
   OffchainAttestationOptions,
   OnchainAttestationOptions,
+  RuntimeSchemaConfig,
 } from './types';
 import { SchemaValue } from '../eas/SchemaEncoder';
 import { CustomSchemaExtensionOptions } from '../extensions/schema/helpers';
 import { OffchainSigner } from '../eas/OffchainSigner';
 import { OnchainRegistrar } from '../eas/OnchainRegistrar';
-import { getChainId, getChainName } from '../eas/chains';
+import { getChainId, getChainName, getSchemaUID, getSchemaString } from '../eas/chains';
+import { SchemaValidationCache, SchemaValidationResult } from '../utils/schemaValidation';
 
 /**
  * AstralSDK is the main entry point for the Astral SDK.
@@ -50,6 +52,15 @@ export class AstralSDK {
   /** OnchainRegistrar instance for onchain workflow */
   private onchainRegistrar?: OnchainRegistrar;
 
+  /** Schema validation cache for multi-schema support */
+  private readonly schemaCache: SchemaValidationCache;
+
+  /** Default schema configuration */
+  private readonly defaultSchema: RuntimeSchemaConfig;
+
+  /** Strict schema validation mode */
+  private readonly strictSchemaValidation: boolean;
+
   /**
    * Creates a new AstralSDK instance.
    *
@@ -65,6 +76,30 @@ export class AstralSDK {
     };
 
     this.debug = !!this.config.debug;
+    this.strictSchemaValidation = !!this.config.strictSchemaValidation;
+
+    // Initialize schema validation cache
+    this.schemaCache = new SchemaValidationCache(this.strictSchemaValidation);
+
+    // Determine default schema: use config.defaultSchema, or build from chain config
+    if (this.config.defaultSchema) {
+      this.defaultSchema = this.config.defaultSchema;
+    } else {
+      // Use the Location Protocol v0.1 schema as the default
+      const chainId = this.config.chainId || getChainId(this.config.defaultChain || 'sepolia');
+      this.defaultSchema = {
+        uid: getSchemaUID(chainId),
+        rawString: getSchemaString(),
+      };
+    }
+
+    // Validate pre-registered schemas at initialization
+    if (this.config.schemas && this.config.schemas.length > 0) {
+      this.validatePreRegisteredSchemas(this.config.schemas);
+    }
+
+    // Validate the default schema
+    this.validateAndCacheSchema(this.defaultSchema);
 
     // Initialize extension registry with built-in extensions
     this.extensions = new ExtensionRegistry(true);
@@ -80,8 +115,91 @@ export class AstralSDK {
     }
 
     if (this.debug) {
-      // Debug: AstralSDK initialized with config
+      console.log('AstralSDK initialized with multi-schema support');
+      console.log(`  Default schema UID: ${this.defaultSchema.uid}`);
+      console.log(`  Strict validation: ${this.strictSchemaValidation}`);
+      console.log(`  Pre-registered schemas: ${this.schemaCache.size}`);
     }
+  }
+
+  /**
+   * Validates and caches pre-registered schemas at SDK initialization.
+   *
+   * @param schemas - Array of schemas to validate
+   * @throws {ValidationError} If strict mode is enabled and any schema is non-conformant
+   * @private
+   */
+  private validatePreRegisteredSchemas(schemas: readonly RuntimeSchemaConfig[]): void {
+    for (const schema of schemas) {
+      this.validateAndCacheSchema(schema);
+    }
+
+    if (this.debug) {
+      console.log(`Validated ${schemas.length} pre-registered schemas`);
+    }
+  }
+
+  /**
+   * Validates a schema and caches the result.
+   *
+   * @param schema - Schema configuration to validate
+   * @returns The validation result
+   * @throws {ValidationError} If strict mode is enabled and schema is non-conformant
+   * @private
+   */
+  private validateAndCacheSchema(schema: RuntimeSchemaConfig): SchemaValidationResult {
+    const result = this.schemaCache.validate(schema);
+
+    if (this.debug && !result.conformant) {
+      console.warn(`Schema ${schema.uid} is not Location Protocol conformant:`, {
+        missing: result.missing,
+        errors: result.errors,
+        warnings: result.warnings,
+      });
+    }
+
+    return result;
+  }
+
+  /**
+   * Resolves the schema to use for an operation.
+   *
+   * Resolution order:
+   * 1. Per-method schema override (if provided in options)
+   * 2. Default schema (from config.defaultSchema or chain default)
+   *
+   * Ad-hoc schemas are validated on first use and cached.
+   *
+   * @param options - Options that may contain a schema override
+   * @returns The resolved schema configuration
+   * @throws {ValidationError} If strict mode is enabled and schema is non-conformant
+   */
+  private resolveSchema(options?: { schema?: RuntimeSchemaConfig }): RuntimeSchemaConfig {
+    if (options?.schema) {
+      // Validate ad-hoc schema on first use
+      this.validateAndCacheSchema(options.schema);
+      return options.schema;
+    }
+
+    return this.defaultSchema;
+  }
+
+  /**
+   * Gets the schema validation cache for inspection or advanced usage.
+   *
+   * @returns The schema validation cache instance
+   */
+  public getSchemaCache(): SchemaValidationCache {
+    return this.schemaCache;
+  }
+
+  /**
+   * Gets the current default schema configuration.
+   *
+   * @returns The default schema configuration
+   */
+  public getDefaultSchema(): RuntimeSchemaConfig {
+    return this.defaultSchema;
   }
 
   /**
@@ -238,7 +356,7 @@ export class AstralSDK {
    * for the location attestation, resulting in a complete OffchainLocationAttestation.
    *
    * @param unsignedProof - The unsigned location attestation to sign
-   * @param options - Optional configuration for the signing process
+   * @param options - Optional configuration for the signing process (may include schema override)
    * @returns A complete OffchainLocationAttestation with signature
    * @throws {ValidationError} If no signer is available
    * @throws {SigningError} If the signing process fails
@@ -250,12 +368,15 @@ export class AstralSDK {
     // Ensure we have an OffchainSigner
     this.ensureOffchainSignerInitialized(options);
 
+    // Resolve the schema to use
+    const schema = this.resolveSchema(options);
+
     if (this.debug) {
-      // console.log('Signing location attestation:', unsignedProof);
+      console.log(`Signing attestation with schema UID: ${schema.uid}`);
     }
 
-    // Sign the proof using OffchainSigner
-    return await this.offchainSigner!.signOffchainLocationAttestation(unsignedProof);
+    // Sign the proof using OffchainSigner with the resolved schema
+    return await this.offchainSigner!.signOffchainLocationAttestation(unsignedProof, schema);
   }
 
   /**
@@ -504,7 +625,7 @@ export class AstralSDK {
    * 2. Registers it on the blockchain using the OnchainRegistrar
    *
    * @param input - Location proof input data
-   * @param options - Optional configuration for the registration process
+   * @param options - Optional configuration for the registration process (may include schema override)
    * @returns Promise resolving to an onchain location attestation with transaction details
    * @throws {ValidationError} If no provider or signer is available
    * @throws {RegistrationError} If the onchain registration fails
@@ -517,21 +638,29 @@ export class AstralSDK {
       // First build the unsigned proof
       const unsignedProof = await this.buildLocationAttestation(input);
 
+      // Resolve the schema to use
+      const schema = this.resolveSchema(options);
+
       if (this.debug) {
-        // console.log('Created unsigned location attestation, proceeding to register:', unsignedProof);
+        console.log(`Creating onchain attestation with schema UID: ${schema.uid}`);
       }
 
       // Ensure OnchainRegistrar is initialized
       this.ensureOnchainRegistrarInitialized(options);
 
-      // Register the proof using OnchainRegistrar
+      // Register the proof using OnchainRegistrar with the resolved schema
+      const optionsWithSchema: OnchainAttestationOptions = {
+        ...options,
+        schema,
+      };
+
       const onchainProof = await this.onchainRegistrar!.registerOnchainLocationAttestation(
         unsignedProof,
-        options
+        optionsWithSchema
       );
 
       if (this.debug) {
-        // Debug: Successfully registered onchain location attestation
+        console.log(`Successfully registered onchain attestation: ${onchainProof.uid}`);
       }
 
       return onchainProof;
@@ -559,7 +688,7 @@ export class AstralSDK {
    * returning the registered attestation with transaction details.
    *
    * @param unsignedAttestation - The unsigned location attestation to register
-   * @param options - Optional configuration for the registration process
+   * @param options - Optional configuration for the registration process (may include schema override)
    * @returns The registered onchain location attestation
    * @throws ValidationError if parameters are invalid
    * @throws Error if the registration fails
@@ -572,14 +701,22 @@ export class AstralSDK {
       // Ensure OnchainRegistrar is initialized
       this.ensureOnchainRegistrarInitialized(options);
 
+      // Resolve the schema to use
+      const schema = this.resolveSchema(options);
+
       if (this.debug) {
-        console.log('Registering location attestation onchain');
+        console.log(`Registering attestation onchain with schema UID: ${schema.uid}`);
       }
 
-      // Register using OnchainRegistrar
+      // Register using OnchainRegistrar with the resolved schema
+      const optionsWithSchema: OnchainAttestationOptions = {
+        ...options,
+        schema,
+      };
+
       return await this.onchainRegistrar!.registerOnchainLocationAttestation(
         unsignedAttestation,
-        options
+        optionsWithSchema
       );
     } catch (error) {
       if (error instanceof AstralError) {
