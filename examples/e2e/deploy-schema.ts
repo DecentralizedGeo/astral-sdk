@@ -32,11 +32,14 @@ import { ASSET_TRACKING_SCHEMA_STRING } from './custom-schema';
  * SchemaRegistry ABI - only the functions we need.
  *
  * The register function returns the schema UID (bytes32).
- * The Registered event is emitted with the full schema details.
+ * The Registered event is emitted with the schema UID as indexed topic.
+ *
+ * Note: We omit the tuple parameter from the event since parseAbi doesn't
+ * support inline tuple syntax, and we only need the indexed uid anyway.
  */
 const SCHEMA_REGISTRY_ABI = parseAbi([
   'function register(string schema, address resolver, bool revocable) returns (bytes32)',
-  'event Registered(bytes32 indexed uid, address indexed registerer, tuple(bytes32 uid, address resolver, bool revocable, string schema) schema)',
+  'event Registered(bytes32 indexed uid, address indexed registerer)',
 ]);
 
 /**
