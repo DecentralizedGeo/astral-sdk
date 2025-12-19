@@ -19,7 +19,6 @@ import {
   createPublicClient,
   http,
   parseAbi,
-  decodeEventLog,
   type Hash,
   type TransactionReceipt,
 } from 'viem';
@@ -43,24 +42,26 @@ const SCHEMA_REGISTRY_ABI = parseAbi([
 ]);
 
 /**
+ * EAS SchemaRegistry Registered event signature (keccak256 hash).
+ * Full signature: Registered(bytes32 indexed uid, address indexed registerer, SchemaRecord schema)
+ */
+const REGISTERED_EVENT_SIG = '0x7d917fcbc9a29a9705ff9936f083c6a875c3ccc3e4b5e3b0de8e8d41441a938a';
+
+/**
  * Extract schema UID from transaction receipt logs.
+ *
+ * We extract directly from topics[1] rather than using decodeEventLog
+ * because the full event signature includes a tuple that parseAbi can't handle.
  */
 function extractSchemaUID(receipt: TransactionReceipt): `0x${string}` | null {
   for (const log of receipt.logs) {
-    try {
-      const decoded = decodeEventLog({
-        abi: SCHEMA_REGISTRY_ABI,
-        data: log.data,
-        topics: log.topics,
-      });
-
-      if (decoded.eventName === 'Registered') {
-        // The UID is the first indexed parameter
-        return decoded.args.uid as `0x${string}`;
-      }
-    } catch {
-      // Not our event, skip
-      continue;
+    // Check if this is the Registered event from SchemaRegistry
+    if (
+      log.address.toLowerCase() === ANVIL_CONFIG.schemaRegistry.toLowerCase() &&
+      log.topics[0] === REGISTERED_EVENT_SIG
+    ) {
+      // The UID is the first indexed parameter (topics[1])
+      return log.topics[1] as `0x${string}`;
     }
   }
   return null;
