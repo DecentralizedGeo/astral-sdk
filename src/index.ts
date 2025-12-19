@@ -19,6 +19,9 @@ export * from './utils';
 // Extension system exports
 export * from './extensions';
 
+// Schema constants exports
+export * from './schemas';
+
 // Workflow-specific exports
 export * from './offchain';
 export * from './onchain';
