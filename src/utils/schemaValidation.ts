@@ -442,3 +442,147 @@ export function getSchemaFieldNames(rawSchema: string): string[] {
   if (!fields) return [];
   return fields.map(f => f.name);
 }
+
+/**
+ * Cached schema validation result with metadata.
+ *
+ * @property result - The validation result
+ * @property validatedAt - Timestamp when the schema was validated
+ * @property rawString - The original schema string that was validated
+ */
+export interface CachedValidationResult {
+  readonly result: SchemaValidationResult;
+  readonly validatedAt: number;
+  readonly rawString: string;
+}
+
+/**
+ * SchemaValidationCache provides caching for schema validation results
+ * to avoid repeated validation of the same schemas.
+ *
+ * The cache is keyed by schema UID, allowing quick lookups for schemas
+ * that have already been validated. This is particularly useful when
+ * working with multiple schemas across many attestation operations.
+ *
+ * ## Usage
+ *
+ * ```typescript
+ * const cache = new SchemaValidationCache();
+ *
+ * // Validate and cache a schema
+ * const result = cache.validate({ uid: '0x...', rawString: 'uint256 timestamp,...' });
+ *
+ * // Subsequent calls with the same UID return cached result
+ * const cachedResult = cache.validate(schema); // Returns cached result
+ *
+ * // Check if a schema is already validated
+ * if (cache.has(schema.uid)) {
+ *   const cached = cache.get(schema.uid);
+ * }
+ *
+ * // Invalidate a specific schema (e.g., after schema update)
+ * cache.invalidate(schema.uid);
+ *
+ * // Clear all cached results
+ * cache.clear();
+ * ```
+ */
+export class SchemaValidationCache {
+  private readonly cache: Map<string, CachedValidationResult>;
+  private readonly strictMode: boolean;
+
+  /**
+   * Creates a new SchemaValidationCache instance.
+   *
+   * @param strictMode - If true, validate() throws for non-conformant schemas
+   */
+  constructor(strictMode: boolean = false) {
+    this.cache = new Map();
+    this.strictMode = strictMode;
+  }
+
+  /**
+   * Validates a schema and caches the result.
+   *
+   * If the schema UID is already in the cache, returns the cached result.
+   * Otherwise, validates the schema, caches the result, and returns it.
+   *
+   * @param schema - Schema configuration with uid and rawString
+   * @returns The validation result (from cache or newly validated)
+   * @throws {ValidationError} If strict mode is enabled and schema is non-conformant
+   */
+  validate(schema: { uid: string; rawString: string }): SchemaValidationResult {
+    // Check cache first
+    const cached = this.cache.get(schema.uid);
+    if (cached && cached.rawString === schema.rawString) {
+      return cached.result;
+    }
+
+    // Validate the schema
+    const result = validateLocationProtocolSchema(schema.rawString, {
+      strict: this.strictMode,
+    });
+
+    // Cache the result
+    this.cache.set(schema.uid, {
+      result,
+      validatedAt: Date.now(),
+      rawString: schema.rawString,
+    });
+
+    return result;
+  }
+
+  /**
+   * Checks if a schema UID is present in the cache.
+   *
+   * @param uid - The schema UID to check
+   * @returns True if the schema is cached
+   */
+  has(uid: string): boolean {
+    return this.cache.has(uid);
+  }
+
+  /**
+   * Gets the cached validation result for a schema UID.
+   *
+   * @param uid - The schema UID to look up
+   * @returns The cached result, or undefined if not found
+   */
+  get(uid: string): CachedValidationResult | undefined {
+    return this.cache.get(uid);
+  }
+
+  /**
+   * Invalidates (removes) a specific schema from the cache.
+   *
+   * Use this when a schema has been updated and needs re-validation.
+   *
+   * @param uid - The schema UID to invalidate
+   * @returns True if the schema was in the cache and was removed
+   */
+  invalidate(uid: string): boolean {
+    return this.cache.delete(uid);
+  }
+
+  /**
+   * Clears all cached validation results.
+   */
+  clear(): void {
+    this.cache.clear();
+  }
+
+  /**
+   * Returns the number of schemas currently cached.
+   */
+  get size(): number {
+    return this.cache.size;
+  }
+
+  /**
+   * Returns all cached schema UIDs.
+   */
+  get cachedUIDs(): string[] {
+    return Array.from(this.cache.keys());
+  }
+}
