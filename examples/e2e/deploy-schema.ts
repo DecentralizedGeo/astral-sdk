@@ -45,7 +45,7 @@ const SCHEMA_REGISTRY_ABI = parseAbi([
  * EAS SchemaRegistry Registered event signature (keccak256 hash).
  * Full signature: Registered(bytes32 indexed uid, address indexed registerer, SchemaRecord schema)
  */
-const REGISTERED_EVENT_SIG = '0x7d917fcbc9a29a9705ff9936f083c6a875c3ccc3e4b5e3b0de8e8d41441a938a';
+const REGISTERED_EVENT_SIG = '0x7d917fcbc9a29a9705ff9936ffa599500e4fd902e4486bae317414fe967b307c';
 
 /**
  * Extract schema UID from transaction receipt logs.
