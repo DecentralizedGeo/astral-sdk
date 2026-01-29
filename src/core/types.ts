@@ -495,3 +495,56 @@ export interface RuntimeSchemaConfig {
 export interface SchemaOverrideOptions {
   readonly schema?: RuntimeSchemaConfig;
 }
+
+/**
+ * AstralConfig defines the unified configuration options for AstralSDK v0.2.0.
+ *
+ * This configuration is used by both the LocationModule and ComputeModule.
+ *
+ * @property chainId - The chain ID for blockchain operations (required)
+ * @property signer - Ethereum signer for creating signatures and transactions
+ * @property provider - Ethereum provider for read-only blockchain operations
+ * @property apiUrl - URL for Astral's compute API (defaults to https://api.astral.global)
+ * @property debug - Enable debug mode
+ *
+ * // Location-specific options
+ * @property defaultChain - Default blockchain name for operations (deprecated - use chainId)
+ * @property schemas - Pre-registered schemas for validation caching
+ * @property defaultSchema - Default schema to use when no schema is specified
+ * @property strictSchemaValidation - If true, throws ValidationError for non-conformant schemas
+ */
+export interface AstralConfig {
+  readonly chainId: number;
+  readonly signer?: unknown; // Will be refined to ethers.Signer
+  readonly provider?: unknown; // Will be refined to ethers.Provider
+  readonly apiUrl?: string;
+  readonly debug?: boolean;
+  // Location-specific (inherited from AstralSDKConfig)
+  readonly defaultChain?: string;
+  readonly schemas?: readonly RuntimeSchemaConfig[];
+  readonly defaultSchema?: RuntimeSchemaConfig;
+  readonly strictSchemaValidation?: boolean;
+}
+
+/**
+ * LocationConfig for the LocationModule
+ */
+export interface LocationConfig {
+  readonly chainId: number;
+  readonly signer?: unknown;
+  readonly provider?: unknown;
+  readonly debug?: boolean;
+  readonly defaultChain?: string;
+  readonly schemas?: readonly RuntimeSchemaConfig[];
+  readonly defaultSchema?: RuntimeSchemaConfig;
+  readonly strictSchemaValidation?: boolean;
+}
+
+/**
+ * ComputeConfig for the ComputeModule
+ */
+export interface ComputeConfig {
+  readonly apiUrl: string;
+  readonly chainId: number;
+  readonly signer?: unknown;
+}
