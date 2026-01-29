@@ -123,12 +123,4 @@ export class OffchainWorkflow {
       };
     }
   }
-
-  /**
-   * Publishes an offchain location attestation to storage
-   */
-  async publish(attestation: OffchainLocationAttestation): Promise<OffchainLocationAttestation> {
-    // Placeholder - will integrate with storage adapters
-    return attestation;
-  }
 }
