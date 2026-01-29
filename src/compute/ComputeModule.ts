@@ -17,6 +17,8 @@ import {
   NumericComputeResult,
   BooleanComputeResult,
   DelegatedAttestation,
+  AttestationObject,
+  DelegatedAttestationObject,
   AttestationResult,
   HealthStatus,
 } from './types';
@@ -196,15 +198,63 @@ export class ComputeModule {
   }
 
   /**
+   * Parse a signature hex string into v, r, s components
+   */
+  private parseSignature(signature: string): { v: number; r: string; s: string } {
+    // Remove 0x prefix if present
+    const sig = signature.startsWith('0x') ? signature.slice(2) : signature;
+
+    // Standard signature is 65 bytes: r (32) + s (32) + v (1)
+    const r = '0x' + sig.slice(0, 64);
+    const s = '0x' + sig.slice(64, 128);
+    const v = parseInt(sig.slice(128, 130), 16);
+
+    return { v, r, s };
+  }
+
+  /**
    * Submit a delegated attestation to EAS
    * The caller pays gas; Astral remains the attester.
+   *
+   * Accepts either:
+   * - The full DelegatedAttestation type (for advanced usage)
+   * - An object with attestation and delegatedAttestation from API response
    */
-  async submit(attestation: DelegatedAttestation): Promise<AttestationResult> {
+  async submit(
+    input:
+      | DelegatedAttestation
+      | { attestation: AttestationObject; delegatedAttestation: DelegatedAttestationObject }
+  ): Promise<AttestationResult> {
     if (!this.eas || !this.signer) {
       throw new ValidationError('Signer is required for attestation submission');
     }
 
-    const { message, signature, attester } = attestation;
+    // Detect API response format (has attestation + delegatedAttestation properties)
+    if ('attestation' in input && 'delegatedAttestation' in input) {
+      const { attestation, delegatedAttestation } = input;
+      const sig = this.parseSignature(delegatedAttestation.signature);
+
+      const tx = await this.eas.attestByDelegation({
+        schema: attestation.schema,
+        data: {
+          recipient: attestation.recipient,
+          expirationTime: 0n, // No expiration
+          revocable: true,
+          refUID: '0x0000000000000000000000000000000000000000000000000000000000000000',
+          data: attestation.data,
+          value: 0n,
+        },
+        signature: sig,
+        attester: delegatedAttestation.attester,
+        deadline: BigInt(delegatedAttestation.deadline),
+      });
+
+      const uid = await tx.wait();
+      return { uid };
+    }
+
+    // Legacy format with full message structure
+    const { message, signature, attester } = input as DelegatedAttestation;
 
     const tx = await this.eas.attestByDelegation({
       schema: message.schema,
