@@ -143,13 +143,16 @@ function testSchemaValidation(schema: RuntimeSchemaConfig): boolean {
     });
 
     const cache = sdk.getSchemaCache();
-    const validationResult = cache.get(schema.uid);
+    const cachedResult = cache.get(schema.uid);
 
-    if (!validationResult) {
+    if (!cachedResult) {
       console.error('  ✗ Validation result not found in cache');
       return false;
     }
     console.log('  ✓ Validation result retrieved from cache');
+
+    // Extract the actual validation result from the cache wrapper
+    const validationResult = cachedResult.result;
 
     // Verify conformance
     if (!validationResult.conformant) {

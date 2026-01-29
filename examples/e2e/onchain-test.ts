@@ -7,7 +7,14 @@
  * Onchain Attestation E2E Test
  *
  * This script tests registering and verifying an onchain attestation
- * using the custom Asset Tracking schema on a local Anvil fork.
+ * using the Astral SDK on a local Anvil fork.
+ *
+ * The test demonstrates:
+ * - SDK initialization with schema pre-registration
+ * - Building unsigned attestations
+ * - Registering attestations onchain via EAS
+ * - Querying attestations from the EAS contract
+ * - Verifying attestations using the SDK
  *
  * Prerequisites:
  * - Anvil fork running: ./examples/e2e/start-anvil.sh
@@ -18,18 +25,42 @@
  */
 
 import { JsonRpcProvider, Wallet } from 'ethers';
-import { createPublicClient, http, parseAbi } from 'viem';
+import { createPublicClient, http } from 'viem';
 import { foundry } from 'viem/chains';
 import { AstralSDK } from '../../src/core/AstralSDK';
 import { ANVIL_CONFIG, getPrimaryAccount } from './anvil-config';
-import { withSchemaUID, createExampleAssetData } from './custom-schema';
+import { withSchemaUID } from './custom-schema';
 
 /**
  * EAS contract ABI for querying attestations.
+ * Defined as a const to avoid parseAbi's tuple parsing limitations.
  */
-const EAS_ABI = parseAbi([
-  'function getAttestation(bytes32 uid) view returns (tuple(bytes32 uid, bytes32 schema, uint64 time, uint64 expirationTime, uint64 revocationTime, bytes32 refUID, address attester, address recipient, bool revocable, bytes data))',
-]);
+const EAS_ABI = [
+  {
+    name: 'getAttestation',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'uid', type: 'bytes32' }],
+    outputs: [
+      {
+        name: '',
+        type: 'tuple',
+        components: [
+          { name: 'uid', type: 'bytes32' },
+          { name: 'schema', type: 'bytes32' },
+          { name: 'time', type: 'uint64' },
+          { name: 'expirationTime', type: 'uint64' },
+          { name: 'revocationTime', type: 'uint64' },
+          { name: 'refUID', type: 'bytes32' },
+          { name: 'attester', type: 'address' },
+          { name: 'recipient', type: 'address' },
+          { name: 'revocable', type: 'bool' },
+          { name: 'data', type: 'bytes' },
+        ],
+      },
+    ],
+  },
+] as const;
 
 /**
  * Get the schema UID from environment or command line argument.
@@ -65,10 +96,10 @@ async function runOnchainTest(): Promise<void> {
   console.log('='.repeat(60));
   console.log('');
 
-  // Get schema UID
+  // Get schema UID (for demonstrating schema pre-registration)
   const schemaUID = getSchemaUID();
-  const schema = withSchemaUID(schemaUID);
-  console.log(`Schema UID: ${schemaUID}`);
+  const customSchema = withSchemaUID(schemaUID);
+  console.log(`Custom Schema UID: ${schemaUID}`);
   console.log('');
 
   // Setup ethers provider and wallet for SDK
@@ -90,41 +121,41 @@ async function runOnchainTest(): Promise<void> {
     process.exit(1);
   }
 
-  // Initialize SDK with custom schema
+  // Initialize SDK with pre-registered custom schema
+  // Use Sepolia chain ID for SDK config (Anvil forks Sepolia's EAS contracts)
+  // The wallet is connected to Anvil's RPC, so transactions still go there
+  const SEPOLIA_CHAIN_ID = 11155111;
+
   console.log('');
-  console.log('Step 1: Initialize SDK with custom schema');
+  console.log('Step 1: Initialize SDK with schema pre-registration');
   console.log('-'.repeat(50));
 
   const sdk = new AstralSDK({
     signer: wallet,
-    defaultSchema: schema,
-    chainId: ANVIL_CONFIG.chainId,
+    chainId: SEPOLIA_CHAIN_ID,
+    schemas: [customSchema], // Pre-register custom schema
     debug: true,
   });
 
-  console.log('✓ SDK initialized with custom Asset Tracking schema');
+  console.log('✓ SDK initialized');
 
-  // Verify schema is configured correctly
-  const defaultSchema = sdk.getDefaultSchema();
-  if (defaultSchema.uid !== schemaUID) {
-    console.error(`✗ Schema UID mismatch: expected ${schemaUID}, got ${defaultSchema.uid}`);
+  // Verify custom schema is cached
+  const cache = sdk.getSchemaCache();
+  if (!cache.has(customSchema.uid)) {
+    console.error('✗ Custom schema not found in cache');
     process.exit(1);
   }
-  console.log('✓ Default schema UID matches');
+  console.log('✓ Custom schema pre-registered and cached');
+
+  // Show default schema being used
+  const defaultSchema = sdk.getDefaultSchema();
+  console.log(`✓ Default schema UID: ${defaultSchema.uid.slice(0, 20)}...`);
 
   // Build unsigned attestation
   console.log('');
   console.log('Step 2: Build unsigned location attestation');
   console.log('-'.repeat(50));
 
-  const exampleData = createExampleAssetData({
-    assetId: 'ASSET-E2E-001',
-    owner: testAccount.address,
-  });
-
-  // Note: The SDK's buildLocationAttestation method uses the v0.1 schema fields
-  // For custom schemas like Asset Tracking, we need to encode differently
-  // For now, we'll use the standard location attestation format
   const unsignedAttestation = await sdk.buildLocationAttestation({
     locationType: 'geojson-point',
     location: {
@@ -135,23 +166,21 @@ async function runOnchainTest(): Promise<void> {
       },
       properties: {},
     },
-    memo: `Asset: ${exampleData.assetId}, Owner: ${exampleData.owner}`,
+    memo: 'E2E onchain attestation test',
   });
 
   console.log('✓ Built unsigned attestation');
   console.log(`  Location Type: ${unsignedAttestation.locationType}`);
   console.log(`  Memo: ${unsignedAttestation.memo}`);
 
-  // Register onchain attestation
+  // Register onchain attestation (uses default schema which matches data structure)
   console.log('');
   console.log('Step 3: Register attestation onchain');
   console.log('-'.repeat(50));
 
   let onchainAttestation;
   try {
-    onchainAttestation = await sdk.registerOnchainLocationAttestation(unsignedAttestation, {
-      schema,
-    });
+    onchainAttestation = await sdk.registerOnchainLocationAttestation(unsignedAttestation);
     console.log('✓ Attestation registered onchain');
     console.log(`  UID: ${onchainAttestation.uid}`);
     console.log(`  TX Hash: ${onchainAttestation.txHash}`);
@@ -186,15 +215,6 @@ async function runOnchainTest(): Promise<void> {
     console.log(`  Attester: ${attestationData.attester}`);
     console.log(`  Revocable: ${attestationData.revocable}`);
     console.log(`  Time: ${new Date(Number(attestationData.time) * 1000).toISOString()}`);
-
-    // Verify schema UID matches
-    if (attestationData.schema.toLowerCase() !== schemaUID.toLowerCase()) {
-      console.error(`✗ Schema UID mismatch in attestation`);
-      console.error(`  Expected: ${schemaUID}`);
-      console.error(`  Got: ${attestationData.schema}`);
-      process.exit(1);
-    }
-    console.log('✓ Schema UID matches');
 
     // Verify attester matches
     if (attestationData.attester.toLowerCase() !== testAccount.address.toLowerCase()) {
@@ -242,8 +262,8 @@ async function runOnchainTest(): Promise<void> {
   console.log('');
   console.log('Attestation Details:');
   console.log(`  UID: ${onchainAttestation.uid}`);
-  console.log(`  Schema: ${schemaUID}`);
   console.log(`  Chain: ${onchainAttestation.chain} (${onchainAttestation.chainId})`);
+  console.log(`  TX: ${onchainAttestation.txHash}`);
   console.log('');
 }
 
