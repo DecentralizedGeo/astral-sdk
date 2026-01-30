@@ -41,6 +41,13 @@ const mockConfig: EASConfig = {
         'uint256 eventTimestamp,string srs,string locationType,string location,string[] recipeType,bytes[] recipePayload,string[] mediaType,string[] mediaData,string memo',
     },
     chains: {
+      '10': {
+        chain: 'optimism',
+        deploymentBlock: 142210865,
+        rpcUrl: 'https://optimism-mainnet.infura.io/v3/',
+        easContractAddress: '0x4200000000000000000000000000000000000021',
+        schemaUID: '0xba4171c92572b1e4f241d044c32cdf083be9fd946b8766977558ca6378c824e2',
+      },
       '42220': {
         chain: 'celo',
         deploymentBlock: 26901063,
@@ -66,6 +73,13 @@ const mockConfig: EASConfig = {
         chain: 'base',
         deploymentBlock: 25903221,
         rpcUrl: 'https://base-mainnet.infura.io/v3/',
+        easContractAddress: '0x4200000000000000000000000000000000000021',
+        schemaUID: '0xba4171c92572b1e4f241d044c32cdf083be9fd946b8766977558ca6378c824e2',
+      },
+      '84532': {
+        chain: 'base-sepolia',
+        deploymentBlock: 1,
+        rpcUrl: 'https://sepolia.base.org',
         easContractAddress: '0x4200000000000000000000000000000000000021',
         schemaUID: '0xba4171c92572b1e4f241d044c32cdf083be9fd946b8766977558ca6378c824e2',
       },
@@ -245,7 +259,7 @@ describe('EAS Chain Configuration', () => {
       const chainIds = getSupportedChainIds();
 
       // IDs should be returned in ascending order
-      expect(chainIds).toEqual([8453, 42161, 42220, 11155111]);
+      expect(chainIds).toEqual([10, 8453, 42161, 42220, 84532, 11155111]);
     });
 
     it('should return all supported chain IDs for a specific version', () => {
@@ -254,7 +268,7 @@ describe('EAS Chain Configuration', () => {
       // Since we're testing with mock data, we should expect what's in the mock, not the real config
       expect(chainIds).toContain(11155111);
       expect(chainIds).toContain(42161);
-      expect(chainIds.length).toBe(4);
+      expect(chainIds.length).toBe(6);
     });
   });
 
@@ -263,14 +277,28 @@ describe('EAS Chain Configuration', () => {
       const chainNames = getSupportedChainNames();
 
       // Names should be alphabetically sorted
-      expect(chainNames).toEqual(['arbitrum', 'base', 'celo', 'sepolia']);
+      expect(chainNames).toEqual([
+        'arbitrum',
+        'base',
+        'base-sepolia',
+        'celo',
+        'optimism',
+        'sepolia',
+      ]);
     });
 
     it('should return all supported chain names for a specific version', () => {
       const chainNames = getSupportedChainNames('v0.1');
 
       // Names should be alphabetically sorted
-      expect(chainNames).toEqual(['arbitrum', 'base', 'celo', 'sepolia']);
+      expect(chainNames).toEqual([
+        'arbitrum',
+        'base',
+        'base-sepolia',
+        'celo',
+        'optimism',
+        'sepolia',
+      ]);
     });
   });
 
