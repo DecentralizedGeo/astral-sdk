@@ -95,8 +95,8 @@ describe('AstralSDK chainId Configuration', () => {
 
         // Create a location attestation
         const proof = await sdk.buildLocationAttestation({
-          location: [20, 10],
-          locationType: 'coordinates-decimal+lon-lat',
+          location: { type: 'Point', coordinates: [20, 10] },
+          locationType: 'geojson',
           memo: `Testing ${chainName} with chainId ${chainId}`,
         });
 
@@ -123,8 +123,8 @@ describe('AstralSDK chainId Configuration', () => {
 
         // Create a location attestation
         const proof = await sdk.buildLocationAttestation({
-          location: [20, 10],
-          locationType: 'coordinates-decimal+lon-lat',
+          location: { type: 'Point', coordinates: [20, 10] },
+          locationType: 'geojson',
           memo: `Testing ${chainName} with defaultChain`,
         });
 
@@ -150,8 +150,8 @@ describe('AstralSDK chainId Configuration', () => {
 
       // Create a location attestation
       const proof = await sdk.buildLocationAttestation({
-        location: [20, 10],
-        locationType: 'coordinates-decimal+lon-lat',
+        location: { type: 'Point', coordinates: [20, 10] },
+        locationType: 'geojson',
         memo: 'Testing chainId priority',
       });
 
@@ -181,8 +181,8 @@ describe('AstralSDK chainId Configuration', () => {
 
       // Create a location attestation
       const proof = await sdk.buildLocationAttestation({
-        location: [20, 10],
-        locationType: 'coordinates-decimal+lon-lat',
+        location: { type: 'Point', coordinates: [20, 10] },
+        locationType: 'geojson',
         memo: 'Testing default chain',
       });
 
@@ -217,8 +217,8 @@ describe('AstralSDK chainId Configuration', () => {
 
         // Create and sign an attestation to trigger initialization
         const proof = await sdk.buildLocationAttestation({
-          location: [20, 10],
-          locationType: 'coordinates-decimal+lon-lat',
+          location: { type: 'Point', coordinates: [20, 10] },
+          locationType: 'geojson',
         });
 
         await sdk.signOffchainLocationAttestation(proof);
@@ -241,8 +241,8 @@ describe('AstralSDK chainId Configuration', () => {
 
         // The schema UID should be consistent across all chains
         const proof = await sdk.buildLocationAttestation({
-          location: [20, 10],
-          locationType: 'coordinates-decimal+lon-lat',
+          location: { type: 'Point', coordinates: [20, 10] },
+          locationType: 'geojson',
         });
 
         await sdk.signOffchainLocationAttestation(proof);
@@ -263,8 +263,8 @@ describe('AstralSDK chainId Configuration', () => {
       await sdk.extensions.ensureInitialized();
 
       const proof = await sdk.buildLocationAttestation({
-        location: [20, 10],
-        locationType: 'coordinates-decimal+lon-lat',
+        location: { type: 'Point', coordinates: [20, 10] },
+        locationType: 'geojson',
         memo: 'Testing backward compatibility',
       });
 

@@ -258,8 +258,9 @@ export interface AttestationOptions {
  *
  * @property signer - Optional custom signer to use instead of the default
  * @property privateKey - Optional private key to create an in-memory signer - not recommended!
+ * @property schema - Optional schema override for this specific attestation
  */
-export interface OffchainAttestationOptions extends AttestationOptions {
+export interface OffchainAttestationOptions extends AttestationOptions, SchemaOverrideOptions {
   readonly signer?: unknown; // Will be refined to ethers.Signer once we have the dependency
   readonly privateKey?: string;
 }
@@ -274,8 +275,9 @@ export interface OffchainAttestationOptions extends AttestationOptions {
  * @property signer - Optional custom signer to use instead of the default
  * @property txOverrides - Optional transaction parameter overrides
  * @property allowDifferentSigner - Whether to allow the transaction sender to differ from the attestation signer
+ * @property schema - Optional schema override for this specific attestation
  */
-export interface OnchainAttestationOptions extends AttestationOptions {
+export interface OnchainAttestationOptions extends AttestationOptions, SchemaOverrideOptions {
   readonly chain?: string;
   readonly provider?: unknown; // Will be refined to ethers.Provider once we have the dependency
   readonly signer?: unknown; // Will be refined to ethers.Signer once we have the dependency
@@ -369,6 +371,21 @@ export enum VerificationError {
  * @property apiKey - Astral API key for queries
  * @property endpoint - Override Astral API base URL
  * @property debug - Enable debug mode
+ * @property schemas - Pre-registered schemas for validation caching at SDK initialization
+ * @property defaultSchema - Default schema to use when no schema is specified per-method
+ * @property strictSchemaValidation - If true, throws ValidationError for non-conformant schemas (default: false)
+ *
+ * @example
+ * ```typescript
+ * // Multi-schema configuration
+ * const sdk = new AstralSDK({
+ *   signer: wallet,
+ *   chainId: 11155111,
+ *   schemas: [LOCATION_V1_SCHEMA, customParcelSchema],
+ *   defaultSchema: LOCATION_V1_SCHEMA,
+ *   strictSchemaValidation: true
+ * });
+ * ```
  */
 export interface AstralSDKConfig {
   readonly defaultChain?: string;
@@ -379,6 +396,9 @@ export interface AstralSDKConfig {
   readonly apiKey?: string;
   readonly endpoint?: string;
   readonly debug?: boolean;
+  readonly schemas?: readonly RuntimeSchemaConfig[];
+  readonly defaultSchema?: RuntimeSchemaConfig;
+  readonly strictSchemaValidation?: boolean;
 }
 
 /**
@@ -440,4 +460,91 @@ export interface IPFSStorageConfig extends StorageConfig {
   readonly type: 'ipfs';
   readonly gateway?: string;
   readonly pinning?: boolean;
+}
+
+/**
+ * RuntimeSchemaConfig defines the essential configuration for an EAS schema
+ * at runtime. This is the minimal configuration needed for multi-schema support.
+ *
+ * For comprehensive schema metadata (version, networks, field types), use the
+ * static SchemaConfig from `@astral-protocol/sdk/schemas`.
+ *
+ * @property uid - The unique identifier of the schema as registered with EAS
+ * @property rawString - The raw schema definition string for use with EAS SchemaEncoder
+ *
+ * @example
+ * ```typescript
+ * const customSchema: RuntimeSchemaConfig = {
+ *   uid: "0x1234...",
+ *   rawString: "uint256 eventTimestamp,string srs,string locationType,string location"
+ * };
+ *
+ * await sdk.signOffchainLocationAttestation(unsigned, { schema: customSchema });
+ * ```
+ */
+export interface RuntimeSchemaConfig {
+  readonly uid: string;
+  readonly rawString: string;
+}
+
+/**
+ * SchemaOverrideOptions allows specifying a custom schema for attestation operations.
+ *
+ * @property schema - The schema configuration to use instead of the default
+ */
+export interface SchemaOverrideOptions {
+  readonly schema?: RuntimeSchemaConfig;
+}
+
+/**
+ * AstralConfig defines the unified configuration options for AstralSDK v0.2.0.
+ *
+ * This configuration is used by both the LocationModule and ComputeModule.
+ *
+ * @property chainId - The chain ID for blockchain operations (required)
+ * @property signer - Ethereum signer for creating signatures and transactions
+ * @property provider - Ethereum provider for read-only blockchain operations
+ * @property apiUrl - URL for Astral's compute API (defaults to https://api.astral.global)
+ * @property debug - Enable debug mode
+ *
+ * // Location-specific options
+ * @property defaultChain - Default blockchain name for operations (deprecated - use chainId)
+ * @property schemas - Pre-registered schemas for validation caching
+ * @property defaultSchema - Default schema to use when no schema is specified
+ * @property strictSchemaValidation - If true, throws ValidationError for non-conformant schemas
+ */
+export interface AstralConfig {
+  readonly chainId: number;
+  readonly signer?: unknown; // Will be refined to ethers.Signer
+  readonly provider?: unknown; // Will be refined to ethers.Provider
+  readonly apiUrl?: string;
+  readonly debug?: boolean;
+  // Location-specific (inherited from AstralSDKConfig)
+  readonly defaultChain?: string;
+  readonly schemas?: readonly RuntimeSchemaConfig[];
+  readonly defaultSchema?: RuntimeSchemaConfig;
+  readonly strictSchemaValidation?: boolean;
+}
+
+/**
+ * LocationConfig for the LocationModule
+ */
+export interface LocationConfig {
+  readonly chainId: number;
+  readonly signer?: unknown;
+  readonly provider?: unknown;
+  readonly debug?: boolean;
+  readonly defaultChain?: string;
+  readonly schemas?: readonly RuntimeSchemaConfig[];
+  readonly defaultSchema?: RuntimeSchemaConfig;
+  readonly strictSchemaValidation?: boolean;
+}
+
+/**
+ * ComputeConfig for the ComputeModule
+ */
+export interface ComputeConfig {
+  readonly apiUrl: string;
+  readonly chainId: number;
+  readonly signer?: unknown;
 }

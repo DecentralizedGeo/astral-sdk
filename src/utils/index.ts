@@ -10,5 +10,5 @@
 // Export type guards
 export * from './typeGuards';
 
-// Validation functions will be implemented in a future phase
-// export * from './validation';
+// Export schema validation utilities
+export * from './schemaValidation';

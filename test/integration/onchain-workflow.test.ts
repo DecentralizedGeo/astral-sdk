@@ -319,8 +319,11 @@ describe('AstralSDK - Onchain Workflow Integration', () => {
 
       const onchainProof = await sdk.createOnchainLocationAttestation(input, options);
 
-      // Verify the options were passed to the registrar
-      expect(registerSpy).toHaveBeenCalledWith(expect.any(Object), options);
+      // Verify the options were passed to the registrar (including resolved schema)
+      expect(registerSpy).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining(options)
+      );
       expect(onchainProof.revocable).toBe(false);
     });
 

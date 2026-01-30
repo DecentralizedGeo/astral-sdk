@@ -17,6 +17,7 @@ import {
   OnchainAttestationOptions,
   VerificationResult,
   VerificationError,
+  RuntimeSchemaConfig,
 } from '../core/types';
 import { ValidationError, RegistrationError, ChainConnectionError } from '../core/errors';
 import { getChainConfig, getSchemaUID, getSchemaString } from './chains';
@@ -33,7 +34,10 @@ export class OnchainRegistrar {
   private chainName: string;
   private contractAddress: string = '';
   private schemaUID: string = '';
+  private schemaString: string = '';
   private schemaEncoder?: SchemaEncoder;
+  /** Cache of schema encoders keyed by schema rawString */
+  private schemaEncoderCache: Map<string, SchemaEncoder> = new Map();
 
   /**
    * Creates a new OnchainRegistrar instance.
@@ -82,6 +86,12 @@ export class OnchainRegistrar {
       } else if (config.chain === 'optimism') {
         this.chainId = 10;
         this.chainName = 'optimism';
+        const chainConfig = getChainConfig(this.chainId);
+        this.contractAddress = chainConfig.easContractAddress;
+        this.schemaUID = config.schemaUID || getSchemaUID(this.chainId);
+      } else if (config.chain === 'base-sepolia') {
+        this.chainId = 84532;
+        this.chainName = 'base-sepolia';
         const chainConfig = getChainConfig(this.chainId);
         this.contractAddress = chainConfig.easContractAddress;
         this.schemaUID = config.schemaUID || getSchemaUID(this.chainId);
@@ -149,8 +159,11 @@ export class OnchainRegistrar {
       }
 
       // Create SchemaEncoder with the schema string (not the UID)
-      const schemaString = getSchemaString();
-      this.schemaEncoder = new SchemaEncoder(schemaString);
+      this.schemaString = getSchemaString();
+      this.schemaEncoder = new SchemaEncoder(this.schemaString);
+
+      // Cache the default schema encoder
+      this.schemaEncoderCache.set(this.schemaString, this.schemaEncoder);
     } catch (error) {
       throw new ChainConnectionError(
         'Failed to initialize EAS modules',
@@ -163,6 +176,40 @@ export class OnchainRegistrar {
         }
       );
     }
+  }
+
+  /**
+   * Gets or creates a SchemaEncoder for the given schema.
+   *
+   * Schema encoders are cached by rawString to avoid re-instantiation.
+   *
+   * @param schema - Optional schema configuration override
+   * @returns The appropriate SchemaEncoder instance
+   * @private
+   */
+  private getSchemaEncoder(schema?: RuntimeSchemaConfig): SchemaEncoder {
+    const rawString = schema?.rawString || this.schemaString;
+
+    // Check cache first
+    let encoder = this.schemaEncoderCache.get(rawString);
+    if (!encoder) {
+      // Create and cache new encoder
+      encoder = new SchemaEncoder(rawString);
+      this.schemaEncoderCache.set(rawString, encoder);
+    }
+
+    return encoder;
+  }
+
+  /**
+   * Gets the schema UID to use for an attestation.
+   *
+   * @param schema - Optional schema configuration override
+   * @returns The schema UID to use
+   * @private
+   */
+  private getSchemaUIDForAttestation(schema?: RuntimeSchemaConfig): string {
+    return schema?.uid || this.schemaUID;
   }
 
   /**
@@ -221,8 +268,11 @@ export class OnchainRegistrar {
 
       // Create SchemaEncoder with the schema string (not the UID)
       // This is the critical fix - SchemaEncoder needs a schema string, not a UID
-      const schemaString = getSchemaString();
-      this.schemaEncoder = new SchemaEncoder(schemaString);
+      this.schemaString = getSchemaString();
+      this.schemaEncoder = new SchemaEncoder(this.schemaString);
+
+      // Cache the default schema encoder
+      this.schemaEncoderCache.set(this.schemaString, this.schemaEncoder);
     } catch (error) {
       throw new ChainConnectionError(
         'Failed to initialize EAS modules',
@@ -285,9 +335,13 @@ export class OnchainRegistrar {
    * Convert an UnsignedLocationAttestation to EAS-compatible format
    *
    * @param proof - The unsigned location attestation
+   * @param schema - Optional schema override
    * @returns Encoded data string for EAS attestation
    */
-  private formatProofForEAS(proof: UnsignedLocationAttestation): string {
+  private formatProofForEAS(
+    proof: UnsignedLocationAttestation,
+    schema?: RuntimeSchemaConfig
+  ): string {
     try {
       // Create schema items array for encoding
       const schemaItems = [
@@ -306,8 +360,10 @@ export class OnchainRegistrar {
         schemaItems.push({ name: 'memo', value: proof.memo, type: 'string' });
       }
 
+      // Get the appropriate schema encoder
+      const encoder = this.getSchemaEncoder(schema);
       // Encode the data using SchemaEncoder
-      return this.schemaEncoder!.encodeData(schemaItems);
+      return encoder.encodeData(schemaItems);
     } catch (error) {
       throw new ValidationError(
         'Failed to format location attestation for EAS',
@@ -321,7 +377,7 @@ export class OnchainRegistrar {
    * Registers an unsigned location attestation on-chain using EAS
    *
    * @param unsignedProof - The unsigned location attestation to register
-   * @param options - Options for the registration process
+   * @param options - Options for the registration process (may include schema override)
    * @returns A complete OnchainLocationAttestation with transaction details
    */
   public async registerOnchainLocationAttestation(
@@ -335,12 +391,15 @@ export class OnchainRegistrar {
       // Get the recipient address (if not specified, use the signer's address)
       const recipient = unsignedProof.recipient || (await this.signer!.getAddress());
 
-      // Encode the proof data for EAS
-      const encodedData = this.formatProofForEAS(unsignedProof);
+      // Encode the proof data for EAS with the appropriate schema
+      const encodedData = this.formatProofForEAS(unsignedProof, options?.schema);
+
+      // Get the schema UID to use
+      const schemaUID = this.getSchemaUIDForAttestation(options?.schema);
 
       // Create attestation parameters
       const attestationParams = {
-        schema: this.schemaUID,
+        schema: schemaUID,
         data: {
           recipient,
           data: encodedData,

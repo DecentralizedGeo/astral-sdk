@@ -129,7 +129,7 @@ describe('Multi-chain Offchain Attestation Integration', () => {
               name: `${chainName} test location`,
             },
           },
-          locationType: 'geojson-point',
+          locationType: 'geojson',
           memo: `Testing offchain attestation on ${chainName} (${chainId})`,
         });
 
@@ -161,8 +161,8 @@ describe('Multi-chain Offchain Attestation Integration', () => {
 
         // Create location attestation
         const unsignedProof = await sdk.buildLocationAttestation({
-          location: [12.34, 56.78],
-          locationType: 'coordinates-decimal',
+          location: { type: 'Point', coordinates: [12.34, 56.78] },
+          locationType: 'geojson',
           memo: `Testing with chain name: ${chainName}`,
         });
 
@@ -187,8 +187,8 @@ describe('Multi-chain Offchain Attestation Integration', () => {
       });
 
       const unsignedProof = await sdk.buildLocationAttestation({
-        location: { lat: 10, lon: 20 },
-        locationType: 'coordinates-decimal',
+        location: { type: 'Point', coordinates: [20, 10] },
+        locationType: 'geojson',
         memo: 'Testing chainId priority',
       });
 
@@ -232,8 +232,8 @@ describe('Multi-chain Offchain Attestation Integration', () => {
         await sdk.extensions.ensureInitialized();
 
         const unsignedProof = await sdk.buildLocationAttestation({
-          location: { lat: 40.7128, lon: -74.006 }, // New York
-          locationType: 'coordinates-decimal',
+          location: { type: 'Point', coordinates: [-74.006, 40.7128] }, // New York
+          locationType: 'geojson',
           memo: `Multi-chain test on ${chainId}`,
         });
 
@@ -261,6 +261,7 @@ describe('Multi-chain Offchain Attestation Integration', () => {
       const unsignedProof = await sdk.buildLocationAttestation({
         location: {
           type: 'Feature',
+          properties: {},
           geometry: {
             type: 'Polygon',
             coordinates: [
@@ -273,7 +274,7 @@ describe('Multi-chain Offchain Attestation Integration', () => {
             ],
           },
         },
-        locationType: 'geojson-polygon',
+        locationType: 'geojson',
         memo: 'Backward compatibility test',
       });
 

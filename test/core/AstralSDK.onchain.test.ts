@@ -342,11 +342,11 @@ describe('AstralSDK - Onchain Workflow', () => {
       expect(result.revocable).toBe(false);
       expect(result.recipient).toBe('0x9876543210987654321098765432109876543210');
 
-      // Verify options were passed to registrar
+      // Verify options were passed to registrar (including the resolved schema)
       const registrarCall = (
         OnchainRegistrar.prototype.registerOnchainLocationAttestation as jest.Mock
       ).mock.calls[0];
-      expect(registrarCall[1]).toEqual(options);
+      expect(registrarCall[1]).toEqual(expect.objectContaining(options));
 
       // Restore the original implementation
       buildSpy.mockRestore();

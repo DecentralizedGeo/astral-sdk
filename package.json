@@ -1,6 +1,6 @@
 {
   "name": "@decentralized-geo/astral-sdk",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "description": "Astral Location Protocol SDK",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -10,6 +10,16 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "require": "./dist/index.js"
+    },
+    "./location": {
+      "types": "./dist/location/index.d.ts",
+      "import": "./dist/location/index.mjs",
+      "require": "./dist/location/index.js"
+    },
+    "./compute": {
+      "types": "./dist/compute/index.d.ts",
+      "import": "./dist/compute/index.mjs",
+      "require": "./dist/compute/index.js"
     },
     "./offchain": {
       "types": "./dist/offchain/index.d.ts",
