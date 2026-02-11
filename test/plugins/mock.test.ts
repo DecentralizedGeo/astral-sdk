@@ -11,7 +11,6 @@ import type { LocationClaim } from '../../src/plugins/types';
 const TEST_PRIVATE_KEY = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
 
 const NYC = { lat: 40.7484, lon: -73.9857 }; // Empire State Building
-const SF = { lat: 37.7749, lon: -122.4194 }; // San Francisco
 
 const nycClaim: LocationClaim = {
   lpVersion: '0.2',
@@ -24,7 +23,7 @@ const nycClaim: LocationClaim = {
 };
 
 describe('MockPlugin', () => {
-  describe('full lifecycle: collect → create → sign → verify → evaluate', () => {
+  describe('full lifecycle: collect → create → sign → verify', () => {
     it('completes the entire stamp lifecycle with valid results', async () => {
       const mock = new MockPlugin({
         ...NYC,
@@ -56,13 +55,6 @@ describe('MockPlugin', () => {
       expect(verification.signaturesValid).toBe(true);
       expect(verification.structureValid).toBe(true);
       expect(verification.signalsConsistent).toBe(true);
-
-      // 5. Evaluate against NYC claim
-      const evaluation = await mock.evaluate(stamp, nycClaim);
-      expect(evaluation.supportsClaim).toBe(true);
-      expect(evaluation.spatial).toBeGreaterThan(0.5);
-      expect(evaluation.temporal).toBeGreaterThan(0);
-      expect(evaluation.score).toBeGreaterThan(0.3);
     });
   });
 
@@ -80,10 +72,10 @@ describe('MockPlugin', () => {
       expect(Math.abs(lat2 - NYC.lat)).toBeLessThan(0.1);
     });
 
-    it('uses high accuracy when requested', async () => {
+    it('uses configured accuracy', async () => {
       const mock = new MockPlugin({ accuracy: 20 });
-      const signals = await mock.collect({ accuracy: 'high' });
-      expect(signals.data.accuracy).toBe(10); // half of 20
+      const signals = await mock.collect();
+      expect(signals.data.accuracy).toBe(20);
     });
   });
 
@@ -142,40 +134,6 @@ describe('MockPlugin', () => {
     });
   });
 
-  describe('evaluate', () => {
-    it('gives high score for co-located stamp and claim', async () => {
-      const mock = new MockPlugin({ ...NYC, timestamp: 1500, privateKey: TEST_PRIVATE_KEY });
-      const signals = await mock.collect();
-      const unsigned = await mock.create(signals);
-      const stamp = await mock.sign(unsigned);
-
-      const result = await mock.evaluate(stamp, nycClaim);
-      expect(result.supportsClaim).toBe(true);
-      expect(result.spatial).toBeGreaterThan(0.8);
-    });
-
-    it('gives low score for distant stamp', async () => {
-      const mock = new MockPlugin({ ...SF, timestamp: 1500, privateKey: TEST_PRIVATE_KEY });
-      const signals = await mock.collect();
-      const unsigned = await mock.create(signals);
-      const stamp = await mock.sign(unsigned);
-
-      const result = await mock.evaluate(stamp, nycClaim);
-      expect(result.supportsClaim).toBe(false);
-      expect(result.spatial).toBe(0);
-    });
-
-    it('gives zero temporal score for non-overlapping times', async () => {
-      const mock = new MockPlugin({ ...NYC, timestamp: 5000, privateKey: TEST_PRIVATE_KEY });
-      const signals = await mock.collect();
-      const unsigned = await mock.create(signals);
-      const stamp = await mock.sign(unsigned);
-
-      const result = await mock.evaluate(stamp, nycClaim);
-      expect(result.temporal).toBe(0);
-    });
-  });
-
   describe('SDK integration', () => {
     it('works through the SDK stamps/proofs/verify pipeline', async () => {
       const mock = new MockPlugin({ ...NYC, timestamp: 1500, privateKey: TEST_PRIVATE_KEY });
@@ -204,11 +162,13 @@ describe('MockPlugin', () => {
       // Build proof
       const proof = proofs.create(nycClaim, [stamp]);
 
-      // Verify
-      const assessment = await verify.proof(proof);
-      expect(assessment.confidence).toBeGreaterThan(0);
-      expect(assessment.stampResults).toHaveLength(1);
-      expect(assessment.stampResults[0].supportsClaim).toBe(true);
+      // Evaluate — VerifyModule measures stamp relevance to claim
+      const vector = await verify.proof(proof);
+      expect(vector.confidence).toBe(1);
+      expect(vector.stampResults).toHaveLength(1);
+      expect(vector.stampResults[0].withinRadius).toBe(true);
+      expect(vector.stampResults[0].distanceMeters).toBe(0);
+      expect(vector.stampResults[0].temporalOverlap).toBeGreaterThan(0);
     });
   });
 });

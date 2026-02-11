@@ -11,7 +11,7 @@
  * - A **stamp** is evidence from a single proof-of-location system
  * - A **proof** is a claim bundled with one or more stamps
  * - `verify` checks stamp internal validity (signatures, structure, signals)
- * - `evaluate` assesses how well a stamp supports a claim → credibility vector
+ * - `evaluate` assesses how well a proof supports a claim → credibility vector
  *
  * @module plugins/types
  */
@@ -204,8 +204,6 @@ export interface LocationProof {
 export interface CollectOptions {
   /** Maximum time to wait for signals (milliseconds) */
   timeout?: number;
-  /** Desired accuracy level */
-  accuracy?: 'low' | 'medium' | 'high';
   /** Specific signals to collect (plugin-dependent) */
   signals?: string[];
 }
@@ -258,41 +256,34 @@ export interface StampVerificationResult {
   details: Record<string, unknown>;
 }
 
+// ============================================
+// Proof evaluation types
+// ============================================
+
 /**
- * Result of evaluating how well a stamp supports a claim.
+ * Per-stamp result within a proof evaluation.
  *
- * This is the output of the evidence function E(C, E) → P from the
- * research framework. It produces a credibility vector, not a single score.
- */
-export interface CredibilityVector {
-  /** Does the stamp support the claim? */
-  supportsClaim: boolean;
-  /** Overall support score (0-1) */
-  score: number;
-  /** Spatial overlap score (0-1) */
-  spatial: number;
-  /** Temporal overlap score (0-1) */
-  temporal: number;
-  /** Plugin-specific evaluation details */
-  details: Record<string, unknown>;
-}
-
-// ============================================
-// Aggregated assessment types
-// ============================================
-
-/**
- * Per-stamp result within a proof verification.
+ * Combines internal verification (is the stamp valid?) with
+ * raw relevance measurements (how close is it to the claim?).
+ * No opinionated scoring — consumers interpret the measurements.
  */
 export interface StampResult {
   stampIndex: number;
   plugin: string;
+  /** Signature verification passed */
   signaturesValid: boolean;
+  /** Structure conforms to expected format */
   structureValid: boolean;
+  /** Internal signals are self-consistent */
   signalsConsistent: boolean;
-  supportsClaim: boolean;
-  claimSupportScore: number;
-  pluginResult: Record<string, unknown>;
+  /** Haversine distance from stamp to claim location (meters) */
+  distanceMeters: number;
+  /** Fraction of stamp/claim time windows that overlap (0-1) */
+  temporalOverlap: number;
+  /** Is the stamp within the claim's radius (accounting for stamp accuracy)? */
+  withinRadius: boolean;
+  /** Additional details (verification + evaluation) */
+  details: Record<string, unknown>;
 }
 
 /**
@@ -308,16 +299,18 @@ export interface CorrelationAssessment {
 }
 
 /**
- * Overall credibility assessment — the output of proof verification.
+ * The output of proof evaluation — the evidence function E(C, E) → P
+ * from the research framework.
  *
- * The confidence score is NOT a calibrated probability. It's a heuristic
- * assessment incorporating evidence validity, claim support, and source
- * independence/agreement.
+ * v0 scoring is deliberately simple: confidence is the fraction of verified
+ * stamps that are co-located and co-temporal with the claim. Future versions
+ * will introduce more sophisticated scoring (source-specific weighting,
+ * threat-model-aware assessment, etc.).
  */
-export interface CredibilityAssessment {
-  /** Overall confidence (0-1) — NOT a calibrated probability */
+export interface CredibilityVector {
+  /** Fraction of verified stamps supporting the claim (0-1) */
   confidence: number;
-  /** Per-stamp verification results */
+  /** Per-stamp verification and relevance results */
   stampResults: StampResult[];
   /** Cross-correlation assessment (for multi-stamp proofs) */
   correlation?: CorrelationAssessment;
@@ -335,13 +328,12 @@ export interface CredibilityAssessment {
  * All methods are optional. Plugins implement what makes sense for their
  * environment and capabilities:
  *
- * - ProofMode RN module: all five methods (collect on mobile, verify anywhere)
- * - WitnessChain Node client: all five methods (collect via API, verify anywhere)
- * - Mock plugin: all five (runs everywhere, for testing)
+ * - ProofMode RN module: collect on mobile, verify anywhere
+ * - WitnessChain Node client: collect via API, verify anywhere
+ * - Mock plugin: runs everywhere, for testing
  *
- * The distinction isn't "client vs server" — it's "what does this plugin's
- * environment support?" Running verify/evaluate through the Astral hosted
- * service adds a TEE attestation on top.
+ * Evaluation (assessing how well stamps support a claim) is handled by the
+ * SDK's VerifyModule, not by individual plugins.
  */
 export interface LocationProofPlugin {
   /** Plugin name (e.g., "proofmode", "witnesschain", "mock") */
@@ -375,12 +367,6 @@ export interface LocationProofPlugin {
    * Verify a stamp's internal validity (signatures, structure, signal consistency).
    */
   verify?(stamp: LocationStamp): Promise<StampVerificationResult>;
-
-  /**
-   * Evaluate how well a stamp supports a location claim.
-   * Produces a credibility vector — the evidence function E(C, E) → P.
-   */
-  evaluate?(stamp: LocationStamp, claim: LocationClaim): Promise<CredibilityVector>;
 }
 
 // ============================================

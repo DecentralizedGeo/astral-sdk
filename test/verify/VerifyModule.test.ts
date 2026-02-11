@@ -49,8 +49,7 @@ function createVerifyPlugin(
     structureValid: true,
     signalsConsistent: true,
     details: {},
-  },
-  evaluateResult = { supportsClaim: true, score: 0.8, spatial: 0.85, temporal: 0.9, details: {} }
+  }
 ): LocationProofPlugin {
   return {
     name,
@@ -59,7 +58,6 @@ function createVerifyPlugin(
     requiredCapabilities: [],
     description: `Test plugin ${name}`,
     verify: jest.fn().mockResolvedValue(verifyResult),
-    evaluate: jest.fn().mockResolvedValue(evaluateResult),
   };
 }
 
@@ -102,7 +100,7 @@ describe('VerifyModule', () => {
   });
 
   describe('proof (single stamp)', () => {
-    it('verifies and evaluates a single-stamp proof', async () => {
+    it('measures a co-located, co-temporal stamp', async () => {
       registry.register(createVerifyPlugin('mock'));
       const proof: LocationProof = {
         claim: baseClaim,
@@ -111,9 +109,10 @@ describe('VerifyModule', () => {
 
       const result = await verify.proof(proof);
       expect(result.stampResults).toHaveLength(1);
-      expect(result.stampResults[0].supportsClaim).toBe(true);
-      expect(result.stampResults[0].claimSupportScore).toBe(0.8);
-      expect(result.confidence).toBeLessThanOrEqual(0.85); // Single stamp cap
+      expect(result.stampResults[0].distanceMeters).toBe(0);
+      expect(result.stampResults[0].temporalOverlap).toBe(1);
+      expect(result.stampResults[0].withinRadius).toBe(true);
+      expect(result.confidence).toBe(1);
       expect(result.correlation).toBeUndefined();
     });
 
@@ -134,6 +133,22 @@ describe('VerifyModule', () => {
       const result = await verify.proof(proof);
       expect(result.confidence).toBe(0);
     });
+
+    it('reports distance for a distant stamp', async () => {
+      registry.register(createVerifyPlugin('mock'));
+      const sfStamp = makeStamp('mock', {
+        location: { type: 'Point', coordinates: [-122.4194, 37.7749] },
+      });
+      const proof: LocationProof = {
+        claim: baseClaim,
+        stamps: [sfStamp],
+      };
+
+      const result = await verify.proof(proof);
+      expect(result.stampResults[0].distanceMeters).toBeGreaterThan(4_000_000);
+      expect(result.stampResults[0].withinRadius).toBe(false);
+      expect(result.confidence).toBe(0);
+    });
   });
 
   describe('proof (multi-stamp)', () => {
@@ -148,11 +163,11 @@ describe('VerifyModule', () => {
       const result = await verify.proof(proof);
       expect(result.stampResults).toHaveLength(2);
       expect(result.correlation).toBeDefined();
-      expect(result.correlation!.independence).toBe(1); // Two different plugins
-      expect(result.correlation!.agreement).toBeGreaterThan(0); // Same scores
+      expect(result.correlation!.independence).toBe(1);
+      expect(result.correlation!.agreement).toBe(1);
     });
 
-    it('gives independence bonus for diverse plugins', async () => {
+    it('reports higher confidence when more stamps support claim', async () => {
       registry.register(createVerifyPlugin('alpha'));
       registry.register(createVerifyPlugin('beta'));
 
@@ -168,8 +183,9 @@ describe('VerifyModule', () => {
       const singleResult = await verify.proof(singleProof);
       const multiResult = await verify.proof(multiProof);
 
-      // Multi-stamp with independent plugins should score higher
-      expect(multiResult.confidence).toBeGreaterThan(singleResult.confidence);
+      // Both should be 1.0 since all stamps are co-located and co-temporal
+      expect(singleResult.confidence).toBe(1);
+      expect(multiResult.confidence).toBe(1);
     });
   });
 

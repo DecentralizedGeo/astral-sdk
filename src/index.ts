@@ -65,7 +65,6 @@ export type {
   CredibilityVector,
   StampResult,
   CorrelationAssessment,
-  CredibilityAssessment,
   SubjectIdentifier,
   TimeBounds,
   LocationData,
