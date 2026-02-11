@@ -4,7 +4,8 @@
  * Mock Location Proof Plugin
  *
  * A complete LocationProofPlugin implementation for testing and development.
- * All five methods, real ECDSA crypto, configurable behavior.
+ * All four methods (collect, create, sign, verify), real ECDSA crypto,
+ * configurable behavior.
  *
  * Usage:
  * ```typescript
@@ -24,14 +25,11 @@ import { ethers } from 'ethers';
 import type {
   LocationProofPlugin,
   Runtime,
-  CollectOptions,
   RawSignals,
   UnsignedLocationStamp,
   LocationStamp,
   StampSigner,
-  LocationClaim,
   StampVerificationResult,
-  CredibilityVector,
 } from '../types';
 
 export interface MockPluginOptions {
@@ -49,38 +47,6 @@ export interface MockPluginOptions {
   durationSeconds?: number;
   /** Deterministic private key for signing. If omitted, generates a random wallet. */
   privateKey?: string;
-}
-
-// Earth radius in meters for haversine calculation
-const EARTH_RADIUS_M = 6_371_000;
-
-/**
- * Haversine distance between two lat/lon points in meters.
- */
-function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const toRad = (deg: number) => (deg * Math.PI) / 180;
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-  return 2 * EARTH_RADIUS_M * Math.asin(Math.sqrt(a));
-}
-
-/**
- * Compute overlap ratio between two time intervals.
- * Returns 0 if no overlap, 1 if one fully contains the other.
- */
-function temporalOverlap(
-  a: { start: number; end: number },
-  b: { start: number; end: number }
-): number {
-  const overlapStart = Math.max(a.start, b.start);
-  const overlapEnd = Math.min(a.end, b.end);
-  if (overlapEnd <= overlapStart) return 0;
-  const overlap = overlapEnd - overlapStart;
-  const shorter = Math.min(a.end - a.start, b.end - b.start);
-  return shorter > 0 ? overlap / shorter : 0;
 }
 
 export class MockPlugin implements LocationProofPlugin {
@@ -112,7 +78,7 @@ export class MockPlugin implements LocationProofPlugin {
   /**
    * Collect fake signals. Applies optional jitter to the configured location.
    */
-  async collect(options?: CollectOptions): Promise<RawSignals> {
+  async collect(): Promise<RawSignals> {
     let { lat, lon } = this.options;
 
     // Apply jitter if configured
@@ -123,8 +89,6 @@ export class MockPlugin implements LocationProofPlugin {
     }
 
     const now = this.options.timestamp ?? Math.floor(Date.now() / 1000);
-    const accuracy =
-      options?.accuracy === 'high' ? this.options.accuracy / 2 : this.options.accuracy;
 
     return {
       plugin: 'mock',
@@ -132,7 +96,7 @@ export class MockPlugin implements LocationProofPlugin {
       data: {
         latitude: lat,
         longitude: lon,
-        accuracy,
+        accuracy: this.options.accuracy,
         altitude: 0,
         provider: 'mock',
         speed: 0,
@@ -277,74 +241,5 @@ export class MockPlugin implements LocationProofPlugin {
       signalsConsistent,
       details,
     };
-  }
-
-  /**
-   * Evaluate how well a stamp supports a location claim.
-   * Uses haversine distance for spatial scoring and temporal overlap.
-   */
-  async evaluate(stamp: LocationStamp, claim: LocationClaim): Promise<CredibilityVector> {
-    const details: Record<string, unknown> = {};
-
-    // Extract stamp coordinates
-    let stampLat: number;
-    let stampLon: number;
-    const loc = stamp.location;
-    if (typeof loc === 'object' && 'coordinates' in loc) {
-      const coords = loc.coordinates as number[];
-      stampLon = coords[0];
-      stampLat = coords[1];
-    } else {
-      return {
-        supportsClaim: false,
-        score: 0,
-        spatial: 0,
-        temporal: 0,
-        details: { error: 'Cannot extract coordinates from stamp location' },
-      };
-    }
-
-    // Extract claim coordinates
-    let claimLat: number;
-    let claimLon: number;
-    const claimLoc = claim.location;
-    if (typeof claimLoc === 'object' && 'coordinates' in claimLoc) {
-      const coords = claimLoc.coordinates as number[];
-      claimLon = coords[0];
-      claimLat = coords[1];
-    } else {
-      return {
-        supportsClaim: false,
-        score: 0,
-        spatial: 0,
-        temporal: 0,
-        details: { error: 'Cannot extract coordinates from claim location' },
-      };
-    }
-
-    // Spatial scoring: haversine distance vs claim radius
-    const distance = haversineDistance(stampLat, stampLon, claimLat, claimLon);
-    const accuracyMeters = (stamp.signals.accuracyMeters as number) ?? 0;
-    const effectiveRadius = claim.radius + accuracyMeters;
-
-    let spatial: number;
-    if (distance <= effectiveRadius) {
-      spatial = 1.0 - distance / effectiveRadius;
-    } else {
-      // Outside radius — score decays with distance
-      spatial = Math.max(0, 1.0 - distance / (effectiveRadius * 3));
-    }
-    details.distanceMeters = Math.round(distance);
-    details.effectiveRadiusMeters = effectiveRadius;
-
-    // Temporal scoring
-    const temporal = temporalOverlap(stamp.temporalFootprint, claim.time);
-    details.temporalOverlap = temporal;
-
-    // Combined score (weighted: spatial 60%, temporal 40%)
-    const score = spatial * 0.6 + temporal * 0.4;
-    const supportsClaim = score > 0.3 && spatial > 0.1 && temporal > 0;
-
-    return { supportsClaim, score, spatial, temporal, details };
   }
 }
