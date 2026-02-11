@@ -46,6 +46,46 @@ export type {
   AttestationResult,
 } from './compute';
 
+// Plugin system
+export { PluginRegistry, MockPlugin } from './plugins';
+export type { MockPluginOptions } from './plugins';
+export type {
+  LocationProofPlugin,
+  PluginMetadata,
+  Runtime,
+  CollectOptions,
+  RawSignals,
+  LocationStamp,
+  UnsignedLocationStamp,
+  Signature,
+  StampSigner,
+  LocationProof,
+  LocationClaim,
+  StampVerificationResult,
+  CredibilityVector,
+  StampResult,
+  CorrelationAssessment,
+  CredibilityAssessment,
+  SubjectIdentifier,
+  TimeBounds,
+  LocationData,
+  LPGeometry,
+  LPGeometryType,
+} from './plugins';
+export {
+  getPluginMetadata,
+  isGeoJSONGeometry,
+  isMultiStampProof,
+  isUnsignedStamp,
+} from './plugins';
+
+// Stamps, Proofs, Verify modules
+export { StampsModule } from './stamps';
+export type { StampsCollectOptions, StampsCreateOptions, StampsSignOptions } from './stamps';
+export { ProofsModule } from './proofs';
+export { VerifyModule } from './verify';
+export type { VerifyOptions } from './verify';
+
 // Error hierarchy
 export * from './core/errors';
 

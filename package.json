@@ -30,6 +30,11 @@
       "types": "./dist/onchain/index.d.ts",
       "import": "./dist/onchain/index.mjs",
       "require": "./dist/onchain/index.js"
+    },
+    "./plugins": {
+      "types": "./dist/plugins/index.d.ts",
+      "import": "./dist/plugins/index.mjs",
+      "require": "./dist/plugins/index.js"
     }
   },
   "files": [
