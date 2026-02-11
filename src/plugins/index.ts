@@ -1,4 +1,4 @@
-// Copyright © 2026 Sophia Systems Corporation
+// Copyright © 2025 Sophia Systems Corporation
 
 /**
  * Location Proof Plugin System
@@ -31,11 +31,11 @@ export type {
   LocationProof,
   LocationClaim,
 
-  // Verification results
+  // Verification and evaluation results
   StampVerificationResult,
-  CredibilityVector,
   StampResult,
   CorrelationAssessment,
+  CredibilityVector,
   CredibilityAssessment,
 
   // Shared types

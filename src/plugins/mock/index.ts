@@ -1,4 +1,4 @@
-// Copyright © 2026 Sophia Systems Corporation
+// Copyright © 2025 Sophia Systems Corporation
 
 /**
  * Mock Location Proof Plugin
@@ -292,6 +292,15 @@ export class MockPlugin implements LocationProofPlugin {
     const loc = stamp.location;
     if (typeof loc === 'object' && 'coordinates' in loc) {
       const coords = loc.coordinates as number[];
+      if (!Array.isArray(coords) || coords.length < 2) {
+        return {
+          supportsClaim: false,
+          score: 0,
+          spatial: 0,
+          temporal: 0,
+          details: { error: 'Stamp coordinates array must have at least 2 elements' },
+        };
+      }
       stampLon = coords[0];
       stampLat = coords[1];
     } else {
@@ -310,6 +319,15 @@ export class MockPlugin implements LocationProofPlugin {
     const claimLoc = claim.location;
     if (typeof claimLoc === 'object' && 'coordinates' in claimLoc) {
       const coords = claimLoc.coordinates as number[];
+      if (!Array.isArray(coords) || coords.length < 2) {
+        return {
+          supportsClaim: false,
+          score: 0,
+          spatial: 0,
+          temporal: 0,
+          details: { error: 'Claim coordinates array must have at least 2 elements' },
+        };
+      }
       claimLon = coords[0];
       claimLat = coords[1];
     } else {
@@ -324,7 +342,7 @@ export class MockPlugin implements LocationProofPlugin {
 
     // Spatial scoring: haversine distance vs claim radius
     const distance = haversineDistance(stampLat, stampLon, claimLat, claimLon);
-    const accuracyMeters = (stamp.signals.accuracyMeters as number) ?? 0;
+    const accuracyMeters = (stamp.signals?.accuracyMeters as number | undefined) ?? 0;
     const effectiveRadius = claim.radius + accuracyMeters;
 
     let spatial: number;

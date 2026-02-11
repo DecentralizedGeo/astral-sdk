@@ -1,4 +1,4 @@
-// Copyright © 2026 Sophia Systems Corporation
+// Copyright © 2025 Sophia Systems Corporation
 
 /**
  * Location Proof Plugin Types
@@ -369,7 +369,7 @@ export interface LocationProofPlugin {
   /**
    * Cryptographically sign an unsigned stamp.
    */
-  sign?(stamp: UnsignedLocationStamp, signer: StampSigner): Promise<LocationStamp>;
+  sign?(stamp: UnsignedLocationStamp, signer?: StampSigner): Promise<LocationStamp>;
 
   /**
    * Verify a stamp's internal validity (signatures, structure, signal consistency).

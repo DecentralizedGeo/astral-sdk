@@ -35,6 +35,21 @@
       "types": "./dist/plugins/index.d.ts",
       "import": "./dist/plugins/index.mjs",
       "require": "./dist/plugins/index.js"
+    },
+    "./stamps": {
+      "types": "./dist/stamps/index.d.ts",
+      "import": "./dist/stamps/index.mjs",
+      "require": "./dist/stamps/index.js"
+    },
+    "./proofs": {
+      "types": "./dist/proofs/index.d.ts",
+      "import": "./dist/proofs/index.mjs",
+      "require": "./dist/proofs/index.js"
+    },
+    "./verify": {
+      "types": "./dist/verify/index.d.ts",
+      "import": "./dist/verify/index.mjs",
+      "require": "./dist/verify/index.js"
     }
   },
   "files": [

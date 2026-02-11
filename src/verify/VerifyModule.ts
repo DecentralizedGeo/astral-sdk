@@ -1,4 +1,4 @@
-// Copyright © 2026 Sophia Systems Corporation
+// Copyright © 2025 Sophia Systems Corporation
 
 /**
  * VerifyModule — verification orchestration
@@ -21,6 +21,14 @@ import type {
   CorrelationAssessment,
   PluginMetadata,
 } from '../plugins/types';
+
+// Confidence scoring constants
+const MAX_SINGLE_STAMP = 0.85;
+const INVALID_PENALTY = 0.05;
+const INDEPENDENCE_THRESHOLD = 0.5;
+const INDEPENDENCE_BONUS_WEIGHT = 0.1;
+const AGREEMENT_THRESHOLD = 0.7;
+const AGREEMENT_BONUS_WEIGHT = 0.15;
 
 export interface VerifyOptions {
   /** Use the hosted service instead of local verification. */
@@ -78,15 +86,21 @@ export class VerifyModule {
       const plugin = this.registry.get(s.plugin);
 
       // Verify internal validity
-      let verification: StampVerificationResult = {
-        valid: true,
-        signaturesValid: true,
-        structureValid: true,
-        signalsConsistent: true,
-        details: {},
-      };
-      if (plugin.verify) {
+      if (!plugin.verify) {
+        throw new Error(
+          `Plugin '${plugin.name}' does not implement verify() - cannot verify stamp at index ${i}`
+        );
+      }
+
+      let verification: StampVerificationResult;
+      try {
         verification = await plugin.verify(s);
+      } catch (error) {
+        throw new Error(
+          `Plugin '${plugin.name}' verify() failed for stamp at index ${i}: ${
+            error instanceof Error ? error.message : String(error)
+          }`
+        );
       }
 
       // Evaluate against claim
@@ -98,7 +112,15 @@ export class VerifyModule {
         details: {},
       };
       if (plugin.evaluate) {
-        evaluation = await plugin.evaluate(s, proof.claim);
+        try {
+          evaluation = await plugin.evaluate(s, proof.claim);
+        } catch (error) {
+          throw new Error(
+            `Plugin '${plugin.name}' evaluate() failed for stamp at index ${i}: ${
+              error instanceof Error ? error.message : String(error)
+            }`
+          );
+        }
       }
 
       stampResults.push({
@@ -138,6 +160,16 @@ export class VerifyModule {
 
   /**
    * Analyze cross-correlation between stamps from different plugins.
+   *
+   * Independence metric:
+   * Measures source diversity as uniquePlugins / totalStamps.
+   * - 1.0 = all stamps from different plugins (maximum independence)
+   * - 0.5 = half the stamps are duplicates from the same plugin
+   * - Lower values indicate correlated evidence sources
+   *
+   * Rationale: Independent evidence sources are more valuable than
+   * multiple stamps from the same system, as they reduce systemic bias
+   * and single points of failure.
    */
   private analyzeCorrelation(results: StampResult[]): CorrelationAssessment {
     const uniquePlugins = new Set(results.map(r => r.plugin));
@@ -171,9 +203,6 @@ export class VerifyModule {
    * Compute overall confidence from stamp results and correlation.
    */
   private computeConfidence(results: StampResult[], correlation?: CorrelationAssessment): number {
-    const MAX_SINGLE_STAMP = 0.85;
-    const INVALID_PENALTY = 0.05;
-
     const validResults = results.filter(r => r.structureValid && r.signaturesValid);
     if (validResults.length === 0) return 0;
 
@@ -184,11 +213,11 @@ export class VerifyModule {
 
     // Multi-stamp bonuses
     if (correlation) {
-      if (correlation.independence > 0.5) {
-        confidence += correlation.independence * 0.1; // Up to +10%
+      if (correlation.independence > INDEPENDENCE_THRESHOLD) {
+        confidence += correlation.independence * INDEPENDENCE_BONUS_WEIGHT;
       }
-      if (correlation.agreement > 0.7) {
-        confidence += (correlation.agreement - 0.7) * 0.15; // Up to +4.5%
+      if (correlation.agreement > AGREEMENT_THRESHOLD) {
+        confidence += (correlation.agreement - AGREEMENT_THRESHOLD) * AGREEMENT_BONUS_WEIGHT;
       }
     }
 
