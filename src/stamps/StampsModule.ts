@@ -1,4 +1,4 @@
-// Copyright © 2025 Sophia Systems Corporation
+// Copyright © 2026 Sophia Systems Corporation
 
 /**
  * StampsModule — evidence collection orchestration
@@ -60,17 +60,14 @@ export class StampsModule {
       throw new Error('No plugins available that implement collect()');
     }
 
-    const results: RawSignals[] = [];
-
-    for (const plugin of plugins) {
+    const collectPromises = plugins.map(plugin => {
       if (!plugin.collect) {
         throw new Error(`Plugin '${plugin.name}' does not implement collect()`);
       }
-      const signals = await plugin.collect(options);
-      results.push(signals);
-    }
+      return plugin.collect(options);
+    });
 
-    return results;
+    return Promise.all(collectPromises);
   }
 
   /**
