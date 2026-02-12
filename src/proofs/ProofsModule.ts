@@ -151,7 +151,7 @@ export class ProofsModule {
    * const local = await proofs.verify(proof);
    * if (local.dimensions.spatial.withinRadiusFraction < 0.8) return;
    *
-   * // Then get TEE attestation (requires API key)
+   * // Then get TEE attestation (API key optional, throttled without one)
    * const result = await proofs.verify(proof, { mode: 'tee' });
    * if (isVerifiedLocationProof(result)) {
    *   console.log('EAS attestation:', result.attestation.uid);
@@ -175,7 +175,8 @@ export class ProofsModule {
     if (mode === 'tee') {
       if (!this.apiClient) {
         throw new Error(
-          'TEE verification requires an API client. Configure apiKey in AstralSDK options.'
+          'TEE verification requires a hosted service connection. ' +
+            'Use AstralSDK (which configures this automatically) or pass an AstralApiClient.'
         );
       }
       const { chainId, submitOnchain, schema, recipient } = options ?? {};

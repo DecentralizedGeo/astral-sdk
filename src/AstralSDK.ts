@@ -105,13 +105,12 @@ export class AstralSDK {
       signer: config.signer,
     });
 
-    // Initialize API client for hosted verification (optional)
-    const apiClient = config.apiKey
-      ? new AstralApiClient({
-          baseURL: config.apiUrl ?? 'https://api.astral.global',
-          apiKey: config.apiKey,
-        })
-      : undefined;
+    // Initialize API client for hosted verification
+    // API key is optional (throttled to 100 req/hour without one)
+    const apiClient = new AstralApiClient({
+      baseURL: config.apiUrl ?? 'https://api.astral.global',
+      apiKey: config.apiKey,
+    });
 
     // Initialize plugin system
     this.plugins = new PluginRegistry();

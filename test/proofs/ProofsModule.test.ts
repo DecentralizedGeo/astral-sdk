@@ -232,7 +232,7 @@ describe('ProofsModule', () => {
         };
 
         await expect(proofs.verify(proof, { mode: 'tee' })).rejects.toThrow(
-          'TEE verification requires an API client'
+          'TEE verification requires a hosted service connection'
         );
       });
 
