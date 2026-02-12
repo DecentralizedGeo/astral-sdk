@@ -16,7 +16,6 @@ import type {
   StampVerificationResult,
   CredibilityVector,
   StampResult,
-  CorrelationAssessment,
 } from '../plugins/types';
 
 // Earth radius in meters for haversine calculation
@@ -73,6 +72,35 @@ function extractCoordinates(location: LocationData): [number, number] | null {
  */
 export class ProofsModule {
   constructor(private readonly registry: PluginRegistry) {}
+
+  /**
+   * Example weighting function: Basic support ratio.
+   *
+   * Returns the fraction of stamps that pass all validity checks, are spatially
+   * relevant, and have temporal overlap. This is a simple example — applications
+   * should design weighting functions based on their trust models.
+   *
+   * @example
+   * ```typescript
+   * const vector = await proofs.verify(proof);
+   * const score = ProofsModule.exampleWeighting(vector);
+   *
+   * if (score >= 0.8 && vector.meta.stampCount >= 2) {
+   *   console.log('High confidence with multi-source evidence');
+   * }
+   * ```
+   */
+  static exampleWeighting(vector: CredibilityVector): number {
+    const { dimensions } = vector;
+
+    // All validity checks must pass
+    if (dimensions.validity.signaturesValidFraction < 1.0) return 0;
+    if (dimensions.validity.structureValidFraction < 1.0) return 0;
+    if (dimensions.validity.signalsConsistentFraction < 1.0) return 0;
+
+    // Combine spatial and temporal relevance
+    return (dimensions.spatial.withinRadiusFraction + dimensions.temporal.meanOverlap) / 2;
+  }
 
   /**
    * Bundle a claim and stamps into a LocationProof.
@@ -162,19 +190,17 @@ export class ProofsModule {
       })
     );
 
-    // NOTE: Correlation and confidence scoring here is a v0 placeholder.
-    // In practice, evaluating cross-correlation of evidence from different PoL
-    // systems is verifier-specific — different consumers place different value
-    // on different proof sources. Future versions will support pluggable
-    // evaluation strategies.
-    const correlation = proof.stamps.length > 1 ? this.analyzeCorrelation(stampResults) : undefined;
-
-    const confidence = this.computeConfidence(stampResults);
+    // Compute multidimensional credibility assessment
+    const dimensions = this.computeDimensions(stampResults);
 
     return {
-      confidence,
+      dimensions,
       stampResults,
-      correlation,
+      meta: {
+        stampCount: stampResults.length,
+        evaluatedAt: Math.floor(Date.now() / 1000),
+        evaluationMode: mode,
+      },
     };
   }
 
@@ -221,56 +247,90 @@ export class ProofsModule {
   }
 
   /**
-   * Analyze cross-correlation between stamps from different plugins.
+   * Compute multidimensional credibility assessment.
    *
-   * NOTE: This is a simplified v0 approach. More sophisticated methods for
-   * quantifying correlation between heterogeneous proof-of-location systems
-   * are being researched.
+   * Each dimension is independently quantifiable from stamp data.
+   * Applications apply their own weighting schemes to make trust decisions.
    *
-   * Current metrics:
-   * - Independence: uniquePlugins / totalStamps
-   * - Agreement: do stamps agree on whether they're within the claim radius?
+   * v0 dimensions: spatial, temporal, validity, independence
+   * Future: economic security, decentralization, freshness, source reputation
    */
-  private analyzeCorrelation(results: StampResult[]): CorrelationAssessment {
+  private computeDimensions(results: StampResult[]): CredibilityVector['dimensions'] {
+    if (results.length === 0) {
+      // Return zero values for empty proofs
+      return {
+        spatial: {
+          meanDistanceMeters: Infinity,
+          maxDistanceMeters: Infinity,
+          withinRadiusFraction: 0,
+        },
+        temporal: {
+          meanOverlap: 0,
+          minOverlap: 0,
+          fullyOverlappingFraction: 0,
+        },
+        validity: {
+          signaturesValidFraction: 0,
+          structureValidFraction: 0,
+          signalsConsistentFraction: 0,
+        },
+        independence: {
+          uniquePluginRatio: 0,
+          spatialAgreement: 0,
+          pluginNames: [],
+        },
+      };
+    }
+
+    // Spatial dimension
+    const distances = results.map(r => r.distanceMeters).filter(d => d !== Infinity);
+    const meanDistanceMeters =
+      distances.length > 0 ? distances.reduce((sum, d) => sum + d, 0) / distances.length : Infinity;
+    const maxDistanceMeters = distances.length > 0 ? Math.max(...distances) : Infinity;
+    const withinRadiusCount = results.filter(r => r.withinRadius).length;
+    const withinRadiusFraction = withinRadiusCount / results.length;
+
+    // Temporal dimension
+    const overlaps = results.map(r => r.temporalOverlap);
+    const meanOverlap = overlaps.reduce((sum, o) => sum + o, 0) / overlaps.length;
+    const minOverlap = Math.min(...overlaps);
+    const fullyOverlappingCount = overlaps.filter(o => o === 1.0).length;
+    const fullyOverlappingFraction = fullyOverlappingCount / results.length;
+
+    // Validity dimension
+    const signaturesValidCount = results.filter(r => r.signaturesValid).length;
+    const structureValidCount = results.filter(r => r.structureValid).length;
+    const signalsConsistentCount = results.filter(r => r.signalsConsistent).length;
+
+    // Independence dimension
     const uniquePlugins = new Set(results.map(r => r.plugin));
-    const independence = uniquePlugins.size / results.length;
+    const uniquePluginRatio = uniquePlugins.size / results.length;
+    const withinRadiusAgree = results.filter(r => r.withinRadius).length;
+    const majority = Math.max(withinRadiusAgree, results.length - withinRadiusAgree);
+    const spatialAgreement = majority / results.length;
+    const pluginNames = Array.from(uniquePlugins);
 
-    // Agreement: fraction of stamps that agree on withinRadius
-    const withinCount = results.filter(r => r.withinRadius).length;
-    const majority = Math.max(withinCount, results.length - withinCount);
-    const agreement = majority / results.length;
-
-    const notes: string[] = [];
-    if (independence === 1) {
-      notes.push('All stamps from independent plugins');
-    } else if (independence < 0.5) {
-      notes.push('Most stamps from the same plugin — limited independence');
-    }
-    if (agreement === 1) {
-      notes.push('All stamps agree on spatial relevance');
-    }
-
-    return { independence, agreement, notes };
-  }
-
-  /**
-   * Confidence = fraction of verified stamps that support the claim.
-   *
-   * A stamp "supports" if it verified, is within the claim radius,
-   * and has temporal overlap. No weighting, caps, or bonuses.
-   */
-  private computeConfidence(results: StampResult[]): number {
-    if (results.length === 0) return 0;
-
-    const supporting = results.filter(
-      r =>
-        r.signaturesValid &&
-        r.structureValid &&
-        r.signalsConsistent &&
-        r.withinRadius &&
-        r.temporalOverlap > 0
-    );
-
-    return supporting.length / results.length;
+    return {
+      spatial: {
+        meanDistanceMeters: Math.round(meanDistanceMeters),
+        maxDistanceMeters: Math.round(maxDistanceMeters),
+        withinRadiusFraction,
+      },
+      temporal: {
+        meanOverlap,
+        minOverlap,
+        fullyOverlappingFraction,
+      },
+      validity: {
+        signaturesValidFraction: signaturesValidCount / results.length,
+        structureValidFraction: structureValidCount / results.length,
+        signalsConsistentFraction: signalsConsistentCount / results.length,
+      },
+      independence: {
+        uniquePluginRatio,
+        spatialAgreement,
+        pluginNames,
+      },
+    };
   }
 }

@@ -166,11 +166,16 @@ describe('MockPlugin', () => {
 
       // Verify proof — measures stamp relevance to claim
       const vector = await proofs.verify(proof);
-      expect(vector.confidence).toBe(1);
       expect(vector.stampResults).toHaveLength(1);
       expect(vector.stampResults[0].withinRadius).toBe(true);
       expect(vector.stampResults[0].distanceMeters).toBe(0);
       expect(vector.stampResults[0].temporalOverlap).toBeGreaterThan(0);
+
+      // Check dimensional assessment
+      expect(vector.dimensions.spatial.withinRadiusFraction).toBe(1);
+      expect(vector.dimensions.temporal.meanOverlap).toBeGreaterThan(0);
+      expect(vector.dimensions.validity.signaturesValidFraction).toBe(1);
+      expect(vector.meta.stampCount).toBe(1);
     });
   });
 });

@@ -100,15 +100,27 @@ describe('ProofsModule', () => {
         };
 
         const result = await proofs.verify(proof);
+
+        // Stamp-level measurements
         expect(result.stampResults).toHaveLength(1);
         expect(result.stampResults[0].distanceMeters).toBe(0);
         expect(result.stampResults[0].temporalOverlap).toBe(1);
         expect(result.stampResults[0].withinRadius).toBe(true);
-        expect(result.confidence).toBe(1);
-        expect(result.correlation).toBeUndefined();
+
+        // Dimensional assessment
+        expect(result.dimensions.spatial.meanDistanceMeters).toBe(0);
+        expect(result.dimensions.spatial.withinRadiusFraction).toBe(1);
+        expect(result.dimensions.temporal.meanOverlap).toBe(1);
+        expect(result.dimensions.temporal.fullyOverlappingFraction).toBe(1);
+        expect(result.dimensions.validity.signaturesValidFraction).toBe(1);
+        expect(result.dimensions.independence.uniquePluginRatio).toBe(1);
+
+        // Metadata
+        expect(result.meta.stampCount).toBe(1);
+        expect(result.meta.evaluationMode).toBe('local');
       });
 
-      it('returns zero confidence when stamp verification fails', async () => {
+      it('reports zero validity fractions when stamp verification fails', async () => {
         const failResult = {
           valid: false,
           signaturesValid: false,
@@ -123,7 +135,9 @@ describe('ProofsModule', () => {
         };
 
         const result = await proofs.verify(proof);
-        expect(result.confidence).toBe(0);
+        expect(result.dimensions.validity.signaturesValidFraction).toBe(0);
+        expect(result.dimensions.validity.structureValidFraction).toBe(0);
+        expect(result.dimensions.validity.signalsConsistentFraction).toBe(0);
       });
 
       it('reports distance for a distant stamp', async () => {
@@ -139,12 +153,13 @@ describe('ProofsModule', () => {
         const result = await proofs.verify(proof);
         expect(result.stampResults[0].distanceMeters).toBeGreaterThan(4_000_000);
         expect(result.stampResults[0].withinRadius).toBe(false);
-        expect(result.confidence).toBe(0);
+        expect(result.dimensions.spatial.withinRadiusFraction).toBe(0);
+        expect(result.dimensions.spatial.meanDistanceMeters).toBeGreaterThan(4_000_000);
       });
     });
 
     describe('multi-stamp proofs', () => {
-      it('includes correlation for multi-stamp proofs', async () => {
+      it('reports independence metrics for multi-stamp proofs', async () => {
         registry.register(createVerifyPlugin('alpha'));
         registry.register(createVerifyPlugin('beta'));
         const proof: LocationProof = {
@@ -154,12 +169,12 @@ describe('ProofsModule', () => {
 
         const result = await proofs.verify(proof);
         expect(result.stampResults).toHaveLength(2);
-        expect(result.correlation).toBeDefined();
-        expect(result.correlation!.independence).toBe(1);
-        expect(result.correlation!.agreement).toBe(1);
+        expect(result.dimensions.independence.uniquePluginRatio).toBe(1); // 2 plugins / 2 stamps
+        expect(result.dimensions.independence.spatialAgreement).toBe(1); // Both agree
+        expect(result.dimensions.independence.pluginNames).toEqual(['alpha', 'beta']);
       });
 
-      it('reports higher confidence when more stamps support claim', async () => {
+      it('shows stamp count in metadata', async () => {
         registry.register(createVerifyPlugin('alpha'));
         registry.register(createVerifyPlugin('beta'));
 
@@ -175,9 +190,12 @@ describe('ProofsModule', () => {
         const singleResult = await proofs.verify(singleProof);
         const multiResult = await proofs.verify(multiProof);
 
-        // Both should be 1.0 since all stamps are co-located and co-temporal
-        expect(singleResult.confidence).toBe(1);
-        expect(multiResult.confidence).toBe(1);
+        expect(singleResult.meta.stampCount).toBe(1);
+        expect(multiResult.meta.stampCount).toBe(2);
+
+        // Both have perfect validity since all stamps verify
+        expect(singleResult.dimensions.validity.signaturesValidFraction).toBe(1);
+        expect(multiResult.dimensions.validity.signaturesValidFraction).toBe(1);
       });
     });
 
@@ -190,7 +208,8 @@ describe('ProofsModule', () => {
         };
 
         const result = await proofs.verify(proof);
-        expect(result.confidence).toBe(1);
+        expect(result.meta.evaluationMode).toBe('local');
+        expect(result.dimensions.validity.signaturesValidFraction).toBe(1);
       });
 
       it('verifies locally when mode is explicitly set to local', async () => {
@@ -201,7 +220,8 @@ describe('ProofsModule', () => {
         };
 
         const result = await proofs.verify(proof, { mode: 'local' });
-        expect(result.confidence).toBe(1);
+        expect(result.meta.evaluationMode).toBe('local');
+        expect(result.dimensions.validity.signaturesValidFraction).toBe(1);
       });
 
       it('throws for TEE verification (not yet implemented)', async () => {

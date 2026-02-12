@@ -299,23 +299,111 @@ export interface CorrelationAssessment {
 }
 
 /**
- * The output of proof evaluation — the evidence function E(C, E) → P
- * from the research framework.
+ * Multidimensional assessment of how evidence supports a location claim.
  *
- * v0 scoring is deliberately simple: confidence is the fraction of verified
- * stamps that are co-located and co-temporal with the claim. Future versions
- * will introduce more sophisticated scoring (source-specific weighting,
- * threat-model-aware assessment, etc.).
+ * Based on the research framework: E(C, E) → P where P = (P₁, P₂, ..., Pₙ)
+ *
+ * v0 includes fundamental dimensions that can be objectively measured from
+ * stamp data. Future versions will add:
+ * - Economic security (cost-to-forge estimates)
+ * - Decentralization (Nakamoto coefficient for PoL diversity)
+ * - Freshness (recency of evidence collection)
+ * - Source reputation (historical reliability metrics)
+ *
+ * See: https://github.com/AstralProtocol/research/blob/main/docs/towards-harder-location-proofs.md
  */
 export interface CredibilityVector {
-  /** Fraction of verified stamps supporting the claim (0-1) */
-  confidence: number;
-  /** Per-stamp verification and relevance results */
+  /**
+   * Multidimensional proof assessment.
+   *
+   * Each dimension is independently quantifiable. Applications apply their own
+   * weighting schemes to collapse dimensions into trust decisions.
+   */
+  dimensions: {
+    /**
+     * Spatial relevance: How close are stamps to the claimed location?
+     *
+     * Applications decide thresholds (e.g., "require mean < 50m" or
+     * "require 80%+ within radius").
+     */
+    spatial: {
+      /** Mean haversine distance from stamps to claim center (meters) */
+      meanDistanceMeters: number;
+      /** Maximum distance of any stamp from claim center (meters) */
+      maxDistanceMeters: number;
+      /** Fraction of stamps within claim radius + stamp accuracy (0-1) */
+      withinRadiusFraction: number;
+    };
+
+    /**
+     * Temporal relevance: How well do stamp timeframes align with claim?
+     *
+     * Higher overlap = stronger temporal evidence.
+     */
+    temporal: {
+      /** Mean overlap between stamp and claim time windows (0-1) */
+      meanOverlap: number;
+      /** Minimum overlap across all stamps (0-1) */
+      minOverlap: number;
+      /** Fraction of stamps with 100% temporal overlap (0-1) */
+      fullyOverlappingFraction: number;
+    };
+
+    /**
+     * Internal validity: Did stamps pass cryptographic and structural checks?
+     *
+     * From plugin.verify() - checks signatures, format, signal consistency.
+     */
+    validity: {
+      /** Fraction of stamps with valid signatures (0-1) */
+      signaturesValidFraction: number;
+      /** Fraction of stamps with valid structure (0-1) */
+      structureValidFraction: number;
+      /** Fraction of stamps with consistent internal signals (0-1) */
+      signalsConsistentFraction: number;
+    };
+
+    /**
+     * Independence: Are stamps from diverse, uncorrelated sources?
+     *
+     * Higher independence = harder to forge all stamps with single compromise.
+     *
+     * v0: Plugin-level diversity (assumes plugins are independent systems).
+     * Future: Deeper correlation analysis (network latency correlation,
+     * shared infrastructure detection, etc.)
+     */
+    independence: {
+      /** Ratio of unique plugins to total stamps (0-1, 1.0 = all different) */
+      uniquePluginRatio: number;
+      /** Fraction of stamps agreeing on spatial relevance (0-1) */
+      spatialAgreement: number;
+      /** List of unique plugin names contributing evidence */
+      pluginNames: string[];
+    };
+  };
+
+  /**
+   * Per-stamp detailed results.
+   *
+   * PRIVACY NOTE: Future versions may omit this in privacy-preserving modes,
+   * returning only aggregated dimensions. For v0, full stamp data is included
+   * to enable custom evaluation functions.
+   *
+   * See: Compute module for privacy-preserving evaluation (TEE, ZK).
+   */
   stampResults: StampResult[];
-  /** Cross-correlation assessment (for multi-stamp proofs) */
-  correlation?: CorrelationAssessment;
-  /** Extensible dimension scores */
-  dimensions?: Record<string, number>;
+
+  /**
+   * Evaluation metadata.
+   */
+  meta: {
+    /** Total number of stamps evaluated */
+    stampCount: number;
+    /** Timestamp of evaluation (Unix seconds) */
+    evaluatedAt: number;
+    /** Where evaluation occurred */
+    evaluationMode: 'local' | 'tee' | 'zk';
+  };
 }
 
 // ============================================
