@@ -31,7 +31,6 @@ import { LocationModule } from './location';
 import { ComputeModule } from './compute';
 import { StampsModule } from './stamps';
 import { ProofsModule } from './proofs';
-import { VerifyModule } from './verify';
 import { PluginRegistry } from './plugins/registry';
 import { AstralConfig } from './core/types';
 
@@ -41,9 +40,8 @@ import { AstralConfig } from './core/types';
  * It provides namespaced access to:
  * - `location`: Location attestation operations (offchain and onchain workflows)
  * - `compute`: Verifiable geospatial computations
- * - `stamps`: Evidence collection from proof-of-location plugins
- * - `proofs`: Proof construction from claims and stamps
- * - `verify`: Stamp and proof verification
+ * - `stamps`: Evidence collection and stamp verification from proof-of-location plugins
+ * - `proofs`: Proof construction and verification
  * - `registry`: Plugin registration and discovery
  */
 export class AstralSDK {
@@ -63,19 +61,14 @@ export class AstralSDK {
   public readonly registry: PluginRegistry;
 
   /**
-   * Stamps module for evidence collection
+   * Stamps module for evidence collection and verification
    */
   public readonly stamps: StampsModule;
 
   /**
-   * Proofs module for proof construction
+   * Proofs module for proof construction and verification
    */
   public readonly proofs: ProofsModule;
-
-  /**
-   * Verify module for stamp and proof verification
-   */
-  public readonly verify: VerifyModule;
 
   /**
    * Creates a new unified AstralSDK instance.
@@ -114,7 +107,6 @@ export class AstralSDK {
     // Initialize plugin system
     this.registry = new PluginRegistry();
     this.stamps = new StampsModule(this.registry);
-    this.proofs = new ProofsModule();
-    this.verify = new VerifyModule(this.registry);
+    this.proofs = new ProofsModule(this.registry);
   }
 }

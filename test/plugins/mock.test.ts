@@ -4,7 +4,6 @@ import { MockPlugin } from '../../src/plugins/mock';
 import { PluginRegistry } from '../../src/plugins/registry';
 import { StampsModule } from '../../src/stamps/StampsModule';
 import { ProofsModule } from '../../src/proofs/ProofsModule';
-import { VerifyModule } from '../../src/verify/VerifyModule';
 import type { LocationClaim } from '../../src/plugins/types';
 
 // Deterministic key for reproducible tests
@@ -135,15 +134,14 @@ describe('MockPlugin', () => {
   });
 
   describe('SDK integration', () => {
-    it('works through the SDK stamps/proofs/verify pipeline', async () => {
+    it('works through the SDK stamps/proofs pipeline', async () => {
       const mock = new MockPlugin({ ...NYC, timestamp: 1500, privateKey: TEST_PRIVATE_KEY });
 
       const registry = new PluginRegistry('node');
       registry.register(mock);
 
       const stamps = new StampsModule(registry);
-      const proofs = new ProofsModule();
-      const verify = new VerifyModule(registry);
+      const proofs = new ProofsModule(registry);
 
       // Collect
       const signalResults = await stamps.collect({ plugins: ['mock'] });
@@ -159,16 +157,25 @@ describe('MockPlugin', () => {
         sign: async (data: string) => mock['wallet'].signMessage(data),
       });
 
+      // Verify stamp
+      const stampVerification = await stamps.verify(stamp);
+      expect(stampVerification.valid).toBe(true);
+
       // Build proof
       const proof = proofs.create(nycClaim, [stamp]);
 
-      // Evaluate — VerifyModule measures stamp relevance to claim
-      const vector = await verify.proof(proof);
-      expect(vector.confidence).toBe(1);
+      // Verify proof — measures stamp relevance to claim
+      const vector = await proofs.verify(proof);
       expect(vector.stampResults).toHaveLength(1);
       expect(vector.stampResults[0].withinRadius).toBe(true);
       expect(vector.stampResults[0].distanceMeters).toBe(0);
       expect(vector.stampResults[0].temporalOverlap).toBeGreaterThan(0);
+
+      // Check dimensional assessment
+      expect(vector.dimensions.spatial.withinRadiusFraction).toBe(1);
+      expect(vector.dimensions.temporal.meanOverlap).toBeGreaterThan(0);
+      expect(vector.dimensions.validity.signaturesValidFraction).toBe(1);
+      expect(vector.meta.stampCount).toBe(1);
     });
   });
 });
