@@ -113,7 +113,9 @@ export class ProofsModule {
     const mode = options?.mode ?? 'local';
 
     if (mode === 'tee') {
-      throw new Error('TEE verification not yet implemented');
+      // TODO(#45): Wire TEE verification via hosted service
+      // Eigen deployment is ready, needs SDK integration
+      throw new Error('TEE verification not yet implemented — use local verification');
     }
     if (mode === 'zk') {
       throw new Error('ZK verification not yet implemented');
@@ -221,8 +223,13 @@ export class ProofsModule {
   /**
    * Analyze cross-correlation between stamps from different plugins.
    *
-   * Independence: uniquePlugins / totalStamps.
-   * Agreement: do stamps agree on whether they're within the claim radius?
+   * NOTE: This is a simplified v0 approach. More sophisticated methods for
+   * quantifying correlation between heterogeneous proof-of-location systems
+   * are being researched.
+   *
+   * Current metrics:
+   * - Independence: uniquePlugins / totalStamps
+   * - Agreement: do stamps agree on whether they're within the claim radius?
    */
   private analyzeCorrelation(results: StampResult[]): CorrelationAssessment {
     const uniquePlugins = new Set(results.map(r => r.plugin));

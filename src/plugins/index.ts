@@ -36,7 +36,6 @@ export type {
   CredibilityVector,
   StampResult,
   CorrelationAssessment,
-  CredibilityAssessment,
 
   // Shared types
   SubjectIdentifier,
