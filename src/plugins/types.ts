@@ -406,6 +406,85 @@ export interface CredibilityVector {
   };
 }
 
+/**
+ * Verified Location Proof — the complete output of TEE/ZK verification.
+ *
+ * Contains everything needed to evaluate and verify a location proof:
+ * the original proof, the full credibility assessment, and the EAS
+ * attestation signed by the verifier (e.g., Astral TEE).
+ *
+ * Third parties can:
+ * 1. Check `attestation.attester` — do I trust this verifier?
+ * 2. Verify `attestation.signature` — is the attestation authentic?
+ * 3. Inspect `credibility.dimensions` — apply my own trust model
+ * 4. Optionally re-run verification on `proof` to validate the attester's work
+ *
+ * The attestation includes the FULL proof and credibility data (not hashes
+ * or URIs) for v0. Future versions may optimize with hashes + offchain
+ * storage for privacy and size.
+ */
+export interface VerifiedLocationProof {
+  /** The original proof that was verified (claim + stamps) */
+  proof: LocationProof;
+
+  /** Full multidimensional credibility assessment (no summary score) */
+  credibility: CredibilityVector;
+
+  /** EAS attestation signed by the verifier */
+  attestation: {
+    /** EAS attestation UID */
+    uid: string;
+    /** Schema UID used for this attestation */
+    schema: string;
+    /** Address of the verifier who signed (e.g., Astral TEE signer) */
+    attester: string;
+    /** Recipient of the attestation */
+    recipient: string;
+    /** Whether the attestation can be revoked */
+    revocable: boolean;
+    /** Reference to another attestation (bytes32, 0x0 if none) */
+    refUID: string;
+    /** ABI-encoded attestation data */
+    data: string;
+    /** When the attestation was created (Unix timestamp) */
+    timestamp: number;
+    /** When the attestation expires (0 = never) */
+    expirationTime: number;
+    /** When revoked (0 = not revoked) */
+    revocationTime: number;
+    /** Chain where the attestation is valid */
+    chainId: number;
+    /** Signature for offchain attestations */
+    signature?: string;
+  };
+
+  /** TEE remote attestation, if available from the execution environment */
+  remoteAttestation?: {
+    /** TEE attestation quote */
+    quote: string;
+    /** TEE platform identifier (e.g., "sgx", "tdx", "sev") */
+    platform: string;
+    /** Additional platform-specific metadata */
+    metadata?: Record<string, unknown>;
+  };
+
+  /** Identifier for the evaluation method (e.g., "astral-v0.3.0-tee") */
+  evaluationMethod: string;
+
+  /** When evaluation was performed (Unix seconds) */
+  evaluatedAt: number;
+}
+
+/**
+ * Type guard: check if a verification result is a VerifiedLocationProof
+ * (from TEE/ZK mode) rather than a CredibilityVector (from local mode).
+ */
+export function isVerifiedLocationProof(
+  result: CredibilityVector | VerifiedLocationProof
+): result is VerifiedLocationProof {
+  return 'attestation' in result && 'proof' in result;
+}
+
 // ============================================
 // Plugin interface
 // ============================================

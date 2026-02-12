@@ -65,6 +65,7 @@ export type {
   CredibilityVector,
   StampResult,
   CorrelationAssessment,
+  VerifiedLocationProof,
   SubjectIdentifier,
   TimeBounds,
   LocationData,
@@ -76,6 +77,7 @@ export {
   isGeoJSONGeometry,
   isMultiStampProof,
   isUnsignedStamp,
+  isVerifiedLocationProof,
 } from './plugins';
 
 // Stamps and Proofs modules
