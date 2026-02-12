@@ -7,6 +7,7 @@ export default defineConfig({
     'src/compute/index.ts',
     'src/offchain/index.ts',
     'src/onchain/index.ts',
+    'src/plugins/index.ts',
   ],
   format: ['cjs', 'esm'],
   dts: true,
