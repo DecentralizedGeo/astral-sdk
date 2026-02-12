@@ -113,6 +113,18 @@ export class AstralApiClient {
   }
 
   /**
+   * Throws if no API key is configured. Called by methods that require auth.
+   */
+  private requireApiKey(method: string): void {
+    if (!this.apiKey) {
+      throw new AstralAPIError(
+        `${method} requires an API key. Set apiKey in AstralApiClient config.`,
+        401
+      );
+    }
+  }
+
+  /**
    * Makes a request to the Astral API.
    *
    * @param method - HTTP method (GET, POST, etc.)
@@ -409,6 +421,7 @@ export class AstralApiClient {
     proof: LocationProof,
     options?: VerifyProofOptions
   ): Promise<VerifiedLocationProof> {
+    this.requireApiKey('verifyProof');
     return this.request<VerifiedLocationProof>('POST', '/verify/v0/proof', {
       proof,
       options,
@@ -428,6 +441,7 @@ export class AstralApiClient {
    * @throws AstralAPIError if the service request fails
    */
   async verifyStamp(stamp: LocationStamp): Promise<StampVerificationResult> {
+    this.requireApiKey('verifyStamp');
     return this.request<StampVerificationResult>('POST', '/verify/v0/stamp', {
       stamp,
     });
