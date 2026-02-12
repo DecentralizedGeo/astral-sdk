@@ -459,6 +459,21 @@ export interface VerifiedLocationProof {
     signature?: string;
   };
 
+  /**
+   * Delegated attestation data for onchain submission via `attestByDelegation`.
+   * Present when the verifier signs for delegated submission (TEE mode).
+   */
+  delegatedAttestation?: {
+    /** EIP-712 signature for delegated attestation */
+    signature: string;
+    /** Address of the delegated attester (same as attestation.attester) */
+    attester: string;
+    /** Unix timestamp deadline for submission */
+    deadline: number;
+    /** Nonce used in signature (needed for EAS contract verification) */
+    nonce: number;
+  };
+
   /** Chain where the attestation was created (contextual, not part of EAS struct) */
   chainId?: number;
 
