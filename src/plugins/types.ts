@@ -430,7 +430,7 @@ export interface VerifiedLocationProof {
   /** Full multidimensional credibility assessment (no summary score) */
   credibility: CredibilityVector;
 
-  /** EAS attestation signed by the verifier */
+  /** EAS attestation signed by the verifier (field names match EAS AttestationStruct) */
   attestation: {
     /** EAS attestation UID */
     uid: string;
@@ -446,17 +446,21 @@ export interface VerifiedLocationProof {
     refUID: string;
     /** ABI-encoded attestation data */
     data: string;
-    /** When the attestation was created (Unix timestamp) */
-    timestamp: number;
+    /** When the attestation was created (Unix timestamp, matches EAS `time` field) */
+    time: number;
     /** When the attestation expires (0 = never) */
     expirationTime: number;
     /** When revoked (0 = not revoked) */
     revocationTime: number;
-    /** Chain where the attestation is valid */
-    chainId: number;
-    /** Signature for offchain attestations */
+    /**
+     * Signature for offchain attestations.
+     * Undefined for onchain attestations (verified via transaction instead).
+     */
     signature?: string;
   };
+
+  /** Chain where the attestation was created (contextual, not part of EAS struct) */
+  chainId?: number;
 
   /** TEE remote attestation, if available from the execution environment */
   remoteAttestation?: {
@@ -482,7 +486,13 @@ export interface VerifiedLocationProof {
 export function isVerifiedLocationProof(
   result: CredibilityVector | VerifiedLocationProof
 ): result is VerifiedLocationProof {
-  return 'attestation' in result && 'proof' in result;
+  return (
+    'attestation' in result &&
+    'proof' in result &&
+    'evaluationMethod' in result &&
+    typeof (result as VerifiedLocationProof).attestation === 'object' &&
+    'uid' in (result as VerifiedLocationProof).attestation
+  );
 }
 
 // ============================================
