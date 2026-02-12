@@ -45,11 +45,6 @@
       "types": "./dist/proofs/index.d.ts",
       "import": "./dist/proofs/index.mjs",
       "require": "./dist/proofs/index.js"
-    },
-    "./verify": {
-      "types": "./dist/verify/index.d.ts",
-      "import": "./dist/verify/index.mjs",
-      "require": "./dist/verify/index.js"
     }
   },
   "files": [
