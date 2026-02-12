@@ -8,6 +8,8 @@
  */
 
 import { PluginRegistry } from '../plugins/registry';
+import type { AstralApiClient } from '../api/AstralApiClient';
+import type { VerifyProofOptions } from '../api/AstralApiClient';
 import type {
   LocationClaim,
   LocationStamp,
@@ -15,6 +17,7 @@ import type {
   LocationData,
   StampVerificationResult,
   CredibilityVector,
+  VerifiedLocationProof,
   StampResult,
 } from '../plugins/types';
 
@@ -71,7 +74,10 @@ function extractCoordinates(location: LocationData): [number, number] | null {
  * ```
  */
 export class ProofsModule {
-  constructor(private readonly registry: PluginRegistry) {}
+  constructor(
+    private readonly registry: PluginRegistry,
+    private readonly apiClient?: AstralApiClient
+  ) {}
 
   /**
    * Example weighting function: Basic support ratio.
@@ -129,37 +135,56 @@ export class ProofsModule {
    * @param proof - The proof to verify
    * @param options - Verification options
    * @param options.mode - Where to run verification:
-   *   - 'local' (default): Run in current environment
-   *   - 'tee': Run in TEE via hosted service (returns EAS attestation)
+   *   - 'local' (default): Run in current environment, returns CredibilityVector
+   *   - 'tee': Run in TEE via hosted service, returns VerifiedLocationProof with EAS attestation
    *   - 'zk': Run in ZK prover (future)
-   * @param options.endpoint - API endpoint for hosted verification (mode: 'tee' or 'zk')
-   *   - Allows per-call endpoint specification (staging, production, custom)
-   *   - Example: 'https://verify.astral.global' or 'https://verify-staging.astral.global'
-   * @returns Credibility vector with confidence score, stamp results, and correlation analysis
+   * @param options.chainId - Chain ID for EAS attestation (TEE mode only)
+   * @param options.submitOnchain - Submit attestation onchain (TEE mode only)
+   * @param options.schema - EAS schema UID override (TEE mode only)
+   * @param options.recipient - Attestation recipient address (TEE mode only)
+   * @returns CredibilityVector for local mode, VerifiedLocationProof for TEE mode.
+   *   Use `isVerifiedLocationProof()` to narrow the return type.
    *
    * @example
    * ```typescript
    * // Verify locally first (free, fast)
-   * const local = await proofs.verify(proof, { mode: 'local' });
+   * const local = await proofs.verify(proof);
    * if (local.dimensions.spatial.withinRadiusFraction < 0.8) return;
    *
-   * // Then get TEE attestation (costs money, high assurance)
-   * const tee = await proofs.verify(proof, {
-   *   mode: 'tee',
-   *   endpoint: 'https://verify.astral.global'
-   * });
+   * // Then get TEE attestation (requires API key)
+   * const result = await proofs.verify(proof, { mode: 'tee' });
+   * if (isVerifiedLocationProof(result)) {
+   *   console.log('EAS attestation:', result.attestation.uid);
+   * }
    * ```
    */
   async verify(
     proof: LocationProof,
-    options?: { mode?: 'local' | 'tee' | 'zk'; endpoint?: string }
-  ): Promise<CredibilityVector> {
+    options: { mode: 'tee' } & VerifyProofOptions
+  ): Promise<VerifiedLocationProof>;
+  async verify(
+    proof: LocationProof,
+    options?: { mode?: 'local' | 'zk' }
+  ): Promise<CredibilityVector>;
+  async verify(
+    proof: LocationProof,
+    options?: { mode?: 'local' | 'tee' | 'zk' } & VerifyProofOptions
+  ): Promise<CredibilityVector | VerifiedLocationProof> {
     const mode = options?.mode ?? 'local';
 
     if (mode === 'tee') {
-      // TODO(#45): Wire TEE verification via hosted service
-      // Eigen deployment is ready, needs SDK integration
-      throw new Error('TEE verification not yet implemented — use local verification');
+      if (!this.apiClient) {
+        throw new Error(
+          'TEE verification requires an API client. Configure apiKey in AstralSDK options.'
+        );
+      }
+      const { chainId, submitOnchain, schema, recipient } = options ?? {};
+      return this.apiClient.verifyProof(proof, {
+        chainId,
+        submitOnchain,
+        schema,
+        recipient,
+      });
     }
     if (mode === 'zk') {
       throw new Error('ZK verification not yet implemented');

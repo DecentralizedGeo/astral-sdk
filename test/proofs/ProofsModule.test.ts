@@ -224,7 +224,7 @@ describe('ProofsModule', () => {
         expect(result.dimensions.validity.signaturesValidFraction).toBe(1);
       });
 
-      it('throws for TEE verification (not yet implemented)', async () => {
+      it('throws for TEE verification without API client configured', async () => {
         registry.register(createVerifyPlugin('mock'));
         const proof: LocationProof = {
           claim: baseClaim,
@@ -232,7 +232,7 @@ describe('ProofsModule', () => {
         };
 
         await expect(proofs.verify(proof, { mode: 'tee' })).rejects.toThrow(
-          'TEE verification not yet implemented'
+          'TEE verification requires an API client'
         );
       });
 

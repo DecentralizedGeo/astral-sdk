@@ -32,6 +32,7 @@ import { ComputeModule } from './compute';
 import { StampsModule } from './stamps';
 import { ProofsModule } from './proofs';
 import { PluginRegistry } from './plugins/registry';
+import { AstralApiClient } from './api/AstralApiClient';
 import { AstralConfig } from './core/types';
 
 /**
@@ -104,9 +105,17 @@ export class AstralSDK {
       signer: config.signer,
     });
 
+    // Initialize API client for hosted verification (optional)
+    const apiClient = config.apiKey
+      ? new AstralApiClient({
+          baseURL: config.apiUrl ?? 'https://api.astral.global',
+          apiKey: config.apiKey,
+        })
+      : undefined;
+
     // Initialize plugin system
     this.plugins = new PluginRegistry();
     this.stamps = new StampsModule(this.plugins);
-    this.proofs = new ProofsModule(this.plugins);
+    this.proofs = new ProofsModule(this.plugins, apiClient);
   }
 }

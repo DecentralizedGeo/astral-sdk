@@ -518,6 +518,8 @@ export interface AstralConfig {
   readonly signer?: unknown; // Will be refined to ethers.Signer
   readonly provider?: unknown; // Will be refined to ethers.Provider
   readonly apiUrl?: string;
+  /** API key for the hosted verification service */
+  readonly apiKey?: string;
   readonly debug?: boolean;
   // Location-specific (inherited from AstralSDKConfig)
   readonly defaultChain?: string;
