@@ -33,6 +33,8 @@ import type {
 } from '../types';
 
 export interface MockPluginOptions {
+  /** Plugin name (must start with 'mock-', defaults to 'mock-default') */
+  name?: string;
   /** Default latitude (default: 40.7484 — Empire State Building) */
   lat?: number;
   /** Default longitude (default: -73.9857) */
@@ -50,18 +52,27 @@ export interface MockPluginOptions {
 }
 
 export class MockPlugin implements LocationProofPlugin {
-  readonly name = 'mock';
+  readonly name: string;
   readonly version = '0.1.0';
   readonly runtimes: Runtime[] = ['react-native', 'node', 'browser'];
   readonly requiredCapabilities: string[] = [];
   readonly description = 'Mock plugin for testing and development';
 
-  private readonly options: Required<Omit<MockPluginOptions, 'privateKey' | 'timestamp'>> & {
+  private readonly options: Required<
+    Omit<MockPluginOptions, 'privateKey' | 'timestamp' | 'name'>
+  > & {
     timestamp?: number;
   };
   private readonly wallet: ethers.Wallet | ethers.HDNodeWallet;
 
   constructor(options: MockPluginOptions = {}) {
+    // Validate and set name (must be 'mock' or start with 'mock-')
+    const name = options.name ?? 'mock-default';
+    if (name !== 'mock' && !name.startsWith('mock-')) {
+      throw new Error(`MockPlugin name must be 'mock' or start with 'mock-', got: ${name}`);
+    }
+    this.name = name;
+
     this.options = {
       lat: options.lat ?? 40.7484,
       lon: options.lon ?? -73.9857,
@@ -91,7 +102,7 @@ export class MockPlugin implements LocationProofPlugin {
     const now = this.options.timestamp ?? Math.floor(Date.now() / 1000);
 
     return {
-      plugin: 'mock',
+      plugin: this.name,
       timestamp: now,
       data: {
         latitude: lat,
@@ -129,7 +140,7 @@ export class MockPlugin implements LocationProofPlugin {
         start: now,
         end: now + duration,
       },
-      plugin: 'mock',
+      plugin: this.name,
       pluginVersion: this.version,
       signals: {
         ...signals.data,
@@ -189,9 +200,9 @@ export class MockPlugin implements LocationProofPlugin {
       structureValid = false;
       details.missingFields = true;
     }
-    if (stamp.plugin !== 'mock') {
+    if (stamp.plugin !== this.name) {
       structureValid = false;
-      details.pluginMismatch = `Expected 'mock', got '${stamp.plugin}'`;
+      details.pluginMismatch = `Expected '${this.name}', got '${stamp.plugin}'`;
     }
 
     // Signature verification

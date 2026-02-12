@@ -25,6 +25,7 @@ describe('MockPlugin', () => {
   describe('full lifecycle: collect → create → sign → verify', () => {
     it('completes the entire stamp lifecycle with valid results', async () => {
       const mock = new MockPlugin({
+        name: 'mock',
         ...NYC,
         timestamp: 1500,
         privateKey: TEST_PRIVATE_KEY,
@@ -135,7 +136,12 @@ describe('MockPlugin', () => {
 
   describe('SDK integration', () => {
     it('works through the SDK stamps/proofs pipeline', async () => {
-      const mock = new MockPlugin({ ...NYC, timestamp: 1500, privateKey: TEST_PRIVATE_KEY });
+      const mock = new MockPlugin({
+        name: 'mock',
+        ...NYC,
+        timestamp: 1500,
+        privateKey: TEST_PRIVATE_KEY,
+      });
 
       const registry = new PluginRegistry('node');
       registry.register(mock);

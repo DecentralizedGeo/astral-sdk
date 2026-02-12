@@ -132,11 +132,27 @@ export class ProofsModule {
    *   - 'local' (default): Run in current environment
    *   - 'tee': Run in TEE via hosted service (returns EAS attestation)
    *   - 'zk': Run in ZK prover (future)
+   * @param options.endpoint - API endpoint for hosted verification (mode: 'tee' or 'zk')
+   *   - Allows per-call endpoint specification (staging, production, custom)
+   *   - Example: 'https://verify.astral.global' or 'https://verify-staging.astral.global'
    * @returns Credibility vector with confidence score, stamp results, and correlation analysis
+   *
+   * @example
+   * ```typescript
+   * // Verify locally first (free, fast)
+   * const local = await proofs.verify(proof, { mode: 'local' });
+   * if (local.dimensions.spatial.withinRadiusFraction < 0.8) return;
+   *
+   * // Then get TEE attestation (costs money, high assurance)
+   * const tee = await proofs.verify(proof, {
+   *   mode: 'tee',
+   *   endpoint: 'https://verify.astral.global'
+   * });
+   * ```
    */
   async verify(
     proof: LocationProof,
-    options?: { mode?: 'local' | 'tee' | 'zk' }
+    options?: { mode?: 'local' | 'tee' | 'zk'; endpoint?: string }
   ): Promise<CredibilityVector> {
     const mode = options?.mode ?? 'local';
 
