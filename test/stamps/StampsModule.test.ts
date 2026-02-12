@@ -164,10 +164,10 @@ describe('StampsModule', () => {
       await expect(stamps.verify(noVerifyStamp)).rejects.toThrow('does not implement verify()');
     });
 
-    it('throws for hosted verification (not yet implemented)', async () => {
+    it('throws for hosted verification without API client configured', async () => {
       registry.register(fullPlugin());
       await expect(stamps.verify(mockSigned, { hosted: true })).rejects.toThrow(
-        'Hosted verification not yet implemented'
+        'Hosted verification requires a service connection'
       );
     });
   });

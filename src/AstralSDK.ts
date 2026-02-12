@@ -114,7 +114,7 @@ export class AstralSDK {
 
     // Initialize plugin system
     this.plugins = new PluginRegistry();
-    this.stamps = new StampsModule(this.plugins);
+    this.stamps = new StampsModule(this.plugins, apiClient);
     this.proofs = new ProofsModule(this.plugins, apiClient);
   }
 }

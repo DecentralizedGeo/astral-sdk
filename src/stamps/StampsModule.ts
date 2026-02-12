@@ -9,6 +9,7 @@
  */
 
 import { PluginRegistry } from '../plugins/registry';
+import type { AstralApiClient } from '../api/AstralApiClient';
 import type {
   LocationStamp,
   UnsignedLocationStamp,
@@ -44,7 +45,10 @@ export interface StampsSignOptions {
  * ```
  */
 export class StampsModule {
-  constructor(private readonly registry: PluginRegistry) {}
+  constructor(
+    private readonly registry: PluginRegistry,
+    private readonly apiClient?: AstralApiClient
+  ) {}
 
   /**
    * Collect raw signals from one or more plugins.
@@ -98,14 +102,26 @@ export class StampsModule {
   }
 
   /**
-   * Verify a stamp's internal validity using its plugin's verify method.
+   * Verify a stamp's internal validity.
+   *
+   * @param stamp - The stamp to verify
+   * @param options - Verification options
+   * @param options.hosted - If true, verify via the hosted service instead of locally.
+   *   The hosted service doesn't require an API key but is throttled without one.
+   * @returns Verification result with signature, structure, and signal checks
    */
   async verify(
     stamp: LocationStamp,
     options?: { hosted?: boolean }
   ): Promise<StampVerificationResult> {
     if (options?.hosted) {
-      throw new Error('Hosted verification not yet implemented — use local verification');
+      if (!this.apiClient) {
+        throw new Error(
+          'Hosted verification requires a service connection. ' +
+            'Use AstralSDK (which configures this automatically) or pass an AstralApiClient.'
+        );
+      }
+      return this.apiClient.verifyStamp(stamp);
     }
 
     const plugin = this.registry.get(stamp.plugin);
