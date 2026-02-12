@@ -15,6 +15,7 @@ import type {
   RawSignals,
   CollectOptions,
   StampSigner,
+  StampVerificationResult,
 } from '../plugins/types';
 
 export interface StampsCollectOptions extends CollectOptions {
@@ -60,17 +61,14 @@ export class StampsModule {
       throw new Error('No plugins available that implement collect()');
     }
 
-    const results: RawSignals[] = [];
-
-    for (const plugin of plugins) {
+    const collectPromises = plugins.map(plugin => {
       if (!plugin.collect) {
         throw new Error(`Plugin '${plugin.name}' does not implement collect()`);
       }
-      const signals = await plugin.collect(options);
-      results.push(signals);
-    }
+      return plugin.collect(options);
+    });
 
-    return results;
+    return Promise.all(collectPromises);
   }
 
   /**
@@ -97,5 +95,23 @@ export class StampsModule {
       throw new Error(`Plugin '${plugin.name}' does not implement sign()`);
     }
     return plugin.sign(stamp, signer);
+  }
+
+  /**
+   * Verify a stamp's internal validity using its plugin's verify method.
+   */
+  async verify(
+    stamp: LocationStamp,
+    options?: { hosted?: boolean }
+  ): Promise<StampVerificationResult> {
+    if (options?.hosted) {
+      throw new Error('Hosted verification not yet implemented — use local verification');
+    }
+
+    const plugin = this.registry.get(stamp.plugin);
+    if (!plugin.verify) {
+      throw new Error(`Plugin '${plugin.name}' does not implement verify()`);
+    }
+    return plugin.verify(stamp);
   }
 }

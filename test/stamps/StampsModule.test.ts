@@ -49,6 +49,13 @@ function fullPlugin(): LocationProofPlugin {
     collect: jest.fn().mockResolvedValue(mockSignals),
     create: jest.fn().mockResolvedValue(mockUnsigned),
     sign: jest.fn().mockResolvedValue(mockSigned),
+    verify: jest.fn().mockResolvedValue({
+      valid: true,
+      signaturesValid: true,
+      structureValid: true,
+      signalsConsistent: true,
+      details: {},
+    }),
   };
 }
 
@@ -132,6 +139,36 @@ describe('StampsModule', () => {
       };
       const result = await stamps.sign({ plugin: 'test' }, mockUnsigned, signer);
       expect(result.signatures).toHaveLength(1);
+    });
+  });
+
+  describe('verify', () => {
+    it('verifies a stamp using its plugin', async () => {
+      registry.register(fullPlugin());
+      const result = await stamps.verify(mockSigned);
+      expect(result.valid).toBe(true);
+      expect(result.signaturesValid).toBe(true);
+      expect(result.structureValid).toBe(true);
+      expect(result.signalsConsistent).toBe(true);
+    });
+
+    it('throws when plugin has no verify method', async () => {
+      registry.register({
+        name: 'no-verify',
+        version: '0.1.0',
+        runtimes: ['node'],
+        requiredCapabilities: [],
+        description: 'No verify',
+      });
+      const noVerifyStamp = { ...mockSigned, plugin: 'no-verify' };
+      await expect(stamps.verify(noVerifyStamp)).rejects.toThrow('does not implement verify()');
+    });
+
+    it('throws for hosted verification (not yet implemented)', async () => {
+      registry.register(fullPlugin());
+      await expect(stamps.verify(mockSigned, { hosted: true })).rejects.toThrow(
+        'Hosted verification not yet implemented'
+      );
     });
   });
 });
