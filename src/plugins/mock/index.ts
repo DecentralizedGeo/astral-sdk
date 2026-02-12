@@ -17,7 +17,7 @@
  * });
  *
  * const astral = new AstralSDK({ chainId: 84532 });
- * astral.registry.register(mock);
+ * astral.plugins.register(mock);
  * ```
  */
 

@@ -49,7 +49,7 @@ describe('Plugin System E2E', () => {
         timestamp: 1500, // Within claim time window
         privateKey: TEST_PRIVATE_KEY,
       });
-      sdk.registry.register(plugin);
+      sdk.plugins.register(plugin);
       console.log('✓ Registered MockPlugin');
 
       // Step 2: Collect location signals
@@ -178,8 +178,8 @@ describe('Plugin System E2E', () => {
         privateKey: '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
       });
 
-      sdk.registry.register(plugin1);
-      sdk.registry.register(plugin2);
+      sdk.plugins.register(plugin1);
+      sdk.plugins.register(plugin2);
       console.log('✓ Registered 2 plugins (simulating GPS + WiFi)');
 
       // Collect from both
@@ -255,7 +255,7 @@ describe('Plugin System E2E', () => {
         timestamp: 1500,
         privateKey: TEST_PRIVATE_KEY,
       });
-      sdk.registry.register(plugin);
+      sdk.plugins.register(plugin);
       console.log('✓ Registered plugin at Times Square (~1km from claim)');
 
       // Full flow
@@ -307,7 +307,7 @@ describe('Plugin System E2E', () => {
         timestamp: 1500,
         privateKey: TEST_PRIVATE_KEY,
       });
-      sdk.registry.register(plugin);
+      sdk.plugins.register(plugin);
       console.log('✓ Registered plugin at Golden Gate Bridge (~4000km from claim)');
 
       const signals = await sdk.stamps.collect({ plugins: ['mock-3'] });
@@ -358,7 +358,7 @@ describe('Plugin System E2E', () => {
         timestamp: 1500,
         privateKey: TEST_PRIVATE_KEY,
       });
-      sdk.registry.register(plugin);
+      sdk.plugins.register(plugin);
 
       const signals = await sdk.stamps.collect({ plugins: ['mock-4'] });
       const unsigned = await sdk.stamps.create({ plugin: 'mock-4' }, signals[0]);
@@ -439,7 +439,7 @@ describe('Plugin System E2E', () => {
         timestamp: 3000, // Outside claim time window (1000-2000)
         privateKey: TEST_PRIVATE_KEY,
       });
-      sdk.registry.register(plugin);
+      sdk.plugins.register(plugin);
       console.log('✓ Registered plugin with timestamp 3000 (claim window: 1000-2000)');
 
       const signals = await sdk.stamps.collect({ plugins: ['mock-5'] });

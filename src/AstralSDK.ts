@@ -56,9 +56,9 @@ export class AstralSDK {
   public readonly compute: ComputeModule;
 
   /**
-   * Plugin registry for managing proof-of-location plugins
+   * Plugins module for registering and managing proof-of-location plugins
    */
-  public readonly registry: PluginRegistry;
+  public readonly plugins: PluginRegistry;
 
   /**
    * Stamps module for evidence collection and verification
@@ -105,8 +105,8 @@ export class AstralSDK {
     });
 
     // Initialize plugin system
-    this.registry = new PluginRegistry();
-    this.stamps = new StampsModule(this.registry);
-    this.proofs = new ProofsModule(this.registry);
+    this.plugins = new PluginRegistry();
+    this.stamps = new StampsModule(this.plugins);
+    this.proofs = new ProofsModule(this.plugins);
   }
 }
