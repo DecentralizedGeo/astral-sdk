@@ -101,6 +101,7 @@ export { OffchainSigner } from './eas/OffchainSigner';
 export { OnchainRegistrar } from './eas/OnchainRegistrar';
 export { SchemaEncoder } from './eas/SchemaEncoder';
 export { AstralApiClient } from './api/AstralApiClient';
+export type { VerifyProofOptions } from './api/AstralApiClient';
 export { StorageAdapter } from './storage/StorageAdapter';
 
 // Utils exports
