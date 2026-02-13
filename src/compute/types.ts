@@ -6,7 +6,7 @@
  */
 
 import type { Geometry } from 'geojson';
-import type { VerifiedLocationProof } from '../plugins/types';
+import type { VerifiedLocationProof, CredibilityVector, LocationClaim } from '../plugins/types';
 
 /**
  * Raw GeoJSON geometry input
@@ -109,12 +109,11 @@ export interface DelegatedAttestationObject {
 
 /**
  * Proof metadata carried through from a verified proof input.
- * Loose typing (unknown) for forward compatibility with evolving credibility/claim shapes.
  */
 export interface ProofInputContext {
   readonly ref: string;
-  readonly credibility: unknown;
-  readonly claim: unknown;
+  readonly credibility: CredibilityVector;
+  readonly claim: LocationClaim;
   readonly evaluatedAt: number;
   readonly evaluationMethod: string;
 }
