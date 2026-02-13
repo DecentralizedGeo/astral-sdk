@@ -365,7 +365,6 @@ export enum VerificationError {
  *
  * @property defaultChain - Default blockchain for onchain operations (e.g., 'sepolia', 'celo')
  * @property chainId - Default chain ID for operations (e.g., 11155111 for Sepolia, 42220 for Celo)
- * @property mode - Default storage mode for new attestations
  * @property provider - Ethereum provider for blockchain operations
  * @property signer - Ethereum signer for creating signatures
  * @property apiKey - Astral API key for queries
@@ -390,7 +389,6 @@ export enum VerificationError {
 export interface AstralSDKConfig {
   readonly defaultChain?: string;
   readonly chainId?: number;
-  readonly mode?: 'onchain' | 'offchain' | 'ipfs';
   readonly provider?: unknown; // Will be refined to ethers.Provider
   readonly signer?: unknown; // Will be refined to ethers.Signer
   readonly apiKey?: string;
