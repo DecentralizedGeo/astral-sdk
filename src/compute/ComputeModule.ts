@@ -73,6 +73,10 @@ export class ComputeModule {
     if (typeof input === 'string') {
       return { uid: input };
     }
+    // Verified proof input — pass through as-is
+    if (typeof input === 'object' && 'verifiedProof' in input && !('type' in input)) {
+      return input as object;
+    }
     // GeoJSON Feature - extract geometry
     if (
       typeof input === 'object' &&

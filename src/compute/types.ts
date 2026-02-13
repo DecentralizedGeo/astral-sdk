@@ -6,6 +6,7 @@
  */
 
 import type { Geometry } from 'geojson';
+import type { VerifiedLocationProof, CredibilityVector, LocationClaim } from '../plugins/types';
 
 /**
  * Raw GeoJSON geometry input
@@ -28,13 +29,22 @@ export interface OffchainInput {
 }
 
 /**
+ * Input from a verified location proof.
+ * Geometry is extracted from the proof's claim; the attestation UID is used as ref.
+ */
+export interface VerifiedProofInput {
+  readonly verifiedProof: VerifiedLocationProof;
+}
+
+/**
  * Input types for compute operations
  * - string: Direct attestation UID
  * - RawGeometryInput: GeoJSON Geometry
  * - OnchainInput: Reference to onchain attestation
  * - OffchainInput: Reference to offchain attestation with URI
+ * - VerifiedProofInput: Geometry from a verified location proof
  */
-export type Input = string | RawGeometryInput | OnchainInput | OffchainInput;
+export type Input = string | RawGeometryInput | OnchainInput | OffchainInput | VerifiedProofInput;
 
 /**
  * Options for compute operations
@@ -98,6 +108,17 @@ export interface DelegatedAttestationObject {
 }
 
 /**
+ * Proof metadata carried through from a verified proof input.
+ */
+export interface ProofInputContext {
+  readonly ref: string;
+  readonly credibility: CredibilityVector;
+  readonly claim: LocationClaim;
+  readonly evaluatedAt: number;
+  readonly evaluationMethod: string;
+}
+
+/**
  * Result for numeric compute operations (distance, area, length)
  */
 export interface NumericComputeResult {
@@ -108,6 +129,7 @@ export interface NumericComputeResult {
   readonly inputRefs: string[];
   readonly attestation: AttestationObject;
   readonly delegatedAttestation: DelegatedAttestationObject;
+  readonly proofInputs?: ProofInputContext[];
 }
 
 /**
@@ -120,6 +142,7 @@ export interface BooleanComputeResult {
   readonly inputRefs: string[];
   readonly attestation: AttestationObject;
   readonly delegatedAttestation: DelegatedAttestationObject;
+  readonly proofInputs?: ProofInputContext[];
 }
 
 /**

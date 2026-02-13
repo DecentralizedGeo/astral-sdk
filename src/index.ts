@@ -38,6 +38,8 @@ export type {
 // Compute types
 export type {
   Input,
+  VerifiedProofInput,
+  ProofInputContext,
   ComputeOptions,
   NumericComputeResult,
   BooleanComputeResult,

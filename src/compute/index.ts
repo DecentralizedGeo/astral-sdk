@@ -11,6 +11,8 @@ export type {
   RawGeometryInput,
   OnchainInput,
   OffchainInput,
+  VerifiedProofInput,
+  ProofInputContext,
   ComputeOptions,
   DelegatedAttestation,
   DelegatedAttestationMessage,
