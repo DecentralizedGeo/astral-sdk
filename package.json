@@ -21,16 +21,6 @@
       "import": "./dist/compute/index.mjs",
       "require": "./dist/compute/index.js"
     },
-    "./offchain": {
-      "types": "./dist/offchain/index.d.ts",
-      "import": "./dist/offchain/index.mjs",
-      "require": "./dist/offchain/index.js"
-    },
-    "./onchain": {
-      "types": "./dist/onchain/index.d.ts",
-      "import": "./dist/onchain/index.mjs",
-      "require": "./dist/onchain/index.js"
-    },
     "./plugins": {
       "types": "./dist/plugins/index.d.ts",
       "import": "./dist/plugins/index.mjs",
