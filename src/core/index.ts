@@ -24,8 +24,6 @@ export {
   AstralSDKConfig,
   OffchainSignerConfig,
   OnchainRegistrarConfig,
-  StorageConfig,
-  IPFSStorageConfig,
 } from './types';
 
 // Export all errors

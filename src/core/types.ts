@@ -438,31 +438,6 @@ export interface OnchainRegistrarConfig {
 }
 
 /**
- * StorageConfig defines configuration options for storage adapters.
- *
- * @property type - Type of storage adapter
- * @property endpoint - Storage service endpoint
- * @property apiKey - API key for the storage service
- */
-export interface StorageConfig {
-  readonly type: 'ipfs' | 'url' | string;
-  readonly endpoint?: string;
-  readonly apiKey?: string;
-}
-
-/**
- * IPFSStorageConfig extends StorageConfig with IPFS-specific options.
- *
- * @property gateway - IPFS gateway URL
- * @property pinning - Whether to pin content to the IPFS node
- */
-export interface IPFSStorageConfig extends StorageConfig {
-  readonly type: 'ipfs';
-  readonly gateway?: string;
-  readonly pinning?: boolean;
-}
-
-/**
  * RuntimeSchemaConfig defines the essential configuration for an EAS schema
  * at runtime. This is the minimal configuration needed for multi-schema support.
  *
