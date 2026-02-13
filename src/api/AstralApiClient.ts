@@ -213,6 +213,21 @@ export class AstralApiClient {
             });
           }
 
+          // Retry server errors (5xx) with exponential backoff
+          if (response.status >= 500) {
+            retries--;
+            if (retries < 0) {
+              throw AstralAPIError.fromResponse(
+                response.status,
+                response.statusText,
+                await response.text()
+              );
+            }
+            await new Promise(resolve => setTimeout(resolve, delay));
+            delay *= 2;
+            continue;
+          }
+
           // Parse response JSON
           let responseData: unknown;
           const contentType = response.headers.get('content-type');
@@ -222,7 +237,7 @@ export class AstralApiClient {
             responseData = await response.text();
           }
 
-          // Handle error responses
+          // Handle client error responses (4xx except 404, 429 handled above)
           if (!response.ok) {
             throw AstralAPIError.fromResponse(response.status, response.statusText, responseData);
           }
