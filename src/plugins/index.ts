@@ -36,6 +36,7 @@ export type {
   CredibilityVector,
   StampResult,
   CorrelationAssessment,
+  VerifiedLocationProof,
 
   // Shared types
   SubjectIdentifier,
@@ -45,7 +46,13 @@ export type {
   LPGeometryType,
 } from './types';
 
-export { getPluginMetadata, isGeoJSONGeometry, isMultiStampProof, isUnsignedStamp } from './types';
+export {
+  getPluginMetadata,
+  isGeoJSONGeometry,
+  isMultiStampProof,
+  isUnsignedStamp,
+  isVerifiedLocationProof,
+} from './types';
 
 // Mock plugin
 export { MockPlugin } from './mock';

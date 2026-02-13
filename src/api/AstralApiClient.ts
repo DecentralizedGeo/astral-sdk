@@ -14,6 +14,13 @@ import {
   LocationAttestationCollection,
   AttestationQuery,
 } from '../core/types';
+import type {
+  LocationProof,
+  LocationStamp,
+  StampVerificationResult,
+  VerifiedLocationProof,
+  PluginMetadata,
+} from '../plugins/types';
 
 /**
  * Configuration options for the AstralApiClient
@@ -53,6 +60,20 @@ export interface AstralApiConfig {
   features?: {
     [featureName: string]: boolean;
   };
+}
+
+/**
+ * Options for proof verification via the hosted service.
+ */
+export interface VerifyProofOptions {
+  /** Chain ID for the EAS attestation (defaults to service config) */
+  chainId?: number;
+  /** Whether to submit the attestation onchain */
+  submitOnchain?: boolean;
+  /** EAS schema UID override */
+  schema?: string;
+  /** Attestation recipient address */
+  recipient?: string;
 }
 
 /**
@@ -364,5 +385,66 @@ export class AstralApiClient {
       undefined,
       { proof }
     );
+  }
+
+  // ============================================
+  // Location proof verification (hosted service)
+  // ============================================
+
+  /**
+   * Verifies a location proof via the hosted verification service.
+   *
+   * Sends the proof to the Astral service for TEE-hosted evaluation.
+   * The service verifies each stamp, evaluates the proof against the claim,
+   * and returns a VerifiedLocationProof with an EAS attestation.
+   *
+   * An API key is optional but recommended — without one, requests are
+   * throttled to 100/hour.
+   *
+   * @param proof - The location proof (claim + stamps) to verify
+   * @param options - Optional verification parameters
+   * @returns Verified proof with credibility assessment and EAS attestation
+   * @throws AstralAPIError if the service request fails
+   */
+  async verifyProof(
+    proof: LocationProof,
+    options?: VerifyProofOptions
+  ): Promise<VerifiedLocationProof> {
+    return this.request<VerifiedLocationProof>('POST', '/verify/v0/proof', {
+      proof,
+      options,
+    });
+  }
+
+  /**
+   * Verifies a single stamp's internal validity via the hosted service.
+   *
+   * Checks signatures, structure, and signal consistency for one stamp
+   * without evaluating it against a claim.
+   *
+   * An API key is optional but recommended — without one, requests are
+   * throttled to 100/hour.
+   *
+   * @param stamp - The location stamp to verify
+   * @returns Verification result with validity details
+   * @throws AstralAPIError if the service request fails
+   */
+  async verifyStamp(stamp: LocationStamp): Promise<StampVerificationResult> {
+    return this.request<StampVerificationResult>('POST', '/verify/v0/stamp', {
+      stamp,
+    });
+  }
+
+  /**
+   * Lists plugins available on the hosted verification service.
+   *
+   * Returns metadata for each plugin the service can use to verify stamps.
+   * Useful for discovering which proof-of-location systems the service supports.
+   *
+   * @returns Array of plugin metadata
+   * @throws AstralAPIError if the service request fails
+   */
+  async listRemotePlugins(): Promise<PluginMetadata[]> {
+    return this.request<PluginMetadata[]>('GET', '/verify/v0/plugins');
   }
 }
