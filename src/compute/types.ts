@@ -96,6 +96,8 @@ export interface AttestationObject {
   readonly recipient: string;
   readonly data: string;
   readonly signature: string;
+  readonly revocable?: boolean;
+  readonly refUID?: string;
 }
 
 /**

@@ -58,10 +58,15 @@ function temporalOverlap(
  * Returns GeoJSON coordinate order.
  */
 function extractCoordinates(location: LocationData): [number, number] | null {
-  if (typeof location !== 'object' || !('coordinates' in location)) return null;
+  if (typeof location !== 'object' || location === null || !('coordinates' in location))
+    return null;
   const coords = location.coordinates as unknown;
   if (!Array.isArray(coords) || coords.length < 2) return null;
-  return [coords[0] as number, coords[1] as number];
+  const lon = coords[0];
+  const lat = coords[1];
+  if (typeof lon !== 'number' || !Number.isFinite(lon)) return null;
+  if (typeof lat !== 'number' || !Number.isFinite(lat)) return null;
+  return [lon, lat];
 }
 
 /**

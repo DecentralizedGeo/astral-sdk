@@ -70,7 +70,6 @@ export class AstralSDK {
     // Initialize with default configuration
     this.config = {
       defaultChain: 'sepolia',
-      mode: 'offchain',
       debug: false,
       ...config,
     };

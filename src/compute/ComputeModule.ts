@@ -242,9 +242,11 @@ export class ComputeModule {
         schema: attestation.schema,
         data: {
           recipient: attestation.recipient,
-          expirationTime: 0n, // No expiration
-          revocable: true,
-          refUID: '0x0000000000000000000000000000000000000000000000000000000000000000',
+          expirationTime: 0n,
+          revocable: attestation.revocable ?? true,
+          refUID:
+            attestation.refUID ??
+            '0x0000000000000000000000000000000000000000000000000000000000000000',
           data: attestation.data,
           value: 0n,
         },

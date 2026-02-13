@@ -365,7 +365,6 @@ export enum VerificationError {
  *
  * @property defaultChain - Default blockchain for onchain operations (e.g., 'sepolia', 'celo')
  * @property chainId - Default chain ID for operations (e.g., 11155111 for Sepolia, 42220 for Celo)
- * @property mode - Default storage mode for new attestations
  * @property provider - Ethereum provider for blockchain operations
  * @property signer - Ethereum signer for creating signatures
  * @property apiKey - Astral API key for queries
@@ -390,7 +389,6 @@ export enum VerificationError {
 export interface AstralSDKConfig {
   readonly defaultChain?: string;
   readonly chainId?: number;
-  readonly mode?: 'onchain' | 'offchain' | 'ipfs';
   readonly provider?: unknown; // Will be refined to ethers.Provider
   readonly signer?: unknown; // Will be refined to ethers.Signer
   readonly apiKey?: string;
@@ -435,31 +433,6 @@ export interface OnchainRegistrarConfig {
   readonly chain?: string;
   readonly contractAddress?: string;
   readonly schemaUID?: string;
-}
-
-/**
- * StorageConfig defines configuration options for storage adapters.
- *
- * @property type - Type of storage adapter
- * @property endpoint - Storage service endpoint
- * @property apiKey - API key for the storage service
- */
-export interface StorageConfig {
-  readonly type: 'ipfs' | 'url' | string;
-  readonly endpoint?: string;
-  readonly apiKey?: string;
-}
-
-/**
- * IPFSStorageConfig extends StorageConfig with IPFS-specific options.
- *
- * @property gateway - IPFS gateway URL
- * @property pinning - Whether to pin content to the IPFS node
- */
-export interface IPFSStorageConfig extends StorageConfig {
-  readonly type: 'ipfs';
-  readonly gateway?: string;
-  readonly pinning?: boolean;
 }
 
 /**

@@ -105,35 +105,3 @@ export function isEthereumAddress(value: unknown): value is string {
   // TODO: Could test for case-sensitive checksum here as well
   return isNonEmptyString(value) && /^0x[a-fA-F0-9]{40}$/.test(value);
 }
-
-/**
- * Checks if a value is a valid UID for a location attestation.
- *
- * This is a simple format validation for the 32-byte hex string UID.
- *
- * @param value - The value to check
- * @returns True if the value appears to be a valid location attestation UID
- */
-export function isLocationAttestationUID(value: unknown): value is string {
-  return isNonEmptyString(value) && /^0x[a-fA-F0-9]{64}$/.test(value);
-}
-
-/**
- * Checks if a value is a valid UNIX timestamp (seconds since epoch).
- *
- * @param value - The value to check
- * @returns True if the value is a valid UNIX timestamp
- */
-export function isUnixTimestamp(value: unknown): value is number {
-  return typeof value === 'number' && Number.isInteger(value) && value >= 0;
-}
-
-/**
- * Checks if a value is a Date object.
- *
- * @param value - The value to check
- * @returns True if the value is a Date object
- */
-export function isDate(value: unknown): value is Date {
-  return value instanceof Date && !isNaN(value.getTime());
-}
