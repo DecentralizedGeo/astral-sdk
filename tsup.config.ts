@@ -11,4 +11,7 @@ export default defineConfig({
   minify: false,
   platform: 'neutral',
   shims: false,
+  // Node built-ins used by unix-location plugin — mark as external so they
+  // are not bundled and resolve correctly at runtime in Node environments.
+  external: ['child_process', 'util'],
 });
