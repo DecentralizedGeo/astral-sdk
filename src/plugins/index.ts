@@ -57,7 +57,3 @@ export {
 // Mock plugin
 export { MockPlugin } from './mock';
 export type { MockPluginOptions } from './mock';
-
-// Unix location plugin (Node.js / server-side)
-export { UnixLocationPlugin } from './unix-location';
-export type { UnixLocationPluginOptions, SourceReading } from './unix-location';
